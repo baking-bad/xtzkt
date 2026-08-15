@@ -1,0 +1,27 @@
+[
+  {
+    "type": "function",
+    "name": "verifyTezosSignature",
+    "inputs": [
+      {
+        "type": "bytes",
+        "name": "publicKey"
+      },
+      {
+        "type": "bytes32",
+        "name": "hash"
+      },
+      {
+        "type": "bytes",
+        "name": "signature"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "isValid"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

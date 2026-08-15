@@ -1,0 +1,137 @@
+[
+  {
+    "type": "function",
+    "name": "nativeAddress",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "nativeAddress"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialized",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "initialized"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nativePublicKey",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "bytes",
+        "name": "nativePublicKey"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "init_tezosx_alias",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "nativeAddress"
+      },
+      {
+        "type": "bytes",
+        "name": "nativePublicKey"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "isValidSignature",
+    "inputs": [
+      {
+        "type": "bytes32",
+        "name": "hash"
+      },
+      {
+        "type": "bytes",
+        "name": "signature"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bytes4",
+        "name": "magicValue"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "Forwarded",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "type": "string",
+        "name": "nativeAddress"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Initialized",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "nativeAddress"
+      },
+      {
+        "indexed": false,
+        "type": "bytes",
+        "name": "nativePublicKey"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "forwardedBalance"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAuthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "receive",
+    "stateMutability": "payable"
+  },
+  {
+    "type": "fallback",
+    "stateMutability": "payable"
+  }
+]

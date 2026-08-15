@@ -1,0 +1,56 @@
+# Docker build context excludes. The build context is the repository root (see any Dockerfile).
+#
+# Keep this in sync with what the builds actually need: an over-broad pattern here surfaces as
+# a missing-file error inside the container, not locally. In particular, do NOT add a blanket
+# `**/*.md` — Xtzkt.Api/Swagger/description.md is an EmbeddedResource and the build fails
+# without it.
+
+# Build output and IDE state
+**/bin
+**/obj
+**/publish
+**/TestResults
+**/.vs
+**/.vscode
+**/.idea
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm
+**/.classpath
+**/.project
+**/.settings
+**/.toolstarget
+
+# Local secrets and environment
+**/.env
+/.env.example
+**/*.pfx
+**/secrets.dev.yaml
+**/values.dev.yaml
+
+# Docker and deployment descriptors — the image never needs its own build recipe
+**/Dockerfile*
+**/.dockerignore
+**/docker-compose*
+**/azds.yaml
+**/charts
+
+# Repo docs and agent/CI tooling
+/README.md
+/LICENSE
+/CLAUDE.md
+/CLAUDE.local.md
+.claude
+.github
+**/node_modules
+**/npm-debug.log
+
+# Git metadata, except the few files the .NET SDK's built-in SourceLink reads to stamp the
+# assembly with its repository URL and commit. These reach the SDK stages only — the final
+# image copies just the publish output. .git/config holds the remote URL, so if a build ever
+# runs in a clone whose remote embeds a token, drop the four exceptions below.
+**/.git
+!.git/HEAD
+!.git/config
+!.git/packed-refs
+!.git/refs/heads/**

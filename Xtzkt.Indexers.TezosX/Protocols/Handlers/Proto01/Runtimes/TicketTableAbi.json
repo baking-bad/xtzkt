@@ -1,0 +1,139 @@
+[
+  {
+    "type": "function",
+    "name": "ticket_balance_add",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "ticket_hash"
+      },
+      {
+        "type": "address",
+        "name": "owner"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ticket_balance_remove",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "ticket_hash"
+      },
+      {
+        "type": "address",
+        "name": "owner"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "queue_deposit",
+    "inputs": [
+      {
+        "type": "tuple",
+        "name": "deposit",
+        "components": [
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "address",
+            "name": "receiver"
+          },
+          {
+            "type": "address",
+            "name": "proxy"
+          },
+          {
+            "type": "uint256",
+            "name": "ticket_hash"
+          },
+          {
+            "type": "uint256",
+            "name": "inbox_level"
+          },
+          {
+            "type": "uint256",
+            "name": "inbox_msg_id"
+          }
+        ]
+      },
+      {
+        "type": "uint256",
+        "name": "deposit_id"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "find_deposit",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "deposit_id"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "tuple",
+        "name": "deposit",
+        "components": [
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "address",
+            "name": "receiver"
+          },
+          {
+            "type": "address",
+            "name": "proxy"
+          },
+          {
+            "type": "uint256",
+            "name": "ticket_hash"
+          },
+          {
+            "type": "uint256",
+            "name": "inbox_level"
+          },
+          {
+            "type": "uint256",
+            "name": "inbox_msg_id"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "remove_deposit",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "deposit_id"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

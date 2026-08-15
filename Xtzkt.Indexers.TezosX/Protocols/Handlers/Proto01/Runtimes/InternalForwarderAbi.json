@@ -1,0 +1,35 @@
+[
+  {
+    "type": "function",
+    "name": "forward",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "target"
+      },
+      {
+        "type": "bytes",
+        "name": "data"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "success"
+      },
+      {
+        "type": "bytes",
+        "name": "returnData"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "receive",
+    "stateMutability": "payable"
+  },
+  {
+    "type": "fallback",
+    "stateMutability": "payable"
+  }
+]

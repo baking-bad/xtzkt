@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="CLAUDE.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Xtzkt.Api/Xtzkt.Api.csproj" />
+  <Project Path="Xtzkt.Data/Xtzkt.Data.csproj" />
+  <Project Path="Xtzkt.Indexers.Common/Xtzkt.Indexers.Common.csproj" Id="91405a68-bf9b-45fb-994c-41971f0fedea" />
+  <Project Path="Xtzkt.Indexers.L1/Xtzkt.Indexers.L1.csproj" Id="daa1a22c-55b7-4667-b836-11e36b8f529f" />
+  <Project Path="Xtzkt.Indexers.TezosX/Xtzkt.Indexers.TezosX.csproj" Id="32d77b16-1d05-4906-a468-72896e8e759c" />
+  <Project Path="Xtzkt.Services.Metadata/Xtzkt.Services.Metadata.csproj" Id="41613edb-59a8-4bd3-b875-628e558d1804" />
+  <Project Path="Xtzkt.Utils/Xtzkt.Utils.csproj" Id="3d893108-110e-4c0a-ba84-c22859b69dec" />
+</Solution>

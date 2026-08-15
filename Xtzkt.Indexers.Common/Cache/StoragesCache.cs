@@ -1,0 +1,113 @@
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
+using Xtzkt.Data.Models;
+
+namespace Xtzkt.Indexers.Common.Cache;
+
+public class StoragesCache(XtzktContext db)
+{
+    #region static
+    static int SoftCap = 0;
+    static int TargetCap = 0;
+    static Dictionary<int, Storage> Cached = [];
+
+    public static void Configure(CacheSize? size)
+    {
+        SoftCap = size?.SoftCap ?? 60_000;
+        TargetCap = size?.TargetCap ?? 50_000;
+        Cached = new(SoftCap + 1024);
+    }
+    #endregion
+
+    readonly XtzktContext Db = db;
+
+    public void Reset()
+    {
+        Cached.Clear();
+    }
+
+    public void Trim()
+    {
+        if (Cached.Count > SoftCap)
+        {
+            var toRemove = Cached.Values
+                .OrderBy(x => x.Level)
+                .Take(Cached.Count - TargetCap)
+                .ToList();
+
+            foreach (var item in toRemove)
+                Cached.Remove(item.ContractId);
+        }
+    }
+    
+    public void Add(L1Contract contract, Storage storage)
+    {
+        Cached[contract.Id] = storage;
+    }
+
+    public void Add(XMichelsonContract contract, Storage storage)
+    {
+        Cached[contract.Id] = storage;
+    }
+
+    public void Remove(L1Contract contract)
+    {
+        Cached.Remove(contract.Id);
+    }
+
+    public void Remove(XMichelsonContract contract)
+    {
+        Cached.Remove(contract.Id);
+    }
+
+    public async Task PreloadAsync(IEnumerable<int> contracts)
+    {
+        var missed = contracts.Where(x => !Cached.ContainsKey(x)).ToHashSet();
+        if (missed.Count != 0)
+        {
+            var storages = await Db.Storages
+                .Where(x => missed.Contains(x.ContractId) && x.Current)
+                .ToListAsync();
+
+            foreach (var storage in storages)
+                Cached.Add(storage.ContractId, storage);
+        }
+    }
+
+    public async Task<Storage> GetAsync(L1Contract contract)
+    {
+        if (!Cached.TryGetValue(contract.Id, out var item))
+        {
+            item = await Db.Storages.FirstOrDefaultAsync(x => x.ContractId == contract.Id && x.Current)
+                ?? throw new Exception($"Storage for contract #{contract.Id} doesn't exist");
+
+            Add(contract, item);
+        }
+
+        return item;
+    }
+
+    public async Task<Storage> GetAsync(XMichelsonContract contract)
+    {
+        if (!Cached.TryGetValue(contract.Id, out var item))
+        {
+            item = await Db.Storages.FirstOrDefaultAsync(x => x.ContractId == contract.Id && x.Current)
+                ?? throw new Exception($"Storage for contract #{contract.Id} doesn't exist");
+
+            Add(contract, item);
+        }
+
+        return item;
+    }
+
+    public bool TryGetCached(L1Contract contract, [NotNullWhen(true)] out Storage? storage)
+    {
+        return Cached.TryGetValue(contract.Id, out storage);
+    }
+
+    public bool TryGetCached(XMichelsonContract contract, [NotNullWhen(true)] out Storage? storage)
+    {
+        return Cached.TryGetValue(contract.Id, out storage);
+    }
+}

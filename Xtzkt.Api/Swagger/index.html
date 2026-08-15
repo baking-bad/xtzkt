@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+
+    <title>0xTzKT API - Tezos API Documentation</title>
+
+    <meta name="keywords" content="tezos, blockchain, mainnet, explorer, block explorer, blockchain explorer, tezos explorer, tezos block explorer, tezos blockchain explorer, tezos api, explorer api, tezos explorer api, tezos accounts, tezos tokens, tezos assets, tezos blocks, tezos operations, tezos delegates, tezos bakers, baking, smart contracts, xtz, tz, KT, crypto, cryptocurrency, API">
+    <meta name="description" content="0xTzKT API is a reliable API for accessing detailed Tezos blockchain data: blocks, accounts, operations, rights, rewards and much more.">
+
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://api.tzkt.io">
+    <meta name="og:title" content="0xTzKT API Documentation">
+    <meta name="og:description" content="0xTzKT API is a reliable API for accessing Tezos blockchain data: blocks, accounts, operations, rights, rewards and much more.">
+    <meta name="og:image" content="https://tzkt.io/logo.png">
+    <meta name="og:image:secure_url" content="https://tzkt.io/logo.png">
+    <meta name="og:image:alt" content="0xTzKT - Tezos block explorer">
+    <meta name="og:image:type" content="image/png">
+    <meta name="og:image:width" content="500">
+    <meta name="og:image:height" content="540">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@TezosBakingBad">
+    <meta name="twitter:creator" content="@257Byte">
+    <meta name="twitter:title" content="0xTzKT API Documentation">
+    <meta name="twitter:description" content="0xTzKT API is a reliable API for accessing Tezos blockchain data: blocks, accounts, operations, rights, rewards and much more.">
+    <meta name="twitter:image" content="https://tzkt.io/logo.png">
+    <meta name="twitter:image:alt" content="0xTzKT - Tezos block explorer">
+
+    <link rel=icon href=https://api.tzkt.io/favicon.ico>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300..700;1,400&display=swap" />
+
+    <style>
+        :root {
+            --bg: #0e1114;
+            --bg-alt: #131719;
+            --bg-sunken: #090b0d;
+            --bg-menu: #0b0e10;
+            --border: #232a2c;
+            --border-strong: #333c3e;
+            --rule: #2b3335;
+            --text: #b6bfbc;
+            --text-dim: #838f8b;
+            --text-bright: #ced6d3;
+            --accent: #6cbf8a;
+            --accent-hover: #8fd3a6;
+            --ok: #6cbf8a;
+            --warn: #c9a227;
+            --err: #d97066;
+            --info: #6fb3b8;
+            --get: #6cbf8a;
+            --post: #6fb3b8;
+            --put: #9b8ec4;
+            --patch: #c98f4f;
+            --delete: #d97066;
+            --head: #c98fb0;
+            --badge-text: #0b0e10;
+            --anchor-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'><path d='M9.5 14.5l5-5M11 6.6l1.3-1.3a3.8 3.8 0 015.4 5.4L16.4 12M12.6 17.4l-1.3 1.3a3.8 3.8 0 01-5.4-5.4L7.6 12'/></svg>");
+            --json-key: #b0b8b5;
+            --json-string: #8ec49b;
+            --json-number: #8aa9c4;
+            --json-null: #9a9490;
+            --json-bool: #cf8f88;
+            --json-punct: #626b69;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .redoc-wrap, .api-content {
+            background: var(--bg);
+        }
+
+            .api-content button:focus,
+            .react-tabs__tab-list li:focus {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
+            :focus-visible,
+            .api-content button:focus-visible,
+            .react-tabs__tab-list li:focus-visible {
+                outline: 2px solid var(--accent) !important;
+                outline-offset: -2px !important;
+            }
+
+        .menu-content {
+            border-right: 1px solid var(--border);
+        }
+
+            .menu-content label[class*="-depth1"],
+            .menu-content label[class*="-depth2"] {
+                font-size: 12.5px !important;
+            }
+
+            .menu-content label[class*="-depth0"] {
+                font-size: 11.5px !important;
+                letter-spacing: 0.04em !important;
+                padding: 8px 20px 4px !important;
+            }
+
+            .menu-content li:has(> label[class*="-depth0"]) {
+                margin-top: 8px !important;
+            }
+
+            .menu-content label:has(> .operation-type) {
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            .menu-content .operation-type {
+                flex: none !important;
+                width: auto !important;
+                min-width: 32px !important;
+                height: auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: 0 8px 0 0 !important;
+                padding: 2px 6px !important;
+                border-radius: 3px !important;
+                font-family: system-ui, "Segoe UI", sans-serif !important;
+                font-size: 10px !important;
+                line-height: 12px !important;
+                letter-spacing: 0 !important;
+                font-weight: 600 !important;
+                color: var(--badge-text) !important;
+            }
+
+        .search-input {
+            background: var(--bg-sunken) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 6px !important;
+            font-family: inherit !important;
+        }
+
+            .search-input::placeholder {
+                color: var(--text-dim);
+            }
+
+        .search-icon path {
+            fill: var(--text-dim);
+        }
+
+        div:has(> select.dropdown-select) {
+            background: var(--bg-alt) !important;
+            border-color: var(--border) !important;
+            border-radius: 6px !important;
+            color: var(--text) !important;
+        }
+
+        .dropdown-select, .dropdown-select * {
+            background: var(--bg-alt) !important;
+            color: var(--text) !important;
+            border-color: var(--border) !important;
+        }
+
+        .redoc-markdown a, .api-content a {
+            color: var(--accent);
+        }
+
+        .redoc-markdown code {
+            background: color-mix(in srgb, var(--text-dim) 18%, transparent) !important;
+            color: var(--accent) !important;
+            border-radius: 4px;
+            padding: 0.1em 0.35em;
+        }
+
+        .redoc-markdown pre {
+            background: var(--bg-sunken) !important;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .redoc-markdown blockquote {
+            border-left: 3px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .redoc-markdown table tr, .redoc-markdown table th, .redoc-markdown table td {
+            background: transparent !important;
+            border-color: var(--border) !important;
+        }
+
+        .api-content h5 {
+            color: var(--text-dim) !important;
+            border-bottom-color: var(--border) !important;
+        }
+
+            .api-content h5 span {
+                color: var(--text) !important;
+            }
+
+        .api-content .http-verb {
+            color: var(--badge-text) !important;
+        }
+
+        .api-content button:has(.http-verb) svg polygon {
+            fill: currentColor !important;
+        }
+
+        .api-content button:has(.http-verb) {
+            border-bottom-color: var(--border) !important;
+        }
+
+            .api-content button:has(.http-verb) + div div {
+                border-color: var(--border) !important;
+            }
+
+        .api-content td,
+        .api-content td button {
+            font-size: 12.5px !important;
+        }
+
+            .api-content td div:has(> span):not(:has(div)),
+            .api-content td div:has(> span):not(:has(div)) span {
+                font-size: 11.5px !important;
+            }
+
+        .api-content td {
+            border-bottom-color: var(--rule) !important;
+        }
+
+        .api-content [data-section-id]::after {
+            border-bottom-color: var(--border) !important;
+        }
+
+        .api-content h1 > a::before,
+        .api-content h2 > a::before {
+            background-image: none !important;
+            background-color: currentColor !important;
+            opacity: 0.8 !important;
+            -webkit-mask: var(--anchor-icon) center / contain no-repeat !important;
+            mask: var(--anchor-icon) center / contain no-repeat !important;
+        }
+
+        .api-content td button[class]:not(:has(*)) {
+            font-family: inherit !important;
+            font-size: 0.85em !important;
+            padding: 3px 10px !important;
+            border-radius: 6px !important;
+            border-color: currentColor !important;
+            background: color-mix(in srgb, currentColor 16%, transparent) !important;
+        }
+
+        .redoc-json .property.token.string {
+            color: var(--json-key) !important;
+        }
+
+        .redoc-json .token.string {
+            color: var(--json-string) !important;
+        }
+
+        .redoc-json .token.number {
+            color: var(--json-number) !important;
+        }
+
+        .redoc-json .token.keyword {
+            color: var(--json-null) !important;
+        }
+
+        .redoc-json .token.boolean {
+            color: var(--json-bool) !important;
+        }
+
+        .redoc-json .token.punctuation {
+            color: var(--json-punct) !important;
+        }
+
+        .redoc-json .collapser {
+            color: var(--text-dim) !important;
+        }
+
+        .react-tabs__tab-list li {
+            border-color: var(--border) !important;
+        }
+
+            .react-tabs__tab-list li.react-tabs__tab--selected {
+                background: var(--bg-alt) !important;
+                border-color: var(--border-strong) !important;
+            }
+
+        [class*="sc-ikkxIA"] {
+            background: var(--bg-alt) !important;
+        }
+
+            [class*="sc-ikkxIA"] [class*="sc-ikkxIA"] {
+                background: var(--bg) !important;
+            }
+
+                [class*="sc-ikkxIA"] [class*="sc-ikkxIA"] [class*="sc-ikkxIA"] {
+                    background: var(--bg-alt) !important;
+                }
+
+        .property-name {
+            color: var(--text-bright) !important;
+        }
+
+        .ps__rail-x, .ps__rail-y,
+        .ps__rail-x:hover, .ps__rail-y:hover,
+        .ps__rail-x:focus, .ps__rail-y:focus,
+        .ps__rail-x.ps--clicking, .ps__rail-y.ps--clicking {
+            background-color: transparent !important;
+        }
+
+        .ps__thumb-x, .ps__thumb-y {
+            background-color: var(--border) !important;
+        }
+
+        .ps__rail-x:hover > .ps__thumb-x, .ps__rail-y:hover > .ps__thumb-y,
+        .ps__rail-x:focus > .ps__thumb-x, .ps__rail-y:focus > .ps__thumb-y,
+        .ps__rail-x.ps--clicking .ps__thumb-x, .ps__rail-y.ps--clicking .ps__thumb-y {
+            background-color: var(--border-strong) !important;
+        }
+
+        ::selection {
+            background: color-mix(in srgb, var(--accent) 25%, transparent);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            background-clip: content-box;
+            border: 2px solid transparent;
+            border-radius: 5px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: var(--border-strong);
+                background-clip: content-box;
+            }
+    </style>
+</head>
+<body>
+    <div id="redoc"></div>
+    <!-- pinned on purpose: some css workarounds above depend on this exact build -->
+    <script src="https://cdn.redocly.com/redoc/v2.5.3/bundles/redoc.standalone.js"></script>
+    <script>
+        var mono = "'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace";
+
+        // the theme reads the palette from the css variables above, so there is one source of truth
+        var palette = getComputedStyle(document.documentElement);
+        var c = function (name) { return palette.getPropertyValue('--' + name).trim(); };
+        var tint = function (name, percent) { return 'color-mix(in srgb, ' + c(name) + ' ' + percent + '%, transparent)'; };
+
+        Redoc.init('/v1/openapi.json', {
+            expandSingleSchemaField: true,
+            pathInMiddlePanel: true,
+            theme: {
+                logo: {
+                    maxHeight: '160px',
+                    maxWidth: '160px'
+                },
+                spacing: { unit: 5, sectionHorizontal: 48, sectionVertical: 28 },
+                colors: {
+                    primary: { main: c('accent') },
+                    success: { main: c('ok') },
+                    warning: { main: c('warn') },
+                    error: { main: c('err') },
+                    gray: { 50: c('bg-alt'), 100: c('border') },
+                    text: { primary: c('text'), secondary: c('text-dim') },
+                    border: { dark: c('border'), light: 'rgba(255,255,255,0.06)' },
+                    http: {
+                        get: c('get'),
+                        post: c('post'),
+                        put: c('put'),
+                        patch: c('patch'),
+                        delete: c('delete'),
+                        options: c('warn'),
+                        head: c('head'),
+                        basic: c('text-dim'),
+                        link: c('info')
+                    },
+                    responses: {
+                        success: { color: c('ok'), backgroundColor: tint('ok', 10), tabTextColor: c('ok') },
+                        error: { color: c('err'), backgroundColor: tint('err', 10), tabTextColor: c('err') },
+                        redirect: { color: c('warn'), backgroundColor: tint('warn', 10), tabTextColor: c('warn') },
+                        info: { color: c('info'), backgroundColor: tint('info', 10), tabTextColor: c('info') }
+                    }
+                },
+                schema: {
+                    nestedBackground: c('bg-alt'),
+                    linesColor: c('border'),
+                    typeNameColor: c('accent'),
+                    typeTitleColor: c('text-dim'),
+                    requireLabelColor: c('err'),
+                    nestingSpacing: '1.2em',
+                    arrow: { size: '1.1em', color: c('text-dim') }
+                },
+                typography: {
+                    fontSize: '12.5px',
+                    lineHeight: '1.6em',
+                    fontFamily: mono,
+                    fontWeightBold: '600',
+                    headings: { fontFamily: mono, fontWeight: '600', lineHeight: '1.45em' },
+                    code: {
+                        fontFamily: mono,
+                        fontSize: '12.5px',
+                        color: c('accent'),
+                        backgroundColor: tint('text-dim', 18),
+                        wrap: false
+                    },
+                    links: {
+                        color: c('accent'),
+                        visited: c('accent'),
+                        hover: c('accent-hover'),
+                        textDecoration: 'none',
+                        hoverTextDecoration: 'underline'
+                    }
+                },
+                sidebar: {
+                    width: '280px',
+                    backgroundColor: c('bg-menu'),
+                    textColor: c('text'),
+                    activeTextColor: c('accent'),
+                    groupItems: { activeBackgroundColor: c('bg-alt'), activeTextColor: c('accent'), textTransform: 'uppercase' },
+                    level1Items: { activeBackgroundColor: c('bg-alt'), activeTextColor: c('accent'), textTransform: 'none' },
+                    arrow: { size: '1.4em', color: c('text-dim') }
+                },
+                rightPanel: {
+                    backgroundColor: c('bg'),
+                    width: '38%',
+                    textColor: c('text'),
+                    servers: {
+                        overlay: { backgroundColor: c('bg'), textColor: c('text') },
+                        url: { backgroundColor: c('bg-sunken') }
+                    }
+                },
+                codeBlock: { backgroundColor: c('bg-sunken') },
+                fab: { backgroundColor: c('bg-alt'), color: c('accent') }
+            }
+        }, document.getElementById('redoc'));
+    </script>
+</body>
+</html>

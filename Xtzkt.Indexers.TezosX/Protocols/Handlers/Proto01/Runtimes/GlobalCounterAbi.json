@@ -1,0 +1,14 @@
+[
+  {
+    "type": "function",
+    "name": "get_and_increment",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "counter"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

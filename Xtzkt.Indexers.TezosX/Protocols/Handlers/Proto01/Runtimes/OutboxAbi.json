@@ -1,0 +1,146 @@
+[
+  {
+    "type": "function",
+    "name": "push_withdrawal_to_outbox",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "target"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bytes22",
+        "name": "recipient"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "push_fast_withdrawal_to_outbox",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "target"
+      },
+      {
+        "type": "string",
+        "name": "fast_withdrawal_contract"
+      },
+      {
+        "type": "bytes",
+        "name": "payload"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "uint256",
+        "name": "withdrawal_id"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bytes22",
+        "name": "recipient"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "push_fa_withdrawal_to_outbox",
+    "inputs": [
+      {
+        "type": "bytes",
+        "name": "routing_info"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "bytes22",
+        "name": "ticketer"
+      },
+      {
+        "type": "bytes",
+        "name": "content"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "tuple",
+        "name": "routingInfo",
+        "components": [
+          {
+            "type": "bytes22",
+            "name": "target"
+          },
+          {
+            "type": "bytes22",
+            "name": "proxy"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "push_fast_fa_withdrawal_to_outbox",
+    "inputs": [
+      {
+        "type": "bytes",
+        "name": "routing_info"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "bytes22",
+        "name": "ticketer"
+      },
+      {
+        "type": "bytes",
+        "name": "content"
+      },
+      {
+        "type": "string",
+        "name": "fast_withdrawal_contract_address"
+      },
+      {
+        "type": "bytes",
+        "name": "payload"
+      },
+      {
+        "type": "uint256",
+        "name": "withdrawal_id"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "tuple",
+        "name": "routingInfo",
+        "components": [
+          {
+            "type": "bytes22",
+            "name": "target"
+          },
+          {
+            "type": "bytes22",
+            "name": "proxy"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

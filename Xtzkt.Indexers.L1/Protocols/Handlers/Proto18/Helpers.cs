@@ -1,0 +1,59 @@
+﻿using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Extensions;
+
+namespace Xtzkt.Indexers.L1.Protocols.Proto18
+{
+    public class Helpers(ProtocolHandler proto) : Proto13.Helpers(proto)
+    {
+        public override long BakingPower(L1Baker baker)
+        {
+            if (!baker.Staked)
+                return 0;
+
+            if (baker.OwnStakedBalance < Context.Protocol.MinimalFrozenStake)
+                return 0;
+
+            var externalStakeCap = 0L;
+            if (baker.LimitOfStakingOverBaking is long limit)
+            {
+                var (q, r) = Math.DivRem(limit, 1_000_000);
+                if (r == 0)
+                {
+                    externalStakeCap = baker.OwnStakedBalance * Math.Min(q, Context.Protocol.MaxExternalOverOwnStakeRatio);
+                }
+                else
+                {
+                    var limitOfStakingOverBaking = Math.Min(limit, Context.Protocol.MaxExternalOverOwnStakeRatio * 1_000_000);
+                    externalStakeCap = baker.OwnStakedBalance.MulRatio(limitOfStakingOverBaking, 1_000_000);
+                }
+            }
+            var overstaked = Math.Max(0, baker.ExternalStakedBalance - externalStakeCap);
+            var totalDelegated = baker.OwnDelegatedBalance + baker.ExternalDelegatedBalance + overstaked;
+            var delegationCap = baker.OwnStakedBalance * Context.Protocol.MaxDelegatedOverFrozenRatio;
+
+            var actualStaked = baker.OwnStakedBalance + baker.ExternalStakedBalance - overstaked;
+            var actualDelegated = Math.Min(totalDelegated, delegationCap);
+
+            var state = Cache.Chain.Get();
+            if (state.AiActivationLevel is int aiLevel && state.Level >= aiLevel)
+                actualDelegated /= Context.Protocol.StakePowerMultiplier;
+
+            var stake = actualStaked + actualDelegated;
+            if (stake < Context.Protocol.MinimalStake)
+                return 0;
+
+            return stake;
+        }
+        public override long VotingPower(L1Baker baker)
+        {
+            if (!baker.Staked)
+                return 0;
+
+            var stake = baker.OwnStakedBalance + baker.ExternalStakedBalance + baker.OwnDelegatedBalance + baker.ExternalDelegatedBalance;
+            if (stake < Context.Protocol.MinimalStake)
+                return 0;
+
+            return stake;
+        }
+    }
+}

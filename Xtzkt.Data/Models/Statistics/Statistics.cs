@@ -1,0 +1,40 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+
+namespace Xtzkt.Data.Models
+{
+    public abstract class Statistics(Layer layer)
+    {
+        public Layer Layer { get; private set; } = layer;
+
+        public required int ChainId { get; set; }
+        public required int Level { get; set; }
+        public required DateTime Timestamp { get; set; }
+        public DateTime? Date { get; set; }
+    }
+
+    public static class StatisticsModel
+    {
+        public static void BuildStatisticsModel(this ModelBuilder modelBuilder)
+        {
+            #region keys
+            modelBuilder.Entity<Statistics>()
+                .HasKey(x => new { x.ChainId, x.Level });
+            #endregion
+
+            #region inheritance
+            modelBuilder.Entity<Statistics>()
+                .HasDiscriminator<Layer>(nameof(Statistics.Layer))
+                .HasValue<L1Statistics>(Layer.L1)
+                .HasValue<XStatistics>(Layer.TezosX);
+
+            modelBuilder.Entity<Statistics>()
+                .Property(x => x.Layer)
+                .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
+
+            modelBuilder.BuildL1StatisticsModel();
+            modelBuilder.BuildXStatisticsModel();
+            #endregion
+        }
+    }
+}

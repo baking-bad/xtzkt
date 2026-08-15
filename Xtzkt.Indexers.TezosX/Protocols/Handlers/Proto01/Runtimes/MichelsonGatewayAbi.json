@@ -1,0 +1,222 @@
+[
+  {
+    "type": "function",
+    "name": "callMichelson",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "destination"
+      },
+      {
+        "type": "string",
+        "name": "entrypoint"
+      },
+      {
+        "type": "bytes",
+        "name": "parameters"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "callMichelsonView",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "destination"
+      },
+      {
+        "type": "string",
+        "name": "viewName"
+      },
+      {
+        "type": "bytes",
+        "name": "input"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bytes",
+        "name": "response"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "call",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "url"
+      },
+      {
+        "type": "tuple[]",
+        "name": "headers",
+        "components": [
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "string",
+            "name": "value"
+          }
+        ]
+      },
+      {
+        "type": "bytes",
+        "name": "body"
+      },
+      {
+        "type": "uint8",
+        "name": "method"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bytes",
+        "name": "response"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "resolveAddress",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "addr"
+      },
+      {
+        "type": "uint8",
+        "name": "sourceRuntime"
+      },
+      {
+        "type": "uint8",
+        "name": "targetRuntime"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "bool",
+        "name": "classified"
+      },
+      {
+        "type": "uint8",
+        "name": "res"
+      },
+      {
+        "type": "string",
+        "name": "translated"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "originOf",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "addr"
+      },
+      {
+        "type": "uint8",
+        "name": "sourceRuntime"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint8",
+        "name": "kind"
+      },
+      {
+        "type": "uint8",
+        "name": "homeRuntime"
+      },
+      {
+        "type": "string",
+        "name": "nativeAddress"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "CrossRuntimeCallSent",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "crossRuntimeCallId"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "targetRuntime"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "targetAddress"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "CrossRuntimeCallReceived",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "crossRuntimeCallId"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "sourceRuntime"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "senderAddress"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "sourceAddress"
+      },
+      {
+        "indexed": false,
+        "type": "string",
+        "name": "targetAddress"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidRuntimeId",
+    "inputs": [
+      {
+        "type": "uint8",
+        "name": "received"
+      }
+    ]
+  }
+]

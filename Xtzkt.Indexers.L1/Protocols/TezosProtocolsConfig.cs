@@ -1,0 +1,17 @@
+﻿namespace Xtzkt.Indexers.L1.Services
+{
+    public class TezosProtocolsConfig
+    {
+        public bool Diagnostics { get; set; } = false;
+        public bool Validation { get; set; } = true;
+        public List<string>? Precompiles { get; set; } = null;
+    }
+
+    public static class TezosProtocolsConfigExt
+    {
+        public static TezosProtocolsConfig GetTezosProtocolsConfig(this IConfiguration config)
+        {
+            return config.GetSection("Protocols")?.Get<TezosProtocolsConfig>() ?? new();
+        }
+    }
+}

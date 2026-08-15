@@ -1,0 +1,518 @@
+﻿using System.Numerics;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data.Models;
+using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Indexers.Common.Extensions;
+
+namespace Xtzkt.Indexers.L1.Protocols.Proto18
+{
+    class SlashingCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
+    {
+        public async Task Apply(L1Block block, JsonElement rawBlock)
+        {
+            if (!block.Events.HasFlag(L1BlockEvents.CycleEnd))
+                return;
+
+            var slashings = rawBlock
+                .Required("metadata")
+                .RequiredArray("balance_updates")
+                .EnumerateArray()
+                .Where(x => x.RequiredString("origin") == "delayed_operation");
+
+            if (!slashings.Any())
+                return;
+
+            var slashedRequests = await SlashUnstakeRequests(block, slashings);
+
+            foreach (var slashing in slashings.GroupBy(x => x.RequiredString("delayed_operation_hash")).Reverse())
+            {
+                var opHash = slashing.Key;
+                var accusation = Context.DoubleBakingOps.FirstOrDefault(x => x.Hash == opHash)
+                    ?? Context.DoubleConsensusOps.FirstOrDefault(x => x.Hash == opHash)
+                    ?? Db.DoubleBakingOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHash)
+                    ?? (IOperation?)Db.DoubleConsensusOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHash)
+                    ?? throw new Exception($"Cannot find delayed operation '{opHash}'");
+
+                var (accuserId, offenderId) = accusation switch
+                {
+                    DoubleBakingOperation op => (op.AccuserId, op.OffenderId),
+                    DoubleConsensusOperation op => (op.AccuserId, op.OffenderId),
+                    _ => throw new InvalidOperationException()
+                };
+                var accuser = Cache.Addresses.GetBaker(accuserId);
+                var offender = Cache.Addresses.GetBaker(offenderId);
+
+                var updates = await ParseStakingUpdates(block, accusation, slashedRequests[opHash], slashing);
+                await new StakingUpdateCommit(Proto).Apply(updates);
+
+                var lostOwnStaked = updates
+                    .Where(x => x.Type == StakingUpdateType.SlashStaked && x.StakerId == x.BakerId)
+                    .Sum(x => x.Amount);
+                var lostExternalStaked = updates
+                    .Where(x => x.Type == StakingUpdateType.SlashStaked && x.StakerId != x.BakerId)
+                    .Sum(x => x.Amount);
+                var lostOwnUnstaked = updates
+                    .Where(x => x.Type == StakingUpdateType.SlashUnstaked && x.StakerId == x.BakerId)
+                    .Sum(x => x.Amount);
+                var lostExternalUnstaked = updates
+                    .Where(x => x.Type == StakingUpdateType.SlashUnstaked && x.StakerId != x.BakerId)
+                    .Sum(x => x.Amount);
+                var reward = slashing
+                    .Where(x => x.RequiredString("kind") == "contract")
+                    .Sum(x => x.RequiredInt64("change"));
+
+                Db.TryAttach(accuser);
+                Receive(accuser, accuser, reward);
+                accuser.LastLevel = block.Level;
+                accuser.LastTimestamp = block.Timestamp;
+
+                var accuserCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, accuser.Id);
+                var offenderCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, offender.Id);
+
+                switch (accusation)
+                {
+                    case DoubleBakingOperation op:
+                        op.SlashedLevel = block.Level;
+                        op.Reward = reward;
+                        op.LostStaked = lostOwnStaked;
+                        op.LostUnstaked = lostOwnUnstaked;
+                        op.LostExternalStaked = lostExternalStaked;
+                        op.LostExternalUnstaked = lostExternalUnstaked;
+                        op.StakingUpdatesCount = updates.Count;
+                        if (accuserCycle != null)
+                        {
+                            Db.TryAttach(accuserCycle);
+                            accuserCycle.DoubleBakingRewards += reward;
+                        }
+                        if (offenderCycle != null)
+                        {
+                            Db.TryAttach(offenderCycle);
+                            offenderCycle.DoubleBakingLostStaked += lostOwnStaked;
+                            offenderCycle.DoubleBakingLostUnstaked += lostOwnUnstaked;
+                            offenderCycle.DoubleBakingLostExternalStaked += lostExternalStaked;
+                            offenderCycle.DoubleBakingLostExternalUnstaked += lostExternalUnstaked;
+                        }
+                        Db.TryAttach(block);
+                        block.Events |= L1BlockEvents.DoubleBakingSlashing;
+                        break;
+                    case DoubleConsensusOperation op:
+                        op.SlashedLevel = block.Level;
+                        op.Reward = reward;
+                        op.LostStaked = lostOwnStaked;
+                        op.LostUnstaked = lostOwnUnstaked;
+                        op.LostExternalStaked = lostExternalStaked;
+                        op.LostExternalUnstaked = lostExternalUnstaked;
+                        op.StakingUpdatesCount = updates.Count;
+                        if (accuserCycle != null)
+                        {
+                            Db.TryAttach(accuserCycle);
+                            accuserCycle.DoubleConsensusRewards += reward;
+                        }
+                        if (offenderCycle != null)
+                        {
+                            Db.TryAttach(offenderCycle);
+                            offenderCycle.DoubleConsensusLostStaked += lostOwnStaked;
+                            offenderCycle.DoubleConsensusLostUnstaked += lostOwnUnstaked;
+                            offenderCycle.DoubleConsensusLostExternalStaked += lostExternalStaked;
+                            offenderCycle.DoubleConsensusLostExternalUnstaked += lostExternalUnstaked;
+                        }
+                        Db.TryAttach(block);
+                        block.Events |= L1BlockEvents.DoubleConsensusSlashing;
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+
+                Cache.Statistics.Current.TotalBurned += lostOwnStaked + lostExternalStaked + lostOwnUnstaked + lostExternalUnstaked - reward;
+            }
+        }
+
+        public async Task Revert(L1Block block)
+        {
+            if (block.Events.HasFlag(L1BlockEvents.DoubleBakingSlashing))
+            {
+                foreach (var op in await Db.DoubleBakingOps.Where(x => x.ChainId == block.ChainId && x.SlashedLevel == block.Level).ToListAsync())
+                {
+                    var accuser = Cache.Addresses.GetBaker(op.AccuserId);
+                    Db.TryAttach(accuser);
+                    RevertReceive(accuser, accuser, op.Reward);
+
+                    var accuserCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, accuser.Id);
+                    if (accuserCycle != null)
+                    {
+                        Db.TryAttach(accuserCycle);
+                        accuserCycle.DoubleBakingRewards -= op.Reward;
+                    }
+
+                    var offenderCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, op.OffenderId);
+                    if (offenderCycle != null)
+                    {
+                        Db.TryAttach(offenderCycle);
+                        offenderCycle.DoubleBakingLostStaked -= op.LostStaked;
+                        offenderCycle.DoubleBakingLostUnstaked -= op.LostUnstaked;
+                        offenderCycle.DoubleBakingLostExternalStaked -= op.LostExternalStaked;
+                        offenderCycle.DoubleBakingLostExternalUnstaked -= op.LostExternalUnstaked;
+                    }
+
+                    op.Reward = 0;
+                    op.LostStaked = 0;
+                    op.LostUnstaked = 0;
+                    op.LostExternalStaked = 0;
+                    op.LostExternalUnstaked = 0;
+
+                    var updates = await Db.StakingUpdates
+                        .Where(x => x.DoubleBakingOpId == op.Id)
+                        .OrderByDescending(x => x.Id)
+                        .ToListAsync();
+
+                    await new StakingUpdateCommit(Proto).Revert(updates);
+
+                    op.StakingUpdatesCount = null;
+                }
+            }
+
+            if (block.Events.HasFlag(L1BlockEvents.DoubleConsensusSlashing))
+            {
+                foreach (var op in await Db.DoubleConsensusOps.Where(x => x.ChainId == block.ChainId && x.SlashedLevel == block.Level).ToListAsync())
+                {
+                    var accuser = Cache.Addresses.GetBaker(op.AccuserId);
+                    Db.TryAttach(accuser);
+                    RevertReceive(accuser, accuser, op.Reward);
+
+                    var accuserCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, accuser.Id);
+                    if (accuserCycle != null)
+                    {
+                        Db.TryAttach(accuserCycle);
+                        accuserCycle.DoubleConsensusRewards -= op.Reward;
+                    }
+
+                    var offenderCycle = await Cache.BakerCycles.GetOrDefaultAsync(block.Cycle, op.OffenderId);
+                    if (offenderCycle != null)
+                    {
+                        Db.TryAttach(offenderCycle);
+                        offenderCycle.DoubleConsensusLostStaked -= op.LostStaked;
+                        offenderCycle.DoubleConsensusLostUnstaked -= op.LostUnstaked;
+                        offenderCycle.DoubleConsensusLostExternalStaked -= op.LostExternalStaked;
+                        offenderCycle.DoubleConsensusLostExternalUnstaked -= op.LostExternalUnstaked;
+                    }
+
+                    op.Reward = 0;
+                    op.LostStaked = 0;
+                    op.LostUnstaked = 0;
+                    op.LostExternalStaked = 0;
+                    op.LostExternalUnstaked = 0;
+
+                    var updates = await Db.StakingUpdates
+                        .Where(x => x.DoubleConsensusOpId == op.Id)
+                        .OrderByDescending(x => x.Id)
+                        .ToListAsync();
+
+                    await new StakingUpdateCommit(Proto).Revert(updates);
+
+                    op.StakingUpdatesCount = null;
+                }
+            }
+        }
+
+        async Task<Dictionary<string, List<(int stakerId, int cycle, long slashed)>>> SlashUnstakeRequests(
+            L1Block block,
+            IEnumerable<JsonElement> slashings)
+        {
+            var slashedBakers = slashings
+                .Where(x => x.RequiredString("kind") == "freezer")
+                .Select(GetFreezerBaker)
+                .ToHashSet()
+                .Select(Cache.Addresses.GetExistingBaker);
+
+            var slashedRequests = new Dictionary<int, List<(int, int, long)>>();
+            foreach (var baker in slashedBakers)
+            {
+                var bakerContext = await Proto.Rpc.GetContractRawAsync(block.Level, baker.Hash);
+                if (bakerContext.TryGetProperty("unstaked_frozen_deposits", out var prop))
+                {
+                    var cycles = prop.RequiredArray().EnumerateArray()
+                        .Select(x => x.RequiredArray().EnumerateArray().First().RequiredInt32())
+                        .ToHashSet();
+
+                    var requests = await Db.UnstakeRequests
+                        .Where(x => x.BakerId == baker.Id && cycles.Contains(x.Cycle) && x.StakerId != null)
+                        .ToListAsync();
+
+                    foreach (var request in requests)
+                        Cache.UnstakeRequests.Add(request);
+
+                    var stakers = requests
+                        .Select(x => x.StakerId!.Value)
+                        .ToHashSet();
+
+                    var slashedBakerRequests = new List<(int, int, long)>(requests.Count);
+                    foreach (var stakerId in stakers)
+                    {
+                        var staker = await Cache.Addresses.GetAsync(stakerId);
+                        var rpc = await Proto.Rpc.GetUnstakeRequests(block.Level, staker.Hash);
+                        if (rpc.ValueKind != JsonValueKind.Null)
+                        {
+                            foreach (var request in rpc.Required("unfinalizable").RequiredArray("requests").EnumerateArray())
+                            {
+                                var cycle = request.RequiredInt32("cycle");
+                                var actualAmount = request.RequiredInt64("amount");
+
+                                var local = requests.First(x => x.StakerId == staker.Id && x.Cycle == cycle);
+                                var localActualAmount = local.RequestedAmount - local.RestakedAmount - local.FinalizedAmount - local.SlashedAmount + (local.RoundingError ?? 0);
+
+                                if (localActualAmount != actualAmount)
+                                    slashedBakerRequests.Add((staker.Id, cycle, localActualAmount - actualAmount));
+                            }
+                        }
+                    }
+
+                    if (slashedBakerRequests.Count != 0)
+                        slashedRequests.Add(baker.Id, slashedBakerRequests);
+                }
+            }
+
+            var bakerByOp = slashings
+                .Where(x => x.RequiredString("kind") == "freezer")
+                .DistinctBy(x => x.RequiredString("delayed_operation_hash"))
+                .ToDictionary(x => x.RequiredString("delayed_operation_hash"), GetFreezerBaker);
+
+            var burnedByOp = slashings
+                .Where(x => x.RequiredString("kind") == "burned")
+                .ToDictionary(x => x.RequiredString("delayed_operation_hash"), x => x.RequiredInt64("change"));
+
+            var burnedByBaker = burnedByOp
+                .GroupBy(x => bakerByOp[x.Key])
+                .ToDictionary(x => x.Key, x => x.Sum(y => y.Value));
+
+            var shares = burnedByOp
+                .ToDictionary(x => x.Key, x => x.Value / (double)burnedByBaker[bakerByOp[x.Key]]);
+
+            var opsByBaker = burnedByOp.Keys
+                .GroupBy(x => Cache.Addresses.GetExistingBaker(bakerByOp[x]).Id)
+                .ToDictionary(x => x.Key, x => x.ToList());
+
+            var res = shares.Keys.ToDictionary(x => x, x => new List<(int stakerId, int cycle, long slashed)>());
+            foreach (var (bakerId, bakerRequests) in slashedRequests)
+            {
+                var ops = opsByBaker[bakerId];
+                foreach (var (stakerId, cycle, totalSlashed) in bakerRequests)
+                {
+                    var rest = totalSlashed;
+                    foreach (var op in ops)
+                    {
+                        var slashed = (long)Math.Floor(totalSlashed * shares[op]);
+                        res[op].Add((stakerId, cycle, slashed));
+                        rest -= slashed;
+                    }
+                    var last = res[ops[^1]][^1];
+                    res[ops[^1]][^1] = (last.stakerId, last.cycle, last.slashed + rest);
+                }
+            }
+
+            return res;
+        }
+
+        async Task<List<StakingUpdate>> ParseStakingUpdates(
+            L1Block block,
+            IOperation operation,
+            List<(int stakerId, int cycle, long slashed)> unstakeRequests,
+            IEnumerable<JsonElement> balanceUpdates)
+        {
+            var bakerAddress = balanceUpdates
+                .Where(x => x.RequiredString("kind") == "freezer")
+                .Select(GetFreezerBaker)
+                .First();
+            var baker = Cache.Addresses.GetExistingBaker(bakerAddress);
+            var res = new List<StakingUpdate>();
+
+            var slashedOwn = balanceUpdates
+                .Where(x => x.RequiredString("kind") == "freezer" && x.RequiredString("category") == "deposits" && IsOwnStake(x))
+                .Sum(x => -x.RequiredInt64("change"));
+
+            var slashedExternal = balanceUpdates
+                .Where(x => x.RequiredString("kind") == "freezer" && x.RequiredString("category") == "deposits" && IsExternalStake(x))
+                .Sum(x => -x.RequiredInt64("change"));
+
+            var slashedUnstaked = balanceUpdates
+                .Where(x => x.RequiredString("kind") == "freezer" && x.RequiredString("category") == "unstaked_deposits" && IsExternalStake(x))
+                .GroupBy(x => x.RequiredInt32("cycle"))
+                .ToDictionary(x => x.Key, x => x.Sum(u => -u.RequiredInt64("change")));
+
+            #region diagnostics
+            if (slashedOwn == 0)
+                throw new Exception("Baker own stake wasn't slashed");
+
+            var burnedUpdate = balanceUpdates.SingleOrDefault(x => x.RequiredString("kind") == "burned");
+            var burned = burnedUpdate.ValueKind != JsonValueKind.Undefined
+                ? burnedUpdate.RequiredInt64("change")
+                : 0;
+
+            var rewardUpdate = balanceUpdates.SingleOrDefault(x => x.RequiredString("kind") == "contract");
+            var reward = rewardUpdate.ValueKind != JsonValueKind.Undefined
+                ? rewardUpdate.RequiredInt64("change")
+                : 0;
+
+            var totalSlashed = slashedOwn + slashedExternal;
+            if (slashedUnstaked.Count > 0)
+                totalSlashed += slashedUnstaked.Sum(x => x.Value);
+
+            if (totalSlashed != burned + reward)
+                throw new Exception("Wrong slashing balance updates");
+
+            if (balanceUpdates.Where(x => x.RequiredString("kind") == "freezer").Select(GetFreezerBaker).ToHashSet().Count != 1)
+                throw new Exception("Wrong slashing balance updates");
+            #endregion
+
+            #region slash own stake
+            if (slashedOwn > 0)
+            {
+                var stakingUpdate = new StakingUpdate
+                {
+                    Id = Cache.Chain.NextStakingUpdateId(),
+                    ChainId = block.ChainId,
+                    Level = block.Level,
+                    Timestamp = block.Timestamp,
+                    Cycle = block.Cycle,
+                    BakerId = baker.Id,
+                    StakerId = baker.Id,
+                    Type = StakingUpdateType.SlashStaked,
+                    Amount = slashedOwn
+                };
+                switch (operation)
+                {
+                    case DoubleBakingOperation: stakingUpdate.DoubleBakingOpId = operation.Id; break;
+                    case DoubleConsensusOperation: stakingUpdate.DoubleConsensusOpId = operation.Id; break;
+                    default: throw new InvalidOperationException();
+                }
+                res.Add(stakingUpdate);
+            }
+            #endregion
+
+            #region slash external stake
+            if (slashedExternal > 0)
+            {
+                var stakers = await Db.Addresses
+                    .OfType<L1User>()
+                    .Where(x => x.BakerId != null && x.BakerId == baker.Id && x.StakedPseudotokens != null)
+                    .OrderBy(x => x.Id)
+                    .ToListAsync();
+
+                var newExternalStake = baker.ExternalStakedBalance - slashedExternal;
+
+                var updates = new List<StakingUpdate>(stakers.Count);
+                foreach (var staker in stakers)
+                {
+                    Cache.Addresses.Add(staker);
+
+                    var prevStake = staker.StakedPseudotokens != baker.IssuedPseudotokens
+                        ? (long)((BigInteger)baker.ExternalStakedBalance * staker.StakedPseudotokens!.Value / baker.IssuedPseudotokens!.Value)
+                        : baker.ExternalStakedBalance;
+
+                    var newStake = staker.StakedPseudotokens != baker.IssuedPseudotokens
+                        ? (long)((BigInteger)newExternalStake * staker.StakedPseudotokens!.Value / baker.IssuedPseudotokens!.Value)
+                        : newExternalStake;
+
+                    if (prevStake != newStake)
+                    {
+                        updates.Add(new StakingUpdate
+                        {
+                            Id = Cache.Chain.NextStakingUpdateId(),
+                            ChainId = block.ChainId,
+                            Level = block.Level,
+                            Timestamp = block.Timestamp,
+                            Cycle = block.Cycle,
+                            BakerId = baker.Id,
+                            StakerId = staker.Id,
+                            Type = StakingUpdateType.SlashStaked,
+                            Amount = prevStake - newStake
+                        });
+                    }
+                }
+
+                switch (operation)
+                {
+                    case DoubleBakingOperation:
+                        foreach (var update in updates)
+                            update.DoubleBakingOpId = operation.Id;
+                        break;
+                    case DoubleConsensusOperation:
+                        foreach (var update in updates)
+                            update.DoubleConsensusOpId = operation.Id;
+                        break;
+                    default: throw new InvalidOperationException();
+                }
+
+                var actuallySlashed = updates.Sum(x => x.Amount);
+                if (actuallySlashed != slashedExternal)
+                    updates[^1].RoundingError = actuallySlashed - slashedExternal;
+
+                res.AddRange(updates);
+            }
+            #endregion
+
+            #region slash unstaked
+            if (unstakeRequests.Count > 0)
+            {
+                var updates = new List<StakingUpdate>(unstakeRequests.Count);
+                foreach (var (stakerId, cycle, amount) in unstakeRequests.OrderBy(x => x.cycle).ThenBy(x => x.stakerId))
+                {
+                    updates.Add(new StakingUpdate
+                    {
+                        Id = Cache.Chain.NextStakingUpdateId(),
+                        ChainId = block.ChainId,
+                        Level = block.Level,
+                        Timestamp = block.Timestamp,
+                        Cycle = cycle,
+                        BakerId = baker.Id,
+                        StakerId = stakerId,
+                        Type = StakingUpdateType.SlashUnstaked,
+                        Amount = amount
+                    });
+                }
+
+                switch (operation)
+                {
+                    case DoubleBakingOperation:
+                        foreach (var update in updates)
+                            update.DoubleBakingOpId = operation.Id;
+                        break;
+                    case DoubleConsensusOperation:
+                        foreach (var update in updates)
+                            update.DoubleConsensusOpId = operation.Id;
+                        break;
+                    default: throw new InvalidOperationException();
+                }
+
+                foreach (var cycle in unstakeRequests.Select(x => x.cycle).ToHashSet())
+                {
+                    var slashed = slashedUnstaked.TryGetValue(cycle, out var v) ? v : 0;
+                    var actuallySlashed = unstakeRequests.Where(x => x.cycle == cycle).Sum(x => x.slashed);
+                    if (actuallySlashed != slashed)
+                        updates.Last(x => x.Cycle == cycle).RoundingError = actuallySlashed - slashed;
+                }
+
+                res.AddRange(updates);
+            }
+            #endregion
+
+            return res;
+        }
+
+        protected virtual string GetFreezerBaker(JsonElement update)
+        {
+            return update.Required("staker").OptionalString("baker")
+                ?? update.Required("staker").RequiredString("delegate");
+        }
+
+        protected virtual bool IsOwnStake(JsonElement update)
+        {
+            return update.Required("staker").TryGetProperty("baker", out _);
+        }
+
+        protected virtual bool IsExternalStake(JsonElement update)
+        {
+            return update.Required("staker").TryGetProperty("delegate", out _);
+        }
+    }
+}
