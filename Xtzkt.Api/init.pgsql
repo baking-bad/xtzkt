@@ -19,6 +19,11 @@ SET statement_timeout = 0;
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+-- ActivationOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_ActivationOps_Hash"
+    ON "ActivationOps" ("Hash");
+
 -- Addresses
 
 -- needed for AddressCache
@@ -42,10 +47,15 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_CreatorId"
     ON "Addresses" ("CreatorId")
     WHERE "CreatorId" IS NOT NULL;
 
--- BigMaps
+-- AttestationOps
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BigMaps_Ptr"
-    ON "BigMaps" ("Ptr");
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_AttestationOps_Hash"
+    ON "AttestationOps" ("Hash");
+
+-- BallotOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BallotOps_Hash"
+    ON "BallotOps" ("Hash");
 
 -- BigMapKeys
 
@@ -71,9 +81,6 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BigMapUpdates_MigrationId"
 
 -- Blocks
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Blocks_Level"
-    ON "Blocks" ("Level");
-
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Blocks_ChainId_Timestamp"
     ON "Blocks" ("ChainId", "Timestamp");
 
@@ -83,6 +90,21 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Blocks_Hash"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Blocks_MichelsonHash"
     ON "Blocks" ("MichelsonHash")
     WHERE "MichelsonHash" IS NOT NULL;
+
+-- DalEntrapmentEvidenceOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DalEntrapmentEvidenceOps_Hash"
+    ON "DalEntrapmentEvidenceOps" ("Hash");
+
+-- DalPublishCommitmentOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DalPublishCommitmentOps_Hash"
+    ON "DalPublishCommitmentOps" ("Hash");
+
+-- DelegationOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DelegationOps_Hash"
+    ON "DelegationOps" ("Hash");
 
 -- DepositOps
 
@@ -95,6 +117,11 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_ReceiverId"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_ProxyId"
     ON "DepositOps" ("ProxyId")
     WHERE "ProxyId" IS NOT NULL;
+
+-- DrainDelegateOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DrainDelegateOps_Hash"
+    ON "DrainDelegateOps" ("Hash");
 
 -- Eip7702Delegations
 
@@ -132,6 +159,11 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_OriginationId"
     ON "Logs" ("OriginationId")
     WHERE "OriginationId" IS NOT NULL;
 
+-- NonceRevelationOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_NonceRevelationOps_Hash"
+    ON "NonceRevelationOps" ("Hash");
+
 -- OriginationOps
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_OriginationOps_Hash"
@@ -152,6 +184,16 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_OriginationOps_BakerId"
     ON "OriginationOps" ("BakerId")
     WHERE "BakerId" IS NOT NULL;
 
+-- PreattestationOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_PreattestationOps_Hash"
+    ON "PreattestationOps" ("Hash");
+
+-- ProposalOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_ProposalOps_Hash"
+    ON "ProposalOps" ("Hash");
+
 -- RegisterConstantOps
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_RegisterConstantOps_Hash"
@@ -167,6 +209,56 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_RevealOps_Hash"
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_RevealOps_SenderId"
     ON "RevealOps" ("SenderId");
+
+-- SetDelegateParametersOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SetDelegateParametersOps_Hash"
+    ON "SetDelegateParametersOps" ("Hash");
+
+-- SetDepositsLimitOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SetDepositsLimitOps_Hash"
+    ON "SetDepositsLimitOps" ("Hash");
+
+-- SmartRollupAddMessagesOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupAddMessagesOps_Hash"
+    ON "SmartRollupAddMessagesOps" ("Hash");
+
+-- SmartRollupCementOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupCementOps_Hash"
+    ON "SmartRollupCementOps" ("Hash");
+
+-- SmartRollupExecuteOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupExecuteOps_Hash"
+    ON "SmartRollupExecuteOps" ("Hash");
+
+-- SmartRollupOriginateOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupOriginateOps_Hash"
+    ON "SmartRollupOriginateOps" ("Hash");
+
+-- SmartRollupPublishOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupPublishOps_Hash"
+    ON "SmartRollupPublishOps" ("Hash");
+
+-- SmartRollupRecoverBondOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupRecoverBondOps_Hash"
+    ON "SmartRollupRecoverBondOps" ("Hash");
+
+-- SmartRollupRefuteOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_SmartRollupRefuteOps_Hash"
+    ON "SmartRollupRefuteOps" ("Hash");
+
+-- StakingOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_StakingOps_Hash"
+    ON "StakingOps" ("Hash");
 
 -- Storages
 
@@ -316,5 +408,15 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TransferTicketOps_TargetId"
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TransferTicketOps_TicketerId"
     ON "TransferTicketOps" ("TicketerId");
+
+-- UpdateSecondaryKeyOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_UpdateSecondaryKeyOps_Hash"
+    ON "UpdateSecondaryKeyOps" ("Hash");
+
+-- VdfRevelationOps
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_VdfRevelationOps_Hash"
+    ON "VdfRevelationOps" ("Hash");
 
 -- --
