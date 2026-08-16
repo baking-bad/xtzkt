@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 
@@ -49,6 +50,26 @@ namespace Xtzkt.Api.Services.Cache
                 Id = chain.Id,
                 ChainId = chain.ChainId,
                 Layer = Models.Enums.Layers.ToString((int)chain.Layer),
+            };
+        }
+
+        public ChainInfoParameter ResolveChainFilter(ChainInfoParameter? filter)
+        {
+            var id = filter?.Id + filter?.ChainId?.ToIdParameter(this);
+
+            var ids = new List<int>(2);
+            for (int i = 0; i < Chains.Length; i++)
+                if (Chains[i] is Chain chain && (id == null || id.Matches(chain.Id)))
+                    ids.Add(chain.Id);
+
+            return new ChainInfoParameter
+            {
+                Id = ids.Count switch
+                {
+                    0 => new() { Eq = -1 },
+                    1 => new() { Eq = ids[0] },
+                    _ => new() { In = ids }
+                }
             };
         }
 

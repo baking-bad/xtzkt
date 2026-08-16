@@ -23,21 +23,27 @@ public class DepositRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(DepositOperationFilter filter)
+    async Task<bool> ProcessFilters(DepositOperationFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Receiver?.Hash != null)
             filter.Receiver.Id += await filter.Receiver.Hash.ToIdParameter(_addressCache, chainId);
 
         if (filter.Proxy?.Hash != null)
             filter.Proxy.Id += await filter.Proxy.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(DepositOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -97,7 +103,8 @@ public class DepositRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().OfType<Data.Models.XChain>().Sum(x => x.DepositOpsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

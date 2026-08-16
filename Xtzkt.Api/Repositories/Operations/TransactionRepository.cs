@@ -23,10 +23,13 @@ public class TransactionRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(TransactionOperationFilter filter)
+    async Task<bool> ProcessFilters(TransactionOperationFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Sender?.Hash != null)
             filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
@@ -42,11 +45,14 @@ public class TransactionRepository(
 
         if (filter.Gateway?.Hash != null)
             filter.Gateway.Id += await filter.Gateway.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TransactionOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -178,7 +184,8 @@ public class TransactionRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.TransactionOpsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

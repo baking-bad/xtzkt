@@ -24,14 +24,16 @@ public class BlockRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    void ProcessFilters(BlockFilter filter)
+    bool ProcessFilters(BlockFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        return filter.Chain.Id!.Eq != -1;
     }
 
     async Task<IEnumerable<dynamic>> Query(BlockFilter filter, Pagination pagination, Selection? selection = null)
     {
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -102,7 +104,8 @@ public class BlockRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.BlocksCount);
 
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
@@ -121,7 +124,8 @@ public class BlockRepository(
 
     internal async Task<IEnumerable<(Data.Models.AllOperations Operations, Data.Models.AllBlockEvents Events)>> GetMasks(BlockFilter filter)
     {
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return [];
 
         var (query, parameters) = new SqlBuilder()
             .Select([@"""Operations""", @"""Events"""])

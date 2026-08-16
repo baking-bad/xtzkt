@@ -18,14 +18,16 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
         { "firstLevel", (@"""FirstLevel""", "integer") },
     };
 
-    void ProcessFilters(ProtocolFilter filter)
+    bool ProcessFilters(ProtocolFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        return filter.Chain.Id!.Eq != -1;
     }
 
     async Task<IEnumerable<dynamic>> Query(ProtocolFilter filter, Pagination pagination, Selection? selection = null)
     {
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -131,7 +133,8 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.ProtocolsCount);
 
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

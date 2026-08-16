@@ -1040,7 +1040,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             }
 
             if (sort.Cols[^1].field != spec.PrimaryKey)
-                _sorting.Add((spec.PrimaryKey, spec[spec.PrimaryKey].column, true));
+                _sorting.Add((spec.PrimaryKey, spec[spec.PrimaryKey].column, sort.Cols[^1].asc));
         }
         else
         {
@@ -1056,7 +1056,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (cursor.Cols.Count > _sorting.Count)
                 throw new BadRequestException(nameof(Pagination.Cursor), "Cursor must match sort");
 
-            var values = new List<(object, string)>(cursor.Cols.Count);
+            var values = new List<(object Value, string Type)>(cursor.Cols.Count);
             for (int i = 0; i < cursor.Cols.Count; i++)
             {
                 var (field, _, _) = _sorting[i];
@@ -1084,7 +1084,17 @@ public class SqlBuilder(SqlBuilder? _root = null)
                     : $"{c} {o} {p}::{t}";
             }
 
-            _filters.Add(BuildFilter(values, 0));
+            var asc = _sorting[0].asc;
+            if (values.Count == 1 || _sorting.Take(values.Count).All(x => x.asc == asc))
+            {
+                var cols = string.Join(", ", _sorting.Take(values.Count).Select(x => x.column));
+                var vals = string.Join(", ", values.Select(x => $"{Param(x.Value)}::{x.Type}"));
+                _filters.Add($"({cols}) {(asc ? ">" : "<")} ({vals})");
+            }
+            else
+            {
+                _filters.Add(BuildFilter(values, 0));
+            }
         }
         return this;
     }

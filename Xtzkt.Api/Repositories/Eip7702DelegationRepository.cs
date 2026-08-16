@@ -20,10 +20,13 @@ public class Eip7702DelegationRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(Eip7702DelegationFilter filter)
+    async Task<bool> ProcessFilters(Eip7702DelegationFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Sender?.Hash != null)
             filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
@@ -36,11 +39,14 @@ public class Eip7702DelegationRepository(
 
         if (filter.Delegate?.Hash != null)
             filter.Delegate.Id += await filter.Delegate.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(Eip7702DelegationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -92,7 +98,8 @@ public class Eip7702DelegationRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().OfType<Data.Models.XChain>().Sum(x => x.Eip7702DelegationCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

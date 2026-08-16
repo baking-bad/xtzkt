@@ -22,18 +22,24 @@ public class LogRepository(
         { "timestamp", (@"l.""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(LogFilter filter)
+    async Task<bool> ProcessFilters(LogFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Address?.Hash != null)
             filter.Address.Id += await filter.Address.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(LogFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -119,7 +125,8 @@ public class LogRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.LogsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var sql = new SqlBuilder()
             .Select("COUNT(*)")

@@ -23,18 +23,24 @@ public class MigrationRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(MigrationOperationFilter filter)
+    async Task<bool> ProcessFilters(MigrationOperationFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Account?.Hash != null)
             filter.Account.Id += await filter.Account.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(MigrationOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -83,7 +89,8 @@ public class MigrationRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.MigrationOpsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

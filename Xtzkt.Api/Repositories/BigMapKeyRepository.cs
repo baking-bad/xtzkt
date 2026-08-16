@@ -26,8 +26,11 @@ public class BigMapKeyRepository(
 
     async Task<bool> ProcessFilters(BigMapKeyFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.BigMap?.Contract?.Hash != null)
             filter.BigMap.Contract.Id += await filter.BigMap.Contract.Hash.ToIdParameter(_addressCache, chainId);

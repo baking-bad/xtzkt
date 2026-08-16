@@ -26,21 +26,27 @@ public class TicketRepository(
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
     };
 
-    async Task ProcessFilters(TicketFilter filter)
+    async Task<bool> ProcessFilters(TicketFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Ticketer?.Hash != null)
             filter.Ticketer.Id += await filter.Ticketer.Hash.ToIdParameter(_addressCache, chainId);
 
         if (filter.FirstMinter?.Hash != null)
             filter.FirstMinter.Id += await filter.FirstMinter.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TicketFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -115,7 +121,8 @@ public class TicketRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.TicketsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

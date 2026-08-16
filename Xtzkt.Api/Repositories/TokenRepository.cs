@@ -27,18 +27,24 @@ public class TokenRepository(
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
     };
 
-    async Task ProcessFilters(TokenFilter filter)
+    async Task<bool> ProcessFilters(TokenFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Contract?.Hash != null)
             filter.Contract.Id += await filter.Contract.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TokenFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -114,7 +120,8 @@ public class TokenRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.TokensCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

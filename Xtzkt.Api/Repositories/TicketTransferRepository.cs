@@ -23,10 +23,13 @@ public class TicketTransferRepository(
         { "timestamp", (@"tt.""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(TicketTransferFilter filter)
+    async Task<bool> ProcessFilters(TicketTransferFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.From?.Hash != null)
             filter.From.Id += await filter.From.Hash.ToIdParameter(_addressCache, chainId);
@@ -36,11 +39,14 @@ public class TicketTransferRepository(
 
         if (filter.Ticket?.Ticketer?.Hash != null)
             filter.Ticket.Ticketer.Id += await filter.Ticket.Ticketer.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TicketTransferFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         var counter = 0;
@@ -168,7 +174,8 @@ public class TicketTransferRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.TicketTransfersCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var sql = new SqlBuilder()
             .Select("COUNT(*)")

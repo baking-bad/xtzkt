@@ -23,10 +23,13 @@ public class OriginationRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task ProcessFilters(OriginationOperationFilter filter)
+    async Task<bool> ProcessFilters(OriginationOperationFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Sender?.Hash != null)
             filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
@@ -39,11 +42,14 @@ public class OriginationRepository(
 
         if (filter.Baker?.Hash != null)
             filter.Baker.Id += await filter.Baker.Hash.ToIdParameter(_addressCache, chainId);
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(OriginationOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -135,7 +141,8 @@ public class OriginationRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.OriginationOpsCount);
 
-        await ProcessFilters(filter);
+        if (!await ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

@@ -121,54 +121,6 @@ namespace Xtzkt.Indexers.TezosX
                     {
                         await Commit(block);
                     }
-
-                    #region debug
-                    if (false)
-                    {
-                        if (block.Batches.Count != 0)
-                        {
-                            var addresses = Db.ChangeTracker.Entries()
-                                .Where(x => x.Entity is XAddress)
-                                .Select(x => x.Entity)
-                                .OfType<XAddress>()
-                                .ToList();
-
-                            var evmAddresses = addresses
-                                .Where(x => x is XEvmAddress)
-                                .OfType<XEvmAddress>()
-                                .ToList();
-
-                            if (evmAddresses.Count != 0)
-                            {
-                                var balances = await EvmRpc.DebugBalances(evmAddresses.Select(x => x.Hash), state.Level);
-                                for (int j = 0; j < balances.Length; j++)
-                                {
-                                    var addr = evmAddresses[j].Hash;
-                                    var diff = evmAddresses[j].Balance - balances[j];
-                                    if (diff != 0)
-                                        ;
-                                }
-                            }
-
-                            var michAddresses = addresses
-                                .Where(x => x is XMichelsonAddress)
-                                .OfType<XMichelsonAddress>()
-                                .ToList();
-
-                            if (michAddresses.Count != 0)
-                            {
-                                var balances = await MichelsonRpc.DebugBalances(michAddresses.Select(x => x.Hash), state.Level);
-                                for (int j = 0; j < balances.Length; j++)
-                                {
-                                    var addr = michAddresses[j].Hash;
-                                    var diff = michAddresses[j].Balance - balances[j];
-                                    if (diff != 0)
-                                        ;
-                                }
-                            }
-                        }
-                    }
-                    #endregion
                 }
 
                 Logger.LogDebug("Save changes");

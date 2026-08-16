@@ -27,8 +27,11 @@ public class TokenBalanceRepository(
 
     async Task<bool> ProcessFilters(TokenBalanceFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
-        var chainId = filter.Chain?.Id?.Eq;
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        var chainId = filter.Chain.Id!.Eq;
+
+        if (chainId == -1)
+            return false;
 
         if (filter.Address?.Hash != null)
             filter.Address.Id += await filter.Address.Hash.ToIdParameter(_addressCache, chainId);

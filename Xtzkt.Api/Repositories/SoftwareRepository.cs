@@ -17,14 +17,16 @@ public class SoftwareRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
         { "lastLevel",  (@"""LastLevel""",  "integer") },
     };
 
-    void ProcessFilters(SoftwareFilter filter)
+    bool ProcessFilters(SoftwareFilter filter)
     {
-        filter.Chain?.Id += filter.Chain.ChainId?.ToIdParameter(_chainCache);
+        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
+        return filter.Chain.Id!.Eq != -1;
     }
 
     async Task<IEnumerable<dynamic>> Query(SoftwareFilter filter, Pagination pagination, Selection? selection = null)
     {
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return [];
 
         var columns = new HashSet<string>();
         if (selection != null)
@@ -67,7 +69,8 @@ public class SoftwareRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
         if (filter.IsEmpty())
             return _chainCache.Get().OfType<Data.Models.L1Chain>().Sum(x => x.SoftwareCounter);
 
-        ProcessFilters(filter);
+        if (!ProcessFilters(filter))
+            return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")

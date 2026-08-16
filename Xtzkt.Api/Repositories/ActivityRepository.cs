@@ -271,7 +271,9 @@ public class ActivityRepository(
 
         if (!sort.Cols.Any(x => x.field == "id"))
         {
-            result = result.ThenBy(x => x.Id);
+            result = sort.Cols[^1].asc
+                ? result.ThenBy(x => x.Id)
+                : result.ThenByDescending(x => x.Id);
         }
 
         return result.Take(pagination.Limit);
