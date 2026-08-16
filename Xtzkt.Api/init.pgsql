@@ -178,7 +178,51 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Storages_MigrationId"
     ON "Storages" ("MigrationId")
     WHERE "MigrationId" IS NOT NULL;
 
+-- Tickets
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tickets_ContentHash"
+    ON "Tickets" ("ContentHash");
+
+-- TicketBalances
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketBalances_TicketId_Id"
+    ON "TicketBalances" ("TicketId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketBalances_TicketerId_Id"
+    ON "TicketBalances" ("TicketerId", "Id");
+
+-- TicketTransfers
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_FromId_Id"
+    ON "TicketTransfers" ("FromId", "Id")
+    WHERE "FromId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_ToId_Id"
+    ON "TicketTransfers" ("ToId", "Id")
+    WHERE "ToId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_TicketId_Id"
+    ON "TicketTransfers" ("TicketId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_TicketerId_Id"
+    ON "TicketTransfers" ("TicketerId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_TransactionId"
+    ON "TicketTransfers" ("TransactionId")
+    WHERE "TransactionId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_TransferTicketId"
+    ON "TicketTransfers" ("TransferTicketId")
+    WHERE "TransferTicketId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TicketTransfers_SmartRollupExecuteId"
+    ON "TicketTransfers" ("SmartRollupExecuteId")
+    WHERE "SmartRollupExecuteId" IS NOT NULL;
+
 -- Tokens
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tokens_ContractId_Id"
+    ON "Tokens" ("ContractId", "Id");
 
 -- search by name
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tokens_Name_trgm"
@@ -194,6 +238,43 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tokens_Symbol_trgm"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tokens_Symbol_lower"
     ON "Tokens" (lower("Symbol") text_pattern_ops)
     WHERE "Symbol" IS NOT NULL;
+
+-- TokenBalances
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenBalances_TokenId_Balance_Id"
+    ON "TokenBalances" ("TokenId", "Id")
+    WHERE "Balance" != 0;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenBalances_ContractId_Id"
+    ON "TokenBalances" ("ContractId", "Id");
+
+-- TokenTransfers
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_FromId_Id"
+    ON "TokenTransfers" ("FromId", "Id")
+    WHERE "FromId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_ToId_Id"
+    ON "TokenTransfers" ("ToId", "Id")
+    WHERE "ToId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_TokenId_Id"
+    ON "TokenTransfers" ("TokenId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_ContractId_Id"
+    ON "TokenTransfers" ("ContractId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_TransactionId"
+    ON "TokenTransfers" ("TransactionId")
+    WHERE "TransactionId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_OriginationId"
+    ON "TokenTransfers" ("OriginationId")
+    WHERE "OriginationId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TokenTransfers_MigrationId"
+    ON "TokenTransfers" ("MigrationId")
+    WHERE "MigrationId" IS NOT NULL;
 
 -- TransactionOps
 
