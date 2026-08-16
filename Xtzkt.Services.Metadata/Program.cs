@@ -26,7 +26,7 @@ builder.Logging.AddConsole();
 #endregion
 
 #region services
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetDbConnectionString();
 builder.Services.AddDbContextFactory<XtzktContext>(options =>
 {
     options.UseNpgsql(connectionString);

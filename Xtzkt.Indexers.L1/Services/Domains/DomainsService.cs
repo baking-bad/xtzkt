@@ -4,6 +4,7 @@ using Netezos.Encoding;
 using Npgsql;
 using System.Text;
 using System.Text.Json;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
@@ -12,7 +13,7 @@ namespace Xtzkt.Indexers.L1.Services.Domains
 {
     public class DomainsService(IConfiguration config, ILogger<DomainsService> logger) : BackgroundService
     {
-        readonly string ConnectionString = config.GetDefaultConnectionString();
+        readonly string ConnectionString = config.GetDbConnectionString();
         readonly DomainsConfig Config = config.GetDomainsConfig();
         readonly ChainConfig Chain = config.GetChainConfig();
         readonly ILogger Logger = logger;

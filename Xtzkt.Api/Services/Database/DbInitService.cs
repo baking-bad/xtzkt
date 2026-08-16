@@ -1,6 +1,7 @@
 using Dapper;
 using Npgsql;
 using System.Text;
+using Xtzkt.Data;
 
 namespace Xtzkt.Api.Services.Database;
 
@@ -14,7 +15,7 @@ public class DbInitService(
 
     readonly NpgsqlDataSource _dataSource = dataSource;
     readonly ILogger _logger = logger;
-    readonly string? _script = config.GetDbInitConfig().Script is string scriptPath
+    readonly string? _script = config.GetDbConfig().InitScript is string scriptPath
         ? Path.Combine(env.ContentRootPath, scriptPath)
         : null;
 
@@ -74,6 +75,8 @@ public class DbInitService(
 
             _logger.LogInformation("DB init script executed");
 
+            await CheckInvalidIndexes(db, stoppingToken);
+
             // re-read extensions after the init script
             await CheckExtensions(db, stoppingToken);
         }
@@ -81,6 +84,29 @@ public class DbInitService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "DbInitService crashed");
+        }
+    }
+
+    async Task CheckInvalidIndexes(NpgsqlConnection db, CancellationToken stoppingToken)
+    {
+        try
+        {
+            var invalidIndexes = await db.QueryAsync<string>("""
+                SELECT c.relname
+                FROM pg_index i
+                JOIN pg_class c ON c.oid = i.indexrelid
+                WHERE NOT i.indisvalid AND c.relname LIKE 'AX\_%'
+                ORDER BY c.relname
+                """);
+
+            if (invalidIndexes.Any())
+                _logger.LogWarning("Invalid indexes found: {indexes}. Drop them manually and restart the API to rebuild them.",
+                    string.Join(", ", invalidIndexes));
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check DB indexes");
         }
     }
 

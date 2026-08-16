@@ -29,7 +29,7 @@ builder.Logging.AddConsole();
 
 #region services
 builder.Services.AddDbContext<XtzktContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetDbConnectionString()));
 
 builder.Services.AddCache(builder.Configuration);
 builder.Services.AddEvmNode();

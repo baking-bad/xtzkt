@@ -90,7 +90,7 @@ dotnet publish -o ~/xtzkt-indexer-tezosx
 
 #### Configure Tezos X indexer
 
-Edit the configuration file `~/xtzkt-indexer-tezosx/appsettings.json`. What you basically need is to adjust the `EvmNode.Endpoint`, `TezosNode.Endpoint` and `ConnectionStrings.DefaultConnection`, if needed.
+Edit the configuration file `~/xtzkt-indexer-tezosx/appsettings.json`. What you basically need is to adjust the `EvmNode.Endpoint`, `TezosNode.Endpoint` and `Db.ConnectionString`, if needed.
 
 #### Run Tezos X indexer
 
@@ -114,7 +114,7 @@ dotnet publish -o ~/xtzkt-indexer-l1
 
 #### Configure L1 indexer
 
-Edit the configuration file `~/xtzkt-indexer-l1/appsettings.json`. What you basically need is to adjust the `TezosNode.Endpoint` and `ConnectionStrings.DefaultConnection`, if needed.
+Edit the configuration file `~/xtzkt-indexer-l1/appsettings.json`. What you basically need is to adjust the `TezosNode.Endpoint` and `Db.ConnectionString`, if needed.
 
 #### Run L1 indexer
 
@@ -139,7 +139,7 @@ dotnet publish -o ~/xtzkt-api
 
 #### Configure API
 
-Edit the configuration file `~/xtzkt-api/appsettings.json`. What you basically need is to adjust the `ConnectionStrings.DefaultConnection`, if needed.
+Edit the configuration file `~/xtzkt-api/appsettings.json`. What you basically need is to adjust the `Db.ConnectionString`, if needed.
 
 #### Run API
 

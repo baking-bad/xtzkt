@@ -4,12 +4,16 @@
 --
 -- Conventions:
 --   * a blank line separates statements - not the semicolon;
+--   * the whole script runs on a single connection, so a SET at the top applies to all of it;
 --   * statements are grouped by table, one group per table;
 --   * name indexes AX_*, so they never collide with the indexers' IX_*;
 --   * use IF NOT EXISTS to avoid redundant work;
 --   * build CONCURRENTLY to avoid blocking indexers;
 --   * failed build can leave an INVALID index, which IF NOT EXISTS then skips forever - drop it manually.
 --
+
+-- the api caps statement_timeout, index builds must not be
+SET statement_timeout = 0;
 
 -- extensions
 

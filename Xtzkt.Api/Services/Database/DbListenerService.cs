@@ -3,6 +3,7 @@ using Npgsql;
 using System.Data;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Services.ResponseCache;
+using Xtzkt.Data;
 
 namespace Xtzkt.Api.Services.Database;
 
@@ -20,7 +21,7 @@ public class DbListenerService(
     #endregion
 
     readonly Lock Crit = new();
-    readonly List<int>[] StateChanges = [[], [], [], [], [], [], []];
+    readonly List<int>[] StateChanges = [[], [], [], [], [], [], [], []];
     Task StateNotifying = Task.CompletedTask;
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -29,8 +30,8 @@ public class DbListenerService(
         {
             _logger.LogInformation("DB listener started");
 
-            var connectionString = _config.GetConnectionString("DefaultConnection")
-                ?? throw new Exception("Connection string is missed");
+            // no statement timeout: this connection sits in LISTEN and must not be capped
+            var connectionString = _config.GetDbConnectionString(statementTimeout: false);
 
             using var db = new NpgsqlConnection(connectionString);
             db.Notification += OnNotification;

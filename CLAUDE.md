@@ -94,7 +94,7 @@ Indexes are split by consumer, and each consumer owns its own — an index decla
 |---|---|---|
 | `IX_` | Indexers (`Xtzkt.Indexers.*`) | `HasIndex` in `Xtzkt.Data/Models`, shipped in migrations |
 | `MX_` | `Xtzkt.Services.Metadata` | `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in `StoreService.Ensure*ResolverIndexes`, run at startup |
-| `AX_` | `Xtzkt.Api` | `init.db` script, per deployment — **not** in migrations |
+| `AX_` | `Xtzkt.Api` | `Xtzkt.Api/init.pgsql` script (`Db.InitScript`), run by `DbInitService` at startup, per deployment — **not** in migrations |
 
 So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actually uses. Before adding one there, find the query it serves; before removing one, check all three consumers. Write API queries as if their indexes existed rather than adding them to the models.
 
@@ -103,6 +103,8 @@ So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actuall
 Indexers and services read config in this order, each source overriding the previous one: `appsettings.json` → `appsettings.{Environment}.json` → environment variables → prefixed env vars (`XTZKT_L1_*` for L1, `XTZKT_TEZOSX_*` for TezosX, `XTZKT_API_*` for the API, `XTZKT_METADATA_*` for the metadata service) → `ASPNETCORE_*` env vars → command-line args.
 
 Every `Program.cs` builds that chain by hand after `builder.Configuration.Sources.Clear()`. The `AddEnvironmentVariables("ASPNETCORE_")` line is load-bearing and must not be dropped: `ASPNETCORE_URLS` / `ASPNETCORE_HTTP_PORTS` reach the `URLS` / `HTTP_PORTS` config keys only through that prefix, and without it the app silently ignores both and binds the default `localhost:5000` — which in a container means loopback-only, unreachable from outside.
+
+All four apps read their database settings from one shared `Db` section (`Xtzkt.Data/DbConfig.cs`, bound via `GetDbConfig()`): `ConnectionString` carries no timeouts of its own — `CommandTimeout` (client-side, enforced by Npgsql) and `StatementTimeout` (server-side, enforced by postgres, `0` = off) are separate settings that `GetConnectionString()` bakes into the string. Call it with `statementTimeout: false` for connections that legitimately run long: the API does that for its EF contexts (cache warm-up reads whole tables) and for the `LISTEN` connection. `DbInitService` shares the API's data source, which is why `init.pgsql` starts with `SET statement_timeout = 0` — a capped `CREATE INDEX CONCURRENTLY` leaves an INVALID index behind. Indexers leave `StatementTimeout` at 0, since it would cap migrations too.
 
 `Chain.Id` setting must be an integer (0–7) and must be unique for every indexer instance.
 

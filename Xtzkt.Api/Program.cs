@@ -34,15 +34,15 @@ builder.Logging.AddConsole();
 #endregion
 
 #region services
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContextFactory<XtzktContext>(options =>
 {
-    options.UseNpgsql(connectionString);
+    // XtzktContext is used internally, so no statement timeout here
+    options.UseNpgsql(builder.Configuration.GetDbConnectionString(statementTimeout: false));
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 builder.Services.AddSingleton(serviceProvider =>
 {
-    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetDbConnectionString());
 #pragma warning disable NPG9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     dataSourceBuilder.AddTypeInfoResolverFactory(new BigIntegerNumericTypeInfoResolverFactory());
 #pragma warning restore NPG9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -94,6 +94,7 @@ builder.Services.AddTransient<SearchRepository>();
 builder.Services.AddControllers(options =>
     {
         options.Filters.Add<BadRequestExceptionFilter>();
+        options.Filters.Add<TimeoutExceptionFilter>();
     })
     .AddJsonOptions(options =>
     {
