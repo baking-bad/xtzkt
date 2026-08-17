@@ -75,7 +75,7 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
                     case "proposalQuorum":                     columns.Add(@"""ProposalQuorum"""); break;
                     case "ballotQuorumMin":                    columns.Add(@"""BallotQuorumMin"""); break;
                     case "ballotQuorumMax":                    columns.Add(@"""BallotQuorumMax"""); break;
-                    case "lBToggleThreshold":                  columns.Add(@"""LBToggleThreshold"""); break;
+                    case "lbToggleThreshold":                  columns.Add(@"""LBToggleThreshold"""); break;
                     case "consensusThreshold":                 columns.Add(@"""ConsensusThreshold"""); break;
                     case "minParticipationNumerator":          columns.Add(@"""MinParticipationNumerator"""); break;
                     case "minParticipationDenominator":        columns.Add(@"""MinParticipationDenominator"""); break;
@@ -377,7 +377,7 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
                 case "ballotQuorumMax":
                     foreach (var row in rows) result[j++][i] = row.BallotQuorumMax;
                     break;
-                case "lBToggleThreshold":
+                case "lbToggleThreshold":
                     foreach (var row in rows) result[j++][i] = row.LBToggleThreshold;
                     break;
                 case "consensusThreshold":

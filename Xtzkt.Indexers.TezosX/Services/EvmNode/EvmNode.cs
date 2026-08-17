@@ -7,7 +7,7 @@ using Xtzkt.Utils.Network;
 
 namespace Xtzkt.Indexers.TezosX.Services;
 
-public class EvmNode : IDisposable
+public sealed class EvmNode : IDisposable
 {
     readonly TzktClient _client;
     readonly ILogger _logger;

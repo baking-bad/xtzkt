@@ -17,7 +17,7 @@ public sealed class TzktClient : IDisposable
 
     readonly static JsonDocumentOptions DefaultDocumentOptions = new()
     {
-        MaxDepth = 100_000
+        MaxDepth = 100_000,
     };
     #endregion
 

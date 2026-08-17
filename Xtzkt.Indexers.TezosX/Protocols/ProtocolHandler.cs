@@ -11,7 +11,13 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX
 {
-    public abstract class ProtocolHandler(XtzktContext db, CacheService cache, IServiceProvider services, IConfiguration config, ILogger logger, IMetrics metrics)
+    public abstract class ProtocolHandler(
+        XtzktContext db,
+        CacheService cache,
+        IServiceProvider services,
+        IConfiguration config,
+        ILogger logger,
+        IMetrics metrics)
     {
         public readonly XtzktContext Db = db;
         public readonly CacheService Cache = cache;

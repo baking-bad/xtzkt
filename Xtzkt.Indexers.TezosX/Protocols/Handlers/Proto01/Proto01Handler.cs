@@ -12,7 +12,15 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
-class Proto01Handler(EvmNode evmRpc, TezosNode michelsonRpc, XtzktContext db, CacheService cache, IServiceProvider services, IConfiguration config, ILogger<Proto01Handler> logger, IMetrics metrics) : ProtocolHandler(db, cache, services, config, logger, metrics)
+class Proto01Handler(
+    EvmNode evmRpc,
+    TezosNode michelsonRpc,
+    XtzktContext db,
+    CacheService cache,
+    IServiceProvider services,
+    IConfiguration config,
+    ILogger<Proto01Handler> logger,
+    IMetrics metrics) : ProtocolHandler(db, cache, services, config, logger, metrics)
 {
     public override int Version => 1;
     public override IEvmRpc EvmRpc { get; } = new EvmRpc(evmRpc);

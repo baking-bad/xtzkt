@@ -55,7 +55,26 @@ public class ProtoMigrator(ProtocolHandler proto) : IMigrator
         #endregion
 
         if (protocol.Hash == "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a")
+        {
+            // update michelson protocol
             protocol.MichelsonHash = state.MichelsonProtocol = "PsUshuai9QapM5TGj1JpuVGkdxz5GykdnEvS6Rh8SUVrARvZLCY";
+        }
+        else if (protocol.Hash == "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f")
+        {
+            // amend sequencer pool balance
+            if (await Cache.Addresses.GetOrDefaultAsync("0x433df42a81f9a4a1480e92641b694399a83647ca") is XEvmUser sp)
+            {
+                Db.TryAttach(sp);
+                sp.Balance = (await Proto.EvmRpc.GetBalance(sp.Hash, Context.Block.Level)).RequiredHexBigInteger();
+            }
+
+            // amend broken alias counter
+            if (await Cache.Addresses.GetOrDefaultAsync("0xa6312daed8fdc322bd56ef236194588133bfea0d") is XEvmAlias a)
+            {
+                Db.TryAttach(a);
+                a.Counter = (await Proto.EvmRpc.GetTransactionCount(a.Hash, Context.Block.Level)).RequiredHexInt32() - 1;
+            }
+        }
     }
 
     public async Task RevertContext(XChain state)

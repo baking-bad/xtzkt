@@ -179,6 +179,11 @@ public static class JsonElementExtension
             : throw new SerializationException($"Missed required hex timestamp");
     }
 
+    public static int RequiredHexInt32(this JsonElement el)
+    {
+        return HexNumber.GetInt32(el.RequiredString());
+    }
+
     public static int RequiredHexInt32(this JsonElement el, string name)
     {
         return el.TryGetProperty(name, out var prop) ? HexNumber.GetInt32(prop.RequiredString())

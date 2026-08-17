@@ -29,7 +29,7 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
             HardEvmBlockGasLimit = 2L << 50,
             HardEvmOperationGasLimit = 2L << 50,
             DaFeePerByte = 4,
-            DaFeePerByte18 = new System.Numerics.BigInteger(4_000_000_000_000),
+            DaFeePerByte18 = new BigInteger(4_000_000_000_000),
         };
 
         Context.Block.ProtocolId = protocol.Id;
