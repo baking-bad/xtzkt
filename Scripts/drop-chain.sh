@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deletes all data of a single chain from an xtzkt database, so it can be reindexed from scratch
-# without touching the other chains. Tables are taken from the catalog (every public table with an
-# integer "ChainId" column), so new tables are covered automatically.
-#
-# The "Chains" row is deleted by "Id" ("ChainId" there is the textual network id, not a reference):
-# it holds the id counters, the indexing head and the metadata service cursor, and the indexer
-# re-creates it, zeroed, on the next start. "Assets" is left alone - it is curated cross-chain data.
-#
-# There are no foreign keys in the schema, so the deletion order doesn't matter. Everything runs in
-# a single transaction. Stop the indexer of that chain first.
+# Deletes all data of a single chain from an xtzkt database.
 #
 # Usage: ./drop-chain.sh <database> <chain-id>
 # Host/user/password are taken from the usual PGHOST/PGPORT/PGUSER/PGPASSWORD env vars.
