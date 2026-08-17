@@ -3,7 +3,6 @@ using Xtzkt.Api.Filters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Repositories;
 using Xtzkt.Api.Responses;
-using Xtzkt.Api.Services.ResponseCache;
 
 namespace Xtzkt.Api.Controllers.Chains;
 
@@ -11,7 +10,7 @@ namespace Xtzkt.Api.Controllers.Chains;
 [Tags("Chains")]
 [Route("v1/chains")]
 [Produces("application/json")]
-public class ChainsController(ChainRepository _chains, ResponseCacheService _responseCache) : ControllerBase
+public class ChainsController(ChainRepository _chains) : ControllerBase
 {
     /// <summary>
     /// Get chains
@@ -25,29 +24,15 @@ public class ChainsController(ChainRepository _chains, ResponseCacheService _res
     /// head level before querying anything level-based.
     /// </remarks>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Chain>>> Get(ChainFilter filter, Pagination pagination, Selection selection)
+    public ActionResult<IEnumerable<Chain>> Get(ChainFilter filter, Pagination pagination, Selection selection)
     {
-        var query = ResponseCacheService.BuildKey(Request.Path.Value,
-            ("filter", filter), ("pagination", pagination), ("selection", selection));
-
-        if (_responseCache.TryGet(query, out var cached))
-            return this.Bytes(cached);
-
-        object res;
-        if (selection.Select == null)
-        {
-            res = await _chains.Get(filter, pagination);
-        }
-        else
-        {
-            res = new SelectionResponse
+        return Ok(selection.Select == null
+            ? _chains.Get(filter, pagination)
+            : new SelectionResponse
             {
                 Cols = selection.Cols(),
-                Rows = await _chains.Get(filter, pagination, selection)
-            };
-        }
-
-        return this.Bytes(_responseCache.Set(query, res));
+                Rows = _chains.Get(filter, pagination, selection)
+            });
     }
 
     /// <summary>
@@ -57,16 +42,8 @@ public class ChainsController(ChainRepository _chains, ResponseCacheService _res
     /// Returns the number of chains matching the filters — the same ones accepted by `/v1/chains`.
     /// </remarks>
     [HttpGet("count")]
-    public async Task<ActionResult<long>> GetCount(ChainFilter filter)
+    public ActionResult<long> GetCount(ChainFilter filter)
     {
-        var query = ResponseCacheService.BuildKey(Request.Path.Value,
-            ("filter", filter));
-
-        if (_responseCache.TryGet(query, out var cached))
-            return this.Bytes(cached);
-
-        var res = await _chains.Count(filter);
-
-        return this.Bytes(_responseCache.Set(query, res));
+        return _chains.Count(filter);
     }
 }

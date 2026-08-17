@@ -11,13 +11,14 @@ public class DbListenerService(
     ChainCache _chainCache,
     AddressCache _addressCache,
     ProtocolCache _protocolCache,
+    SoftwareCache _softwareCache,
     ResponseCacheService _responseCache,
     IConfiguration _config,
     ILogger<DbListenerService> _logger) : BackgroundService
 {
     #region channels
-    const string StateHashChanged = "state_hash_changed";
-    const string SyncStateChanged = "sync_state_changed";
+    const string ChainStateChanged = "chain_state_changed";
+    const string ChainSyncStateChanged = "chain_sync_state_changed";
     #endregion
 
     readonly Lock Crit = new();
@@ -31,7 +32,7 @@ public class DbListenerService(
             _logger.LogInformation("DB listener started");
 
             // no statement timeout: this connection sits in LISTEN and must not be capped
-            var connectionString = _config.GetDbConnectionString(statementTimeout: false);
+            var connectionString = new NpgsqlConnectionStringBuilder(_config.GetDbConnectionString(statementTimeout: false)) { KeepAlive = 30 }.ToString();
 
             using var db = new NpgsqlConnection(connectionString);
             db.Notification += OnNotification;
@@ -44,8 +45,8 @@ public class DbListenerService(
                     {
                         await db.OpenAsync(cancellationToken);
                         await db.ExecuteAsync($"""
-                            LISTEN {StateHashChanged};
-                            LISTEN {SyncStateChanged};
+                            LISTEN {ChainStateChanged};
+                            LISTEN {ChainSyncStateChanged};
                             """);
                         _logger.LogInformation("Db listener connected");
                     }
@@ -83,11 +84,12 @@ public class DbListenerService(
             return;
         }
 
-        if (e.Channel == StateHashChanged)
+        if (e.Channel == ChainStateChanged)
         {
             var data = e.Payload.Split(':', StringSplitOptions.RemoveEmptyEntries);
-            if (data.Length != 3 ||
+            if (data.Length != 2 ||
                 !int.TryParse(data[0], out var id) ||
+                (uint)id >= StateChanges.Length ||
                 !int.TryParse(data[1], out var level))
             {
                 _logger.LogCritical("Invalid trigger payload");
@@ -102,12 +104,13 @@ public class DbListenerService(
                     StateNotifying = NotifyStateAsync(); // async run
             }
         }
-        else if (e.Channel == SyncStateChanged)
+        else if (e.Channel == ChainSyncStateChanged)
         {
             var ind1 = e.Payload.IndexOf(':');
             var ind2 = e.Payload.IndexOf(':', ind1 + 1);
             if (ind2 == -1 ||
                 !int.TryParse(e.Payload[..ind1], out var id) ||
+                (uint)id >= StateChanges.Length ||
                 !int.TryParse(e.Payload[(ind1 + 1)..ind2], out var knownLevel) ||
                 !DateTimeOffset.TryParse(e.Payload[(ind2 + 1)..], out var syncedAt))
             {
@@ -145,12 +148,13 @@ public class DbListenerService(
             #endregion
 
             #region cache
-            var tasks = new List<Task>(1);
+            var tasks = new List<Task>(changes.Count * 4);
             foreach (var (chainid, minLevel, lastLevel) in changes)
             {
                 tasks.Add(_chainCache.OnStateChanged(chainid));
                 tasks.Add(_addressCache.OnStateChanged(chainid, minLevel, lastLevel));
                 tasks.Add(_protocolCache.OnStateChanged(chainid, minLevel, lastLevel));
+                tasks.Add(_softwareCache.OnStateChanged(chainid, minLevel, lastLevel));
             }
             await Task.WhenAll(tasks);
 

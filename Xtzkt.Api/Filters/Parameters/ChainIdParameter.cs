@@ -41,6 +41,12 @@ public class ChainIdParameter : INormalizable
     /// </summary>
     public List<string>? Ni { get; set; }
 
+    public bool Matches(string value) =>
+        (Eq == null || value == Eq) &&
+        (Ne == null || value != Ne) &&
+        (In == null || In.Contains(value)) &&
+        (Ni == null || !Ni.Contains(value));
+
     public Int32Parameter ToIdParameter(ChainCache cache)
     {
         var id = new Int32Parameter();

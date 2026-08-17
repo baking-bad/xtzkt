@@ -1,147 +1,115 @@
-﻿using Dapper;
-using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
-using Xtzkt.Api.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
-public class ChainRepository(ChainCache _chainCache, NpgsqlDataSource _dataSource)
+public class ChainRepository(ChainCache _chainCache)
 {
-    static readonly SortSpec SortSpec = new("id")
-    {
-        { "id", (@"""Id""", "integer") },
-    };
+    const string SortField = "id";
 
-    async Task<IEnumerable<dynamic>> Query(ChainFilter filter, Pagination pagination, Selection? selection = null)
+    IEnumerable<Data.Models.Chain> FromCache(ChainFilter filter)
     {
-        var columns = new HashSet<string>();
-        if (selection != null)
+        return _chainCache.Get().Where(x =>
+            (filter.Id?.Matches(x.Id) ?? true) &&
+            (filter.ChainId?.Matches(x.ChainId) ?? true) &&
+            (filter.Layer?.Matches((int)x.Layer) ?? true));
+    }
+
+    List<Data.Models.Chain> Query(ChainFilter filter, Pagination pagination)
+    {
+        #region sort
+        var asc = true;
+        if (pagination.Sort?.Cols.Count > 0)
         {
-            foreach (var field in selection.Fields())
-            {
-                switch (field.Field)
-                {
-                    case "layer": columns.Add(@"""Layer"""); break;
-                    // Chain
-                    case "id": columns.Add(@"""Id"""); break;
-                    case "chainId": columns.Add(@"""ChainId"""); break;
-                    case "network": columns.Add(@"""Network"""); break;
-                    case "level": columns.Add(@"""Level"""); break;
-                    case "timestamp": columns.Add(@"""Timestamp"""); break;
-                    case "hash": columns.Add(@"""Hash"""); break;
-                    case "knownLevel": columns.Add(@"""KnownLevel"""); break;
-                    case "syncedAt": columns.Add(@"""SyncedAt"""); break;
-                    // XChain
-                    case "rollupAddress": columns.Add(@"""RollupAddress"""); break;
-                    case "kernel": columns.Add(@"""Kernel"""); break;
-                    case "kernelUpgrade": columns.Add(@"""KernelUpgrade"""); break;
-                    case "kernelUpgradeTime": columns.Add(@"""KernelUpgradeTime"""); break;
-                    case "michelsonActivationLevel": columns.Add(@"""MichelsonActivationLevel"""); break;
-                    case "michelsonChainId": columns.Add(@"""MichelsonChainId"""); break;
-                    case "michelsonProtocol": columns.Add(@"""MichelsonProtocol"""); break;
-                    case "michelsonBlock": columns.Add(@"""MichelsonBlock"""); break;
-                    // L1Chain
-                    case "cycle": columns.Add(@"""Cycle"""); break;
-                    case "protocol": columns.Add(@"""Protocol"""); break;
-                    case "nextProtocol": columns.Add(@"""NextProtocol"""); break;
-                    case "votingEpoch": columns.Add(@"""VotingEpoch"""); break;
-                    case "votingPeriod": columns.Add(@"""VotingPeriod"""); break;
-                    default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
-                }
-            }
+            foreach (var (field, _) in pagination.Sort.Cols)
+                if (field != SortField)
+                    throw new BadRequestException(nameof(Pagination.Sort), $"Sort by {field} is not allowed");
+
+            asc = pagination.Sort.Cols[0].asc;
         }
+        #endregion
 
-        var (query, parameters) = new SqlBuilder()
-            .Select(columns)
-            .From(@"""Chains""")
-            .Where(@"""Id""", filter.Id)
-            .Where(@"""ChainId""", filter.ChainId)
-            .Where(@"""Layer""", filter.Layer)
-            .OrderBy(pagination.Sort, SortSpec)
-            .Cursor(pagination.Cursor, SortSpec)
-            .Offset(pagination.Offset)
-            .Limit(pagination.Limit)
-            .Build();
-
-        await using var db = await _dataSource.OpenConnectionAsync();
-        return await db.QueryAsync(query, parameters);
-    }
-
-    public async Task<long> Count(ChainFilter filter)
-    {
-        if (filter.IsEmpty())
-            return _chainCache.Get().Count;
-
-        var (query, parameters) = new SqlBuilder()
-            .Select("COUNT(*)")
-            .From(@"""Chains""")
-            .Where(@"""Id""", filter.Id)
-            .Where(@"""ChainId""", filter.ChainId)
-            .Where(@"""Layer""", filter.Layer)
-            .Build();
-
-        await using var db = await _dataSource.OpenConnectionAsync();
-        return await db.QueryFirstAsync<long>(query, parameters);
-    }
-
-    public async Task<IEnumerable<Chain>> Get(ChainFilter filter, Pagination pagination)
-    {
-        var rows = await Query(filter, pagination);
-        return rows.Select<dynamic, Chain>(row =>
+        #region cursor
+        int? cursor = null;
+        if (pagination.Cursor?.Cols?.Count > 0)
         {
-            if (row.Layer == (int)Data.Models.Layer.L1)
-                return new L1Chain
-                {
-                    Id = row.Id,
-                    ChainId = row.ChainId,
-                    Network = row.Network,
-                    Hash = row.Hash,
-                    Level = row.Level,
-                    Timestamp = row.Timestamp,
-                    KnownLevel = row.KnownLevel,
-                    SyncedAt = row.SyncedAt,
-                    Cycle = row.Cycle,
-                    NextProtocol = row.NextProtocol,
-                    Protocol = row.Protocol,
-                    VotingEpoch = row.VotingEpoch,
-                    VotingPeriod = row.VotingPeriod,
-                };
+            if (pagination.Cursor.Cols.Count > 1)
+                throw new BadRequestException(nameof(Pagination.Cursor), "Cursor must match sort");
 
-            if (row.Layer == (int)Data.Models.Layer.TezosX)
-                return new XChain
-                {
-                    Id = row.Id,
-                    ChainId = row.ChainId,
-                    Network = row.Network,
-                    Hash = row.Hash,
-                    Level = row.Level,
-                    Timestamp = row.Timestamp,
-                    KnownLevel = row.KnownLevel,
-                    SyncedAt = row.SyncedAt,
-                    Kernel = row.Kernel,
-                    KernelUpgrade = row.KernelUpgrade,
-                    KernelUpgradeTime = row.KernelUpgradeTime,
-                    MichelsonActivationLevel = row.MichelsonActivationLevel,
-                    MichelsonBlock = row.MichelsonBlock,
-                    MichelsonChainId = row.MichelsonChainId,
-                    MichelsonProtocol = row.MichelsonProtocol,
-                    RollupAddress = row.RollupAddress,
-                };
+            if (!int.TryParse(pagination.Cursor.Cols[0], out var value))
+                throw new BadRequestException(nameof(Pagination.Cursor), "Invalid cursor value");
 
-            throw new InvalidOperationException("Failed to read Chain");
+            cursor = value;
+        }
+        #endregion
+
+        var res = FromCache(filter);
+
+        if (cursor is int id)
+            res = asc ? res.Where(x => x.Id > id) : res.Where(x => x.Id < id);
+
+        res = asc ? res.OrderBy(x => x.Id) : res.OrderByDescending(x => x.Id);
+
+        return [.. res.Skip(pagination.Offset).Take(pagination.Limit)];
+    }
+
+    public long Count(ChainFilter filter)
+    {
+        return FromCache(filter).Count();
+    }
+
+    public IEnumerable<Chain> Get(ChainFilter filter, Pagination pagination)
+    {
+        return Query(filter, pagination).Select<Data.Models.Chain, Chain>(chain => chain switch
+        {
+            Data.Models.L1Chain l1 => new L1Chain
+            {
+                Id = l1.Id,
+                ChainId = l1.ChainId,
+                Network = l1.Network,
+                Hash = l1.Hash,
+                Level = l1.Level,
+                Timestamp = l1.Timestamp,
+                KnownLevel = l1.KnownLevel,
+                SyncedAt = l1.SyncedAt,
+                Cycle = l1.Cycle,
+                NextProtocol = l1.NextProtocol,
+                Protocol = l1.Protocol,
+                VotingEpoch = l1.VotingEpoch,
+                VotingPeriod = l1.VotingPeriod,
+            },
+            Data.Models.XChain x => new XChain
+            {
+                Id = x.Id,
+                ChainId = x.ChainId,
+                Network = x.Network,
+                Hash = x.Hash,
+                Level = x.Level,
+                Timestamp = x.Timestamp,
+                KnownLevel = x.KnownLevel,
+                SyncedAt = x.SyncedAt,
+                Kernel = x.Kernel,
+                KernelUpgrade = x.KernelUpgrade,
+                KernelUpgradeTime = x.KernelUpgradeTime,
+                MichelsonActivationLevel = x.MichelsonActivationLevel,
+                MichelsonBlock = x.MichelsonBlock,
+                MichelsonChainId = x.MichelsonChainId,
+                MichelsonProtocol = x.MichelsonProtocol,
+                RollupAddress = x.RollupAddress,
+            },
+            _ => throw new InvalidOperationException("Failed to read Chain")
         });
     }
 
-    public async Task<object?[][]> Get(ChainFilter filter, Pagination pagination, Selection selection)
+    public object?[][] Get(ChainFilter filter, Pagination pagination, Selection selection)
     {
-        var rows = await Query(filter, pagination, selection);
+        var rows = Query(filter, pagination);
 
         var fields = selection.Fields();
-        var result = new object?[rows.Count()][];
+        var result = new object?[rows.Count][];
         for (int i = 0; i < result.Length; i++)
             result[i] = new object?[fields.Count];
 
@@ -150,8 +118,7 @@ public class ChainRepository(ChainCache _chainCache, NpgsqlDataSource _dataSourc
             switch (fields[i].Full)
             {
                 case "layer":
-                    foreach (var row in rows)
-                        result[j++][i] = Layers.ToString(row.Layer);
+                    foreach (var row in rows) result[j++][i] = Layers.ToString((int)row.Layer);
                     break;
                 // Chain
                 case "id":
@@ -180,45 +147,46 @@ public class ChainRepository(ChainCache _chainCache, NpgsqlDataSource _dataSourc
                     break;
                 // XChain
                 case "rollupAddress":
-                    foreach (var row in rows) result[j++][i] = row.RollupAddress;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.RollupAddress;
                     break;
                 case "kernel":
-                    foreach (var row in rows) result[j++][i] = row.Kernel;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.Kernel;
                     break;
                 case "kernelUpgrade":
-                    foreach (var row in rows) result[j++][i] = row.KernelUpgrade;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.KernelUpgrade;
                     break;
                 case "kernelUpgradeTime":
-                    foreach (var row in rows) result[j++][i] = row.KernelUpgradeTime;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.KernelUpgradeTime;
                     break;
                 case "michelsonActivationLevel":
-                    foreach (var row in rows) result[j++][i] = row.MichelsonActivationLevel;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.MichelsonActivationLevel;
                     break;
                 case "michelsonChainId":
-                    foreach (var row in rows) result[j++][i] = row.MichelsonChainId;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.MichelsonChainId;
                     break;
                 case "michelsonProtocol":
-                    foreach (var row in rows) result[j++][i] = row.MichelsonProtocol;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.MichelsonProtocol;
                     break;
                 case "michelsonBlock":
-                    foreach (var row in rows) result[j++][i] = row.MichelsonBlock;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.XChain)?.MichelsonBlock;
                     break;
                 // L1Chain
                 case "cycle":
-                    foreach (var row in rows) result[j++][i] = row.Cycle;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.L1Chain)?.Cycle;
                     break;
                 case "protocol":
-                    foreach (var row in rows) result[j++][i] = row.Protocol;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.L1Chain)?.Protocol;
                     break;
                 case "nextProtocol":
-                    foreach (var row in rows) result[j++][i] = row.NextProtocol;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.L1Chain)?.NextProtocol;
                     break;
                 case "votingEpoch":
-                    foreach (var row in rows) result[j++][i] = row.VotingEpoch;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.L1Chain)?.VotingEpoch;
                     break;
                 case "votingPeriod":
-                    foreach (var row in rows) result[j++][i] = row.VotingPeriod;
+                    foreach (var row in rows) result[j++][i] = (row as Data.Models.L1Chain)?.VotingPeriod;
                     break;
+                default: throw new BadRequestException(nameof(selection.Select), $"Field {fields[i].Full} doesn't exist");
             }
         }
 

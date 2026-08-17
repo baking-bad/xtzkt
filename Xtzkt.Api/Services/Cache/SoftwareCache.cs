@@ -27,6 +27,7 @@ public class SoftwareCache
         {
             CachedById.Add(software.Id, software);
             CachedByShortHash[software.ChainId].Add(software.ShortHash, software);
+            LastLevels[software.ChainId] = Math.Max(LastLevels[software.ChainId], software.LastLevel);
         }
 
         Logger.LogInformation("Software cache initialized with {cnt} items", CachedById.Count);
@@ -34,7 +35,10 @@ public class SoftwareCache
 
     public async Task OnStateChanged(int chainId, int minLevel, int lastLevel)
     {
-        if (minLevel <= LastLevels[chainId])
+        var cacheLevel = LastLevels[chainId];
+        var lastValidLevel = Math.Min(cacheLevel, minLevel - 1);
+
+        if (minLevel <= cacheLevel)
         {
             List<Software> reorged;
             lock (Crit)
@@ -51,7 +55,7 @@ public class SoftwareCache
 
         using var db = DbFactory.CreateDbContext();
         var updated = await db.Software
-            .Where(x => x.ChainId == chainId && x.LastLevel > LastLevels[chainId])
+            .Where(x => x.ChainId == chainId && x.LastLevel > lastValidLevel)
             .ToListAsync();
 
         lock (Crit)

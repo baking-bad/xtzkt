@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 
@@ -10,6 +11,7 @@ public class ProtocolCache
     readonly ChainCache ChainCache;
     readonly ILogger Logger;
 
+    readonly Lock Crit = new();
     readonly List<Protocol>[] Cache = [[], [], [], [], [], [], [], []];
     readonly Dictionary<int, Protocol> CachedById = [];
 
@@ -18,36 +20,23 @@ public class ProtocolCache
         DbFactory = dbFactory;
         ChainCache = _chainCache;
         Logger = logger;
-
-        Logger.LogDebug("Initializing protocol cache...");
-
-        using var db = DbFactory.CreateDbContext();
-        var protocols = db.Protocols.OrderBy(x => x.Id).ToList();
-
-        foreach (var protocol in protocols)
-        {
-            Cache[protocol.ChainId].Add(protocol);
-            CachedById.Add(protocol.Id, protocol);
-        }
-        
-        Logger.LogInformation("Protocol cache initialized with {cnt} items", Cache.Sum(x => x.Count));
+        ResetCache();
     }
 
     public async Task OnStateChanged(int chainId, int minLevel, int lastLevel)
     {
-        var protocols = Cache[chainId];
+        var protocolsCount = ChainCache.Get(chainId).ProtocolsCount; // TODO: wait for ChainCache
 
-        if (protocols.Count == 0 ||
-            protocols.Count != ChainCache.Get(chainId).ProtocolsCount ||
-            minLevel < protocols[^1].FirstLevel)
+        bool reset;
+        lock (Crit)
         {
-            using var db = DbFactory.CreateDbContext();
-            Cache[chainId] = await db.Protocols.Where(x => x.ChainId == chainId).OrderBy(x => x.Id).ToListAsync();
-            foreach (var protocol in Cache[chainId])
-                CachedById[protocol.Id] = protocol;
-
-            Logger.LogInformation("Updated {cnt} protocols for chain #{chainId}", Cache[chainId].Count, chainId);
+            var protocols = Cache[chainId];
+            reset = protocols.Count == 0 ||
+                protocols.Count != protocolsCount ||
+                minLevel < protocols[^1].FirstLevel;
         }
+
+        if (reset) ResetCache(chainId);
     }
 
     public Models.ProtocolInfo GetInfo(int id)
@@ -63,25 +52,90 @@ public class ProtocolCache
 
     public Protocol Get(int id)
     {
-        if (!CachedById.TryGetValue(id, out var protocol))
+        if (!TryGetSafe(id, out var protocol))
         {
             // should never get here, but still...
             Logger.LogWarning("Inconsistent cache");
-            using var db = DbFactory.CreateDbContext();
-            protocol = db.Protocols.First(x => x.Id == id);
+            ResetCache();
+
+            if (!TryGetSafe(id, out protocol))
+                throw new Exception($"Protocol #{id} doesn't exist");
         }
         return protocol;
     }
 
     public Protocol GetCurrent(int chainId)
     {
-        if (Cache[chainId].Count == 0)
+        if (!TryGetCurrentSafe(chainId, out var protocol))
         {
             // should never get here, but still...
             Logger.LogWarning("Inconsistent cache");
-            using var db = DbFactory.CreateDbContext();
-            Cache[chainId] = [.. db.Protocols.Where(x => x.ChainId == chainId).OrderBy(x => x.Id)];
+            ResetCache(chainId);
+
+            if (!TryGetCurrentSafe(chainId, out protocol))
+                throw new Exception($"Protocols for chain #{chainId} don't exist");
         }
-        return Cache[chainId][^1];
+        return protocol;
+    }
+
+    void ResetCache()
+    {
+        Logger.LogDebug("Initializing protocol cache...");
+
+        using var db = DbFactory.CreateDbContext();
+        var protocols = db.Protocols.OrderBy(x => x.Id).ToList();
+
+        lock (Crit)
+        {
+            for (int i = 0; i < Cache.Length; i++) Cache[i].Clear();
+            CachedById.Clear();
+            
+            foreach (var protocol in protocols)
+            {
+                Cache[protocol.ChainId].Add(protocol);
+                CachedById.Add(protocol.Id, protocol);
+            }
+        }
+
+        Logger.LogInformation("Protocol cache initialized with {cnt} items", protocols.Count);
+    }
+
+    void ResetCache(int chainId)
+    {
+        using var db = DbFactory.CreateDbContext();
+        var protocols = db.Protocols.Where(x => x.ChainId == chainId).OrderBy(x => x.Id).ToList();
+
+        lock (Crit)
+        {
+            Cache[chainId] = protocols;
+            foreach (var protocol in protocols)
+                CachedById[protocol.Id] = protocol;
+        }
+
+        Logger.LogInformation("Updated {cnt} protocols for chain #{chainId}", protocols.Count, chainId);
+
+    }
+
+    bool TryGetSafe(int id, [NotNullWhen(true)] out Protocol? protocol)
+    {
+        lock (Crit)
+        {
+            return CachedById.TryGetValue(id, out protocol);
+        }
+    }
+
+    bool TryGetCurrentSafe(int chainId, [NotNullWhen(true)] out Protocol? protocol)
+    {
+        lock (Crit)
+        {
+            var protocols = Cache[chainId];
+            if (protocols.Count == 0)
+            {
+                protocol = null;
+                return false;
+            }
+            protocol = protocols[^1];
+            return true;
+        }
     }
 }

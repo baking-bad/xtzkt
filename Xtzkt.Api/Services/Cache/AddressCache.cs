@@ -33,7 +33,11 @@ public class AddressCache
 
         Logger.LogDebug("Initializing address cache...");
 
-        var totalAddresses = chainCache.Get().Sum(x => x.AddressCounter);
+        var chains = chainCache.Get();
+        foreach (var chain in chains)
+            LastLevels[chain.Id] = chain.Level;
+
+        var totalAddresses = chains.Sum(x => x.AddressCounter);
         var limits = config.GetCacheConfig().Address;
         HardLimit = limits.GetHardLimit(totalAddresses);
         SoftLimit = Math.Min(limits.GetSoftLimit(totalAddresses), HardLimit);
@@ -52,7 +56,10 @@ public class AddressCache
 
     public async Task OnStateChanged(int chainId, int minLevel, int lastLevel)
     {
-        if (minLevel <= LastLevels[chainId])
+        var cacheLevel = LastLevels[chainId];
+        var lastValidLevel = Math.Min(cacheLevel, minLevel - 1);
+
+        if (minLevel <= cacheLevel)
         {
             List<Address> reorged;
             lock (Crit)
@@ -69,7 +76,7 @@ public class AddressCache
 
         using var db = DbFactory.CreateDbContext();
         var updated = await db.Addresses
-            .Where(x => x.ChainId == chainId && x.LastLevel > LastLevels[chainId])
+            .Where(x => x.ChainId == chainId && x.LastLevel > lastValidLevel)
             .ToListAsync();
 
         var toUpdate = updated.AsEnumerable();
@@ -263,7 +270,12 @@ public class AddressCache
 
     public async Task PreloadAsync(IEnumerable<int> ids)
     {
-        var missed = ids.Where(x => !CachedById.ContainsKey(x)).ToHashSet();
+        HashSet<int> missed;
+        lock (Crit)
+        {
+            missed = ids.Where(x => !CachedById.ContainsKey(x)).ToHashSet();
+        }
+
         if (missed.Count != 0)
         {
             using var db = DbFactory.CreateDbContext();
@@ -278,7 +290,12 @@ public class AddressCache
 
     public async Task PreloadAsync(IEnumerable<int?> ids)
     {
-        var missed = ids.Where(x => x is int id && !CachedById.ContainsKey(id)).ToHashSet();
+        HashSet<int?> missed;
+        lock (Crit)
+        {
+            missed = ids.Where(x => x is int id && !CachedById.ContainsKey(id)).ToHashSet();
+        }
+
         if (missed.Count != 0)
         {
             using var db = DbFactory.CreateDbContext();

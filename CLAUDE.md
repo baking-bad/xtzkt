@@ -98,6 +98,13 @@ Indexes are split by consumer, and each consumer owns its own — an index decla
 
 So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actually uses. Before adding one there, find the query it serves; before removing one, check all three consumers. Write API queries as if their indexes existed rather than adding them to the models.
 
+### DB notifications
+
+`Xtzkt.Api` keeps its caches fresh via postgres `LISTEN`/`NOTIFY`: the indexers just write, and `pg_notify` triggers on the written tables turn those writes into notifications. The triggers live in migrations (`Triggers` migration + its `AddNotificationTrigger` helper).
+
+Rules that keep this working:
+- The channel name, the watched columns and the **payload format are a contract** between the trigger and `DbListenerService` — the two must be changed together.
+
 ### Configuration
 
 Indexers and services read config in this order, each source overriding the previous one: `appsettings.json` → `appsettings.{Environment}.json` → environment variables → prefixed env vars (`XTZKT_L1_*` for L1, `XTZKT_TEZOSX_*` for TezosX, `XTZKT_API_*` for the API, `XTZKT_METADATA_*` for the metadata service) → `ASPNETCORE_*` env vars → command-line args.

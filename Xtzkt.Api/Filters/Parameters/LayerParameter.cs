@@ -25,6 +25,10 @@ public class LayerParameter : INormalizable
     /// </summary>
     public int? Ne { get; set; }
 
+    public bool Matches(int value) =>
+        (Eq == null || value == Eq) &&
+        (Ne == null || value != Ne);
+
     public static implicit operator LayerParameter(Layer value) => new() { Eq = (int)value };
 
     public string Normalize(string name)
