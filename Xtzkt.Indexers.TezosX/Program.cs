@@ -132,7 +132,7 @@ while (true)
                 "0xa729" => "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166",
                 "0x1f34f" => "0x00985fe6f477169765206cfa26dbe7d58b333989d733363c9c648cc2707697df21",
                 "0x1f440" => "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3",
-                "0x1f094" => "0x0019ea6db27c8e9f9081aecc112c01614505d3fc7eaa1a50e9822a6143c348eff7",
+                "0x1f094" => "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25",
                 _ => "0x000000000000000000000000000000000000000000000000000000000000000000",
             };
 
@@ -164,67 +164,6 @@ while (true)
         }
 
         logger.LogInformation("Chain initialized: {chainId} ({network})", chain.ChainId, chain.Network);
-        #endregion
-
-        #region play
-        //var evmNode = scope.ServiceProvider.GetRequiredService<EvmNode>();
-        //var tezNode = scope.ServiceProvider.GetRequiredService<TezosNode>();
-
-        //static IEnumerable<JsonElement> FilterLogs(JsonElement logs)
-        //{
-        //    return logs.EnumerateArray().Where(x => x.RequiredString("address") != EvmRuntime.MichelsonGateway && x.RequiredArray("topics")[0].RequiredString() != "0x60a9f8ac7be7e117b08e5ff52239667fcf051d55e03ead4bfa34c73ff86642e0");
-        //}
-
-        //static void PrintTrace(StringBuilder sb, JsonElement trace, int padding = 0)
-        //{
-        //    sb.AppendLine($"{new string(' ', padding)}{trace.RequiredString("from")[2..6]} -> {trace.RequiredString("to")[2..6]}    [{string.Join(" | ", FilterLogs(trace.RequiredArray("logs")).Select(x => x.RequiredString("address")[2..6]))}]");
-        //    foreach (var call in trace.RequiredArray("calls").EnumerateArray())
-        //        PrintTrace(sb, call, padding + 2);
-        //}
-
-        //var (_, receipts, traces) = await evmNode.GetBlockData(358195);
-
-        //foreach (var trace in traces.EnumerateArray().Select(x => x.Required("result")))
-        //{
-        //    var sb = new StringBuilder();
-        //    PrintTrace(sb, trace);
-        //    Console.WriteLine(sb.ToString());
-        //}
-
-        //var call = new EvmCall(traces[0].Required("result"));
-
-        //var flogs = FilterLogs(receipts[0].RequiredArray("logs"));
-        //if (call.Logs.Count + call.Children().Sum(x => x.Logs.Count) != flogs.Count())
-        //    throw new Exception("Not all logs were consumed");
-
-        //return 0;
-
-        //var level = 13162;
-
-        //var state = new XChain
-        //{
-        //    ChainId = string.Empty,
-        //    Hash = string.Empty,
-        //    Id = 1,
-        //    Kernel = string.Empty,
-        //    Network = string.Empty,
-        //    MichelsonActivationLevel = 0,
-        //    RollupAddress = string.Empty,
-        //    Level = level - 1,
-        //};
-
-        //var meta = new Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock.MetaBlockBuilder(
-        //    new Xtzkt.Indexers.TezosX.Protocols.Proto01.EvmRpc(evmNode),
-        //    new Xtzkt.Indexers.TezosX.Protocols.Proto01.MichelsonRpc(tezNode));
-
-        //var block = await meta.GetNextBlock(state);
-
-        //if (block.Batches.Count != 0)
-        //{
-        //    var blockStr = block.ToString();
-        //    Console.WriteLine(level);
-        //    Console.WriteLine(blockStr);
-        //}
         #endregion
         break;
     }

@@ -2,7 +2,7 @@
 {
     public class TezosProtocolsConfig
     {
-        public List<string>? Precompiles { get; set; } = null;
+        public bool FallbackToLatestKernel { get; set; } = false;
     }
 
     public static class TezosProtocolsConfigExt

@@ -155,7 +155,8 @@ partial class TransactionCommit
 
         Db.TryAttach(alias);
         // TODO: add separate protocol handler
-        if (Context.Protocol.Hash != "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f")
+        if (Context.Protocol.Hash == "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" || // v0.1
+            Context.Protocol.Hash == "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a")   // v0.7
             alias.Counter++;
         alias.TransactionsCount++;
         alias.LastLevel = op.Level;
@@ -304,7 +305,8 @@ partial class TransactionCommit
 
         Db.TryAttach(alias);
         // TODO: add separate protocol handler
-        if (Context.Protocol.Hash != "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f")
+        if (Context.Protocol.Hash == "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" || // v0.1
+            Context.Protocol.Hash == "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a")   // v0.7
             alias.Counter++;
         alias.TransactionsCount++;
         alias.LastLevel = op.Level;
@@ -386,7 +388,10 @@ partial class TransactionCommit
         gateway.LastTimestamp = op.Timestamp;
 
         Db.TryAttach(alias);
-        alias.Counter--;
+        // TODO: add separate protocol handler
+        if (Context.Protocol.Hash == "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" || // v0.1
+            Context.Protocol.Hash == "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a")   // v0.7
+            alias.Counter--;
         alias.TransactionsCount--;
         alias.LastLevel = op.Level;
         alias.LastTimestamp = op.Timestamp;
@@ -446,7 +451,10 @@ partial class TransactionCommit
         gateway.LastTimestamp = op.Timestamp;
 
         Db.TryAttach(alias);
-        alias.Counter--;
+        // TODO: add separate protocol handler
+        if (Context.Protocol.Hash == "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" || // v0.1
+            Context.Protocol.Hash == "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a")   // v0.7
+            alias.Counter--;
         alias.TransactionsCount--;
         alias.LastLevel = op.Level;
         alias.LastTimestamp = op.Timestamp;
