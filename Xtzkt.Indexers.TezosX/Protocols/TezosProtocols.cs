@@ -22,7 +22,9 @@ namespace Xtzkt.Indexers.TezosX
                 "0x00101bd944756199ad19c06fcc12743a90e0db795118ff7479b46c4e80451f6931" => services.GetRequiredService<Proto01Handler>(), // v0.5
                 "0x0019ea6db27c8e9f9081aecc112c01614505d3fc7eaa1a50e9822a6143c348eff7" => services.GetRequiredService<Proto01Handler>(), // v0.6
                 "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a" => services.GetRequiredService<Proto01Handler>(), // v0.7
-                "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f" => services.GetRequiredService<Proto01Handler>(), // v0.7
+                "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f" => services.GetRequiredService<Proto01Handler>(), // v0.9
+                "0x005f5acc7705865ed1e40561a7c5ceba8b59364a3df39b378c8e4d96350b7135ac" => services.GetRequiredService<Proto01Handler>(), // v0.10
+                "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25" => services.GetRequiredService<Proto01Handler>(), // v0.10
                 _ => throw new NotImplementedException($"Kernel {kernel} is not supported")
             };
         }

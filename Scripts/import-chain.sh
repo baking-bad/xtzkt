@@ -15,8 +15,6 @@ fi
 db=$1
 dir=$2
 
-# the dump path ends up inside a SQL literal and inside the shell command COPY ... FROM PROGRAM runs,
-# so quotes, $ and backticks in it would break the statement or execute
 case $dir in
     *[\'\"\$\`]*) echo "$0: dump dir must not contain quotes, \$ or backticks" >&2; exit 1 ;;
 esac

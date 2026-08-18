@@ -49,7 +49,6 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, "Protocols/Handlers/Proto01/Runtimes/SequencerUpdaterAbi.json", nullAddress, state);
         BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, "Protocols/Handlers/Proto01/Runtimes/MichelsonGatewayAbi.json", nullAddress, state);
         BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, "Protocols/Handlers/Proto01/Runtimes/AliasForwarderAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.FA12Wrapper, "Protocols/Handlers/Proto01/Runtimes/Fa12WrapperAbi.json", nullAddress, state);
         BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, "Protocols/Handlers/Proto01/Runtimes/VerifyTezosSignatureAbi.json", nullAddress, state);
         #endregion
 
@@ -81,7 +80,6 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         await RemoveEvmPrecompile(EvmRuntime.SequencerUpdater, state);
         await RemoveEvmPrecompile(EvmRuntime.MichelsonGateway, state);
         await RemoveEvmPrecompile(EvmRuntime.AliasForwarder, state);
-        await RemoveEvmPrecompile(EvmRuntime.FA12Wrapper, state);
         await RemoveEvmPrecompile(EvmRuntime.VerifyTezosSignature, state);
         #endregion
 

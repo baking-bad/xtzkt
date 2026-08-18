@@ -74,8 +74,6 @@ try {
     $lines += "COMMIT;"
     $lines += $sequences
 
-    # via a file, not stdin: what PowerShell prepends to a native command's stdin depends on the
-    # host's encoding, and psql would choke on a BOM in front of the first statement
     $file = Join-Path $temp 'import-chain.psql'
     [IO.File]::WriteAllText($file, ($lines -join "`n") + "`n", (New-Object Text.UTF8Encoding $false))
 

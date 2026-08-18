@@ -19,7 +19,6 @@ public static class EvmRuntime
     public const string SequencerUpdater = "0xff00000000000000000000000000000000000006";
     public const string MichelsonGateway = "0xff00000000000000000000000000000000000007";
     public const string AliasForwarder = "0xff00000000000000000000000000000000ffff08";
-    public const string FA12Wrapper = "0xff00000000000000000000000000000000ffff09";
     public const string VerifyTezosSignature = "0xff0000000000000000000000000000000000000a";
     #endregion
 
