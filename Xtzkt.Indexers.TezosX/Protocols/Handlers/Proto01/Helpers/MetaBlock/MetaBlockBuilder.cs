@@ -5,7 +5,7 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
-public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc)
+public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, ILogger logger)
 {
     public async Task<IMetaBlock> GetNextBlock(XChain state)
     {
@@ -85,10 +85,29 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc)
         var batches = new List<IMetaBatch>();
 
         foreach (var hash in blueprint.DelayedTransactions.Select(x => x.Hash))
-            batches.Add(reader.ReadOperation(hash, true));
+        {
+            if (reader.TryReadOperation(hash, true) is not MetaBatch batch)
+            {
+                logger.LogWarning("Operation {hash} was dropped from block {level}", hash, level);
+                continue;
+            }
+
+            if (blueprint.Transactions.Any(x => x == hash))
+                throw new Exception($"Operation {hash} is ambiguous, because included in both Transactions and DelayedTransactions. Cannot proceed.");
+
+            batches.Add(batch);
+        }
 
         foreach (var hash in blueprint.Transactions)
-            batches.Add(reader.ReadOperation(hash, false));
+        {
+            if (reader.TryReadOperation(hash, false) is not MetaBatch batch)
+            {
+                logger.LogWarning("Operation {hash} was dropped from block {level}", hash, level);
+                continue;
+            }
+
+            batches.Add(batch);
+        }
 
         if (_queuesByHash.Values.Any(x => x.Count != 0))
             throw new Exception("Not all operations were consumed");

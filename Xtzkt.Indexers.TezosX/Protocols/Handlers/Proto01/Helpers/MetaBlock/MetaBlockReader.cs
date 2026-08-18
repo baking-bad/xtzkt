@@ -9,10 +9,11 @@ public class MetaBlockReader(List<DelayedTransaction> delayed, Dictionary<string
     readonly Dictionary<string, Queue<IMetaContent>> Operations = ops;
     readonly Dictionary<string, Queue<IMetaContent>> Cracs = cracs;
 
-    public MetaBatch ReadOperation(string hash, bool delayed)
+    public MetaBatch? TryReadOperation(string hash, bool delayed)
     {
+        // operation from blueprint can be dropped and not appear in the block at all
         if (!Operations.TryGetValue(hash, out var queue))
-            throw new Exception($"Cannot find operation {hash}");
+            return null;
 
         var batch = new MetaBatch(hash, delayed);
         ProcessQueue(queue, batch);

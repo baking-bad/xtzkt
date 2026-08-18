@@ -8,8 +8,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers
     {
         protected readonly IEvmRpc EvmRpc = protocol.EvmRpc;
         protected readonly IMichelsonRpc MichelsonRpc = protocol.MichelsonRpc;
+        protected readonly ILogger Logger = protocol.Logger;
 
         public Task<IMetaBlock> GetMetaBlock(XChain state)
-            => new MetaBlockBuilder(EvmRpc, MichelsonRpc).GetNextBlock(state);
+            => new MetaBlockBuilder(EvmRpc, MichelsonRpc, Logger).GetNextBlock(state);
     }
 }
