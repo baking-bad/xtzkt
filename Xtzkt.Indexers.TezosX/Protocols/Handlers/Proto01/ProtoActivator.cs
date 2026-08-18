@@ -4,6 +4,7 @@ using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
+using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 using Xtzkt.Utils;
 
@@ -90,12 +91,14 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #endregion
     }
 
-    public async Task ActivateMichelsonContext(XChain state)
+    public async Task ActivateMichelsonContext(XChain state, IMetaBlock block)
     {
         #region state
-        var rawBlock = await Proto.MichelsonRpc.GetBlockAsync(state.MichelsonActivationLevel!.Value + 2);
+        var rawBlock = block.MichelsonBlock
+            ?? throw new Exception("Missing Michelson block at activation level");
+
         state.MichelsonChainId = rawBlock.RequiredString("chain_id");
-        state.MichelsonProtocol = rawBlock.RequiredString("protocol");
+        state.MichelsonProtocol = rawBlock.Required("metadata").RequiredString("next_protocol");
         state.MichelsonBlock = rawBlock.Required("header").RequiredString("predecessor");
         #endregion
 

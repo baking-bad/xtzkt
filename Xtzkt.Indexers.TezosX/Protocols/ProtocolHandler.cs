@@ -119,7 +119,7 @@ namespace Xtzkt.Indexers.TezosX
                     if (state.MichelsonActivationLevel == block.Level)
                     {
                         Logger.LogDebug("Activate Michelson context");
-                        await Activator.ActivateMichelsonContext(state);
+                        await Activator.ActivateMichelsonContext(state, block);
                     }
 
                     Logger.LogDebug("Process block");
@@ -225,8 +225,11 @@ namespace Xtzkt.Indexers.TezosX
             if (block.MichelsonBlock?.RequiredString("chain_id") != state.MichelsonChainId)
                 throw new ValidationException("Invalid Michelson chain");
 
-            if (block.MichelsonBlock?.RequiredString("protocol") != state.MichelsonProtocol && block.Level >= state.MichelsonActivationLevel + 2)
-                throw new ValidationException("Invalid Michelson protocol");
+            // TODO: uncomment when the node stops mocking `protocol` of the Michelson blocks 0 and 1
+            // NOTE: `next_protocol` legitimately changes on kernel upgrades bringing a new Michelson protocol,
+            // so such a change must be adopted, not rejected (see the StateCommit)
+            //if (block.MichelsonBlock?.Required("metadata").RequiredString("next_protocol") != state.MichelsonProtocol)
+            //    throw new ValidationException("Invalid Michelson protocol");
 
             if (block.MichelsonBlock?.Required("header").RequiredString("predecessor") != state.MichelsonBlock)
                 throw new ValidationException("Invalid Michelson predecessor", true);

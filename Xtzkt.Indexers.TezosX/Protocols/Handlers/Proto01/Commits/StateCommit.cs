@@ -15,7 +15,19 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             state.Hash = block.Hash;
 
             if (block.MichelsonBlock is JsonElement mb)
+            {
                 state.MichelsonBlock = mb.RequiredString("hash");
+
+                // TODO: remove it when the node stops mocking protocol of the Michelson blocks 0 and 1
+                var michelsonProtocol = mb.Required("metadata").RequiredString("next_protocol");
+                if (state.MichelsonProtocol != michelsonProtocol)
+                {
+                    state.MichelsonProtocol = michelsonProtocol;
+
+                    Db.TryAttach(Context.Protocol);
+                    Context.Protocol.MichelsonHash = michelsonProtocol;
+                }
+            }
 
             return Task.CompletedTask;
         }
