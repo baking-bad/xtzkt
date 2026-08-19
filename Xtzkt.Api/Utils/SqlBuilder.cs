@@ -786,21 +786,21 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
-    public SqlBuilder Where(string column, OperationHashParameter? value)
+    public SqlBuilder Where(string column, OperationHashParameter? value, string type = "text")
     {
         if (value == null) return this;
 
         if (value.Eq != null)
-            _filters.Add($"{column} = {Param(value.Eq)}");
+            _filters.Add($"{column} = {Param(value.Eq)}::{type}");
 
         if (value.Ne != null)
-            _filters.Add($"{column} != {Param(value.Ne)}");
+            _filters.Add($"{column} != {Param(value.Ne)}::{type}");
 
         if (value.In != null)
-            _filters.Add($"{column} = ANY ({Param(value.In)})");
+            _filters.Add($"{column} = ANY ({Param(value.In)}::{type}[])");
 
         if (value.Ni != null)
-            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}::{type}[]))");
 
         return this;
     }
