@@ -1,5 +1,8 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Services.Observer.Notifiers;
+using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Services.Observer
 {
@@ -40,7 +43,9 @@ namespace Xtzkt.Indexers.TezosX.Services.Observer
 
         public static HeadNotifier Create(ObserverConfig config, EvmNode node, ILogger logger)
         {
-            return new PollingHeadNotifier(config.Period, node, logger);
+            return config.Method == "streaming"
+                ? new StreamingHeadNotifier(node, logger)
+                : new PollingHeadNotifier(config.Period, node, logger);
         }
     }
 
@@ -59,6 +64,14 @@ namespace Xtzkt.Indexers.TezosX.Services.Observer
 
         [JsonPropertyName("timestamp")]
         public required DateTime Timestamp { get; set; }
+
+        public static Header Parse(JsonElement block) => new()
+        {
+            Predecessor = block.RequiredString("parentHash"),
+            Hash = block.RequiredString("hash"),
+            Level = HexNumber.GetInt32(block.RequiredString("number")),
+            Timestamp = HexNumber.GetTimestamp(block.RequiredString("timestamp"))
+        };
 
         public static Header Empty() => new()
         {

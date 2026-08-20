@@ -2,6 +2,7 @@
 {
     public class ObserverConfig
     {
+        public string Method { get; set; } = "polling";
         public int Period { get; set; } = 1000;
     }
 

@@ -10,12 +10,14 @@ namespace Xtzkt.Indexers.TezosX.Services;
 public sealed class EvmNode : IDisposable
 {
     readonly TzktClient _client;
+    readonly Lazy<JsonRpcWsClient> _wsClient;
     readonly ILogger _logger;
 
     public EvmNode(IConfiguration config, ILogger<EvmNode> logger)
     {
         var nodeConfig = config.GetEvmNodeConfig();
         _client = new TzktClient(nodeConfig.Endpoint, nodeConfig.Timeout);
+        _wsClient = new(() => new JsonRpcWsClient(nodeConfig.GetWsEndpoint(), nodeConfig.Timeout));
         _logger = logger;
     }
 
@@ -40,6 +42,11 @@ public sealed class EvmNode : IDisposable
     public Task<JsonElement> GetBlock(int level, bool withTxs = false)
     {
         return PostAsync("eth_getBlockByNumber", level.ToString(), withTxs);
+    }
+
+    public IAsyncEnumerable<JsonElement> MonitorHeads(CancellationToken cancellationToken)
+    {
+        return _wsClient.Value.SubscribeAsync("eth_subscribe", ["newHeads"], ct: cancellationToken);
     }
 
     public void Dispose() => _client.Dispose();

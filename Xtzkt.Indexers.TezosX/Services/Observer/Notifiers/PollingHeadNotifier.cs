@@ -1,7 +1,4 @@
-﻿using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Utils;
-
-namespace Xtzkt.Indexers.TezosX.Services.Observer.Notifiers
+﻿namespace Xtzkt.Indexers.TezosX.Services.Observer.Notifiers
 {
     class PollingHeadNotifier(int _period, EvmNode _node, ILogger _logger) : HeadNotifier(_logger)
     {
@@ -9,16 +6,7 @@ namespace Xtzkt.Indexers.TezosX.Services.Observer.Notifiers
 
         protected override async Task OnTick(CancellationToken cancellationToken)
         {
-            var result = await _node.GetHead();
-            
-            var head = new Header
-            {
-                Predecessor = result.RequiredString("parentHash"),
-                Hash = result.RequiredString("hash"),
-                Level = HexNumber.GetInt32(result.RequiredString("number")),
-                Timestamp = HexNumber.GetTimestamp(result.RequiredString("timestamp"))
-            };
-            Notify(head);
+            Notify(Header.Parse(await _node.GetHead()));
 
             await Task.Delay(_period, cancellationToken);
         }
