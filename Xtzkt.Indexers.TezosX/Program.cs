@@ -112,12 +112,12 @@ while (true)
             return 4;
         }
 
+        var node = scope.ServiceProvider.GetRequiredService<EvmNode>();
+        var chainId = await node.GetChainId();
+
         var chain = await db.Chains.FirstOrDefaultAsync(x => x.Id == chainConfig.Id);
         if (chain == null)
         {
-            var node = scope.ServiceProvider.GetRequiredService<EvmNode>();
-            
-            var chainId = await node.GetChainId();
             var rollupAddress = await node.GetRollupAddress();
             var network = chainConfig.Network ?? chainId switch
             {
@@ -156,6 +156,11 @@ while (true)
         {
             logger.LogError("Initialization failed: chain id #{id} is already used for layer {layer}.", chain.Id, chain.Layer);
             return 5;
+        }
+        else if (chain.ChainId != chainId)
+        {
+            logger.LogError("Initialization failed: the node is on chain {nodeChainId}, while the DB is on {dbChainId}.", chainId, chain.ChainId);
+            return 6;
         }
         else if (chainConfig.Network != null && chain.Network != chainConfig.Network)
         {

@@ -306,7 +306,7 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #region null-address + gateway + bootstrap
         var migrations = await Db.MigrationOps
             .OfType<MichelsonMigrationOperation>()
-            .Where(x => x.ChainId == state.Id && x.Level == state.Level && x.Kind == MigrationKind.Bootstrap)
+            .Where(x => x.ChainId == state.Id && x.Level == Context.Block.Level && x.Kind == MigrationKind.Bootstrap)
             .ExecuteDeleteAsync();
 
         var scripts = await Db.Scripts

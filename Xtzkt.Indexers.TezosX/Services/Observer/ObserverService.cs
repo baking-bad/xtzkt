@@ -23,7 +23,6 @@ namespace Xtzkt.Indexers.TezosX.Services
 
         readonly CancellationTokenSource _cts = new();
         readonly HeadNotifier _headNotifier = HeadNotifier.Create(_config.GetObserverConfig(), _node, _logger);
-        readonly bool _lessReorgs = _config.GetObserverConfig().LessReorgs;
         readonly Lock _lock = new();
 
         Task? _headNotifierTask;
@@ -31,7 +30,7 @@ namespace Xtzkt.Indexers.TezosX.Services
         volatile Task? _applyTask;
 
         XChain _state = null!;
-        Header _head = Header.Empty();
+        volatile Header _head = Header.Empty();
         DateTime _syncedAt = DateTime.MinValue;
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -143,8 +142,22 @@ namespace Xtzkt.Indexers.TezosX.Services
             {
                 try
                 {
-                    if (_state.Level == _head.Level)
+                    var head = _head;
+                    if (head.Level <= _state.Level)
                     {
+                        if (await IsLocalBranchValid(head))
+                        {
+                            // the node is behind, but on our branch, so there's nothing to rebase
+                            lock (_lock)
+                            {
+                                if (_head.Hash != head.Hash)
+                                    continue; // a newer head arrived while we were checking
+
+                                _applyTask = null;
+                                return;
+                            }
+                        }
+
                         _logger.LogWarning("Chain reorg detected. Rebase local branch...");
                         await RebaseLocalBranch(_cts.Token);
                     }
@@ -156,8 +169,9 @@ namespace Xtzkt.Indexers.TezosX.Services
                 catch (OperationCanceledException) when (_cts.IsCancellationRequested) { }
                 catch (Exception ex)
                 {
-                    // should never happen
-                    _logger.LogCritical(ex, "Failed to apply updates");
+                    _logger.LogError(ex, "Failed to apply updates. Retry in 5 sec...");
+                    try { await Task.Delay(5000, _cts.Token); }
+                    catch (OperationCanceledException) { }
                 }
 
                 lock (_lock)
@@ -173,8 +187,12 @@ namespace Xtzkt.Indexers.TezosX.Services
 
         private async Task AdvanceLocalBranch(CancellationToken cancellationToken)
         {
-            while (_state.Level < _head.Level && !cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
+                var headLevel = _head.Level;
+                if (_state.Level >= headLevel)
+                    return;
+
                 try
                 {
                     _logger.LogDebug("Applying block...");
@@ -182,7 +200,7 @@ namespace Xtzkt.Indexers.TezosX.Services
                     {
                         using var scope = _services.CreateScope();
                         var handler = scope.ServiceProvider.GetProtocolHandler(_state.Kernel);
-                        _state = await handler.ApplyNextBlock(_head.Level);
+                        _state = await handler.ApplyNextBlock(headLevel);
                     }
                     _metrics.Measure.Gauge.SetHealthValue(_state);
                     _logger.LogInformation("Applied {level} of {total}", _state.Level, _state.KnownLevel);
@@ -208,7 +226,7 @@ namespace Xtzkt.Indexers.TezosX.Services
             {
                 try
                 {
-                    if (await IsLocalHeadValid()) return;
+                    if (await IsLocalBranchValid(_head)) return;
 
                     _logger.LogDebug("Reverting block...");
                     using (_metrics.Measure.Timer.Time(MetricsRegistry.RevertBlockTime))
@@ -229,10 +247,23 @@ namespace Xtzkt.Indexers.TezosX.Services
             }
         }
 
-        private async Task<bool> IsLocalHeadValid()
+        private async Task<bool> IsLocalBranchValid(Header head)
         {
-            var evm = await _node.GetBlock(_state.Level);
-            return evm.RequiredString("hash") == _state.Hash;
+            if (head.Level > _state.Level)
+            {
+                var remote = await _node.GetBlock(_state.Level);
+                return remote.RequiredString("hash") == _state.Hash;
+            }
+
+            if (head.Level < _state.Level)
+            {
+                using var scope = _services.CreateScope();
+                var cache = scope.ServiceProvider.GetRequiredService<CacheService>();
+                var local = await cache.Blocks.GetAsync(head.Level);
+                return local.Hash == head.Hash;
+            }
+
+            return head.Hash == _state.Hash;
         }
 
         private async Task ResetState(CancellationToken cancellationToken)
@@ -267,7 +298,7 @@ namespace Xtzkt.Indexers.TezosX.Services
 
         private bool CanApplyUpdates()
         {
-            return _head.Level > _state.Level || _head.Level == _state.Level && _head.Hash != _state.Hash && !_lessReorgs;
+            return _head.Hash != _state.Hash;
         }
     }
 }

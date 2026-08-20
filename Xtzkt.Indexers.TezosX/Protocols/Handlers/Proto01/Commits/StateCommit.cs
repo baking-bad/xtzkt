@@ -35,13 +35,23 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
         public virtual async Task Revert()
         {
             var state = Cache.Chain.Get();
-            var prevBlock = await Cache.Blocks.PreviousAsync();
+            if (state.Level != 0)
+            {
+                var prevBlock = await Cache.Blocks.PreviousAsync();
 
-            state.Level = prevBlock.Level;
-            state.Timestamp = prevBlock.Timestamp;
-            state.Hash = prevBlock.Hash;
+                state.Level = prevBlock.Level;
+                state.Timestamp = prevBlock.Timestamp;
+                state.Hash = prevBlock.Hash;
 
-            state.MichelsonBlock = prevBlock.MichelsonHash;
+                state.MichelsonBlock = prevBlock.MichelsonHash;
+            }
+            else
+            {
+                state.Level = -1;
+                state.Timestamp = DateTimeOffset.MinValue.UtcDateTime;
+                state.Hash = string.Empty;
+                state.MichelsonBlock = null;
+            }
         }
     }
 }

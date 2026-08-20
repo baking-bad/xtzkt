@@ -40,7 +40,7 @@ namespace Xtzkt.Indexers.TezosX.Services.Observer
 
         public static HeadNotifier Create(ObserverConfig config, EvmNode node, ILogger logger)
         {
-            return new PollingHeadNotifier(config.Lag, config.Period, node, logger);
+            return new PollingHeadNotifier(config.Period, node, logger);
         }
     }
 
