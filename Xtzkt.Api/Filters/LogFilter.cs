@@ -85,7 +85,7 @@ public class LogFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?name=Transfer`, `?name.null=false`.
+    /// Examples: `?name=Transfer`, `?name.ne=null`.
     /// </summary>
     public StringNullParameter? Name { get; set; }
 
@@ -113,7 +113,7 @@ public class LogFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?transactionId=123`, `?transactionId.null=false`.
+    /// Examples: `?transactionId=123`, `?transactionId.ne=null`.
     /// </summary>
     public Int64NullParameter? TransactionId { get; set; }
 

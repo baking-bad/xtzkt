@@ -58,7 +58,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?entrypoint=transfer`, `?entrypoint.null=true`.
+    /// Examples: `?entrypoint=transfer`, `?entrypoint=null`.
     /// </summary>
     public StringNullParameter? Entrypoint { get; set; }
 
@@ -102,12 +102,12 @@ public class TransactionOperationFilter : ManagerOperationFilter
 
     /// <summary>
     /// Filters by the deposit operation the transaction claimed off the queue (Tezos X bridge claims
-    /// only). This is the deposit's `id`, not its `depositId` — use `?claimDepositId.null=false`
+    /// only). This is the deposit's `id`, not its `depositId` — use `?claimDepositId.ne=null`
     /// to get all the claims.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?claimDepositId=123`, `?claimDepositId.null=false`.
+    /// Examples: `?claimDepositId=123`, `?claimDepositId.ne=null`.
     /// </summary>
     public Int64NullParameter? ClaimDepositId { get; set; }
 

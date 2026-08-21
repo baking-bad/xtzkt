@@ -28,7 +28,7 @@ Michelson ticket, so it lives in `/v1/bridge_tickets`:
   `/v1/activity` feed usually shows the deposit but no `bridge_ticket_transfer`: that row belongs to the proxy.
 - A deposit is credited immediately when it has no proxy, otherwise it's queued and credited later by a
   `claim` transaction. A queued deposit carries a `depositId`, and once it's claimed, the claiming
-  transaction is on it as `claimTransactionId` — so `?depositId.null=false&claimTransactionId.null=true`
+  transaction is on it as `claimTransactionId` — so `?depositId.ne=null&claimTransactionId=null`
   is the queue itself: funds that were bridged in and are still sitting on the bridge.
   `xtz` deposits never produce a bridge ticket transfer — they credit the native balance instead.
 - Amounts here are ticket units: unlike EVM values they are not scaled by 18 decimals, even though they

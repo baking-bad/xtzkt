@@ -24,7 +24,7 @@ public class DepositController(DepositRepository _deposits, ResponseCacheService
     ///
     /// A deposit with a `depositId` was queued rather than credited right away — the funds stay on the
     /// bridge until a `claim` transaction drains them, and that transaction is then on the deposit as
-    /// `claimTransactionId`. So `?depositId.null=false&amp;claimTransactionId.null=true` is the queue
+    /// `claimTransactionId`. So `?depositId.ne=null&amp;claimTransactionId=null` is the queue
     /// itself, and the same pair with `?receiver=` answers "I bridged, where are my funds?".
     /// A deposit that was never queued has neither field set and needs no claim.
     /// </remarks>

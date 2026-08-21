@@ -8,21 +8,24 @@ namespace Xtzkt.Api.Filters.Parameters;
 [ModelBinder(BinderType = typeof(Int32NullBinder))]
 public class Int32NullParameter : INormalizable
 {
+    /// <summary>
+    /// Sentinel value used to represent a `null` filter.
+    /// </summary>
     public const int Null = int.MinValue;
 
     /// <summary>
     /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
-    /// Returns items where 'param' is equal to 'value'.
+    /// Returns items where 'param' is equal to 'value'. Use `null` to get items where 'param' is not set.
     ///
-    /// Example: `?balance=123`.
+    /// Example: `?balance=123` or `?balance=null`.
     /// </summary>
     public int? Eq { get; set; }
 
     /// <summary>
     /// **Not equal** mode.
-    /// Returns items where 'param' is not equal to 'value'.
+    /// Returns items where 'param' is not equal to 'value'. Use `null` to get items where 'param' is set.
     ///
-    /// Example: `?balance.ne=123`.
+    /// Example: `?balance.ne=123` or `?balance.ne=null`.
     /// </summary>
     public int? Ne { get; set; }
 
@@ -60,17 +63,17 @@ public class Int32NullParameter : INormalizable
 
     /// <summary>
     /// **In list** mode.
-    /// Returns items where 'param' is equal to any of comma-separated 'values'.
+    /// Returns items where 'param' is equal to any of comma-separated 'values'. Use `null` to include items where 'param' is not set.
     ///
-    /// Example: `?balance.in=12,34,56`.
+    /// Example: `?balance.in=12,34,56` or `?balance.in=12,null`.
     /// </summary>
     public List<int>? In { get; set; }
 
     /// <summary>
     /// **Not in list** mode.
-    /// Returns items where 'param' is not equal to any of comma-separated 'values'.
+    /// Returns items where 'param' is not equal to any of comma-separated 'values'. Use `null` to exclude items where 'param' is not set.
     ///
-    /// Example: `?balance.ni=12,34,56`.
+    /// Example: `?balance.ni=12,34,56` or `?balance.ni=12,null`.
     /// </summary>
     public List<int>? Ni { get; set; }
 

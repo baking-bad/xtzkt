@@ -85,18 +85,18 @@ public class DepositOperationFilter : BaseOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?depositId=1`, `?depositId.null=false`.
+    /// Examples: `?depositId=1`, `?depositId.ne=null`.
     /// </summary>
     public BigIntegerNullParameter? DepositId { get; set; }
 
     /// <summary>
     /// Filters by the transaction that claimed the deposit off the queue. Combined with `depositId`
-    /// it selects deposits by their queue state: `?depositId.null=false&amp;claimTransactionId.null=true`
+    /// it selects deposits by their queue state: `?depositId.ne=null&amp;claimTransactionId=null`
     /// returns the ones still waiting to be claimed.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?claimTransactionId=123`, `?claimTransactionId.null=true`.
+    /// Examples: `?claimTransactionId=123`, `?claimTransactionId=null`.
     /// </summary>
     public Int64NullParameter? ClaimTransactionId { get; set; }
 

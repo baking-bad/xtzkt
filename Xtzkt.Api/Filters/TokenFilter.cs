@@ -47,7 +47,7 @@ public class TokenFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?standard=fa2`, `?standard.in=erc20,erc721`.
+    /// Examples: `?standard=fa2`, `?standard.ne=erc20`.
     /// </summary>
     public TokenStandardParameter? Standard { get; set; }
 

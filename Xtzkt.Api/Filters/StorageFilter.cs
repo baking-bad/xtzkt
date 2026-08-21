@@ -72,7 +72,7 @@ public class StorageFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?transactionId=123`, `?transactionId.null=false`.
+    /// Examples: `?transactionId=123`, `?transactionId.ne=null`.
     /// </summary>
     public Int64NullParameter? TransactionId { get; set; }
 

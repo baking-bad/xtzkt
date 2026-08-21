@@ -83,7 +83,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?prevDelegate.null=true`.
+    /// Example: `?prevDelegate=null`.
     /// </summary>
     public AddressInfoNullParameter? PrevDelegate { get; set; }
 
@@ -92,7 +92,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?delegate=0x...`, `?delegate.null=true`.
+    /// Examples: `?delegate=0x...`, `?delegate=null`.
     /// </summary>
     public AddressInfoNullParameter? Delegate { get; set; }
 
