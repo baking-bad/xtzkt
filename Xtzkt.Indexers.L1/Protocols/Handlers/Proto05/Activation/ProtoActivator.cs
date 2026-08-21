@@ -228,7 +228,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     };
 
                     var viewsBytes = newScript.Views?
-                        .OrderBy(x => x, new BytesComparer())
+                        .OrderBy(x => x, BytesComparer.Instance)
                         .SelectMany(x => x)
                         .ToArray()
                         ?? [];

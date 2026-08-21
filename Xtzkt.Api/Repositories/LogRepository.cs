@@ -74,6 +74,7 @@ public class LogRepository(
                     // EvmLog
                     case "transactionId": columns.Add(@"l.""TransactionId"""); break;
                     case "originationId": columns.Add(@"l.""OriginationId"""); break;
+                    case "depositId":   columns.Add(@"l.""DepositId"""); break;
                     case "topics":        columns.Add(@"l.""Topics"""); break;
                     case "data":          columns.Add(@"l.""Data"""); break;
                     // MichelsonLog
@@ -106,6 +107,7 @@ public class LogRepository(
             .Where(@"l.""Guessed""",          filter.Guessed)
             .Where(@"l.""TransactionId""",    filter.TransactionId)
             .Where(@"l.""OriginationId""",    filter.OriginationId)
+            .Where(@"l.""DepositId""",      filter.DepositId)
             .Where(@"l.""Topics""[1]",        filter.Topic0)
             .Where(@"l.""Topics""[2]",        filter.Topic1)
             .Where(@"l.""Topics""[3]",        filter.Topic2)
@@ -146,6 +148,7 @@ public class LogRepository(
             .Where(@"l.""Guessed""",          filter.Guessed)
             .Where(@"l.""TransactionId""",    filter.TransactionId)
             .Where(@"l.""OriginationId""",    filter.OriginationId)
+            .Where(@"l.""DepositId""",      filter.DepositId)
             .Where(@"l.""Topics""[1]",        filter.Topic0)
             .Where(@"l.""Topics""[2]",        filter.Topic1)
             .Where(@"l.""Topics""[3]",        filter.Topic2)
@@ -176,6 +179,7 @@ public class LogRepository(
                     Guessed = row.Guessed,
                     TransactionId = row.TransactionId,
                     OriginationId = row.OriginationId,
+                    DepositId = row.DepositId,
                     Topics = [.. (byte[][])row.Topics],
                     Data = row.Data,
                 };
@@ -276,6 +280,9 @@ public class LogRepository(
                     break;
                 case "originationId":
                     foreach (var row in rows) result[j++][i] = row.OriginationId?.ToString();
+                    break;
+                case "depositId":
+                    foreach (var row in rows) result[j++][i] = row.DepositId?.ToString();
                     break;
                 case "topics":
                     foreach (var row in rows) result[j++][i] = row.Topics == null ? null : ((byte[][])row.Topics).Select(Decode.ToHex).ToList();

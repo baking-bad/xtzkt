@@ -99,6 +99,7 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 Data = data,
                 TransactionId = (op as TransactionOperation)?.Id,
                 OriginationId = (op as XEvmOriginationOperation)?.Id,
+                DepositId = (op as DepositOperation)?.Id,
                 Name = name,
                 Payload = payload,
                 Guessed = guessed,
@@ -121,6 +122,12 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                     foreach (var (tokenId, from, to, amount) in tokenTransfers)
                         Context.EvmTokenTransfers.Add(new(contract, tokenId, tokenType, from, to, amount, (op as ISourceOperation)!));
                 }
+            }
+
+            if (address.Hash == EvmRuntime.FaBridge)
+            {
+                if (FaBridgeEvents.TryParseUpdate(topics, data, (op as ISourceOperation)!, out var bridgeTicketUpdate))
+                    Context.BridgeTicketUpdates.Add(bridgeTicketUpdate);
             }
         }
     }

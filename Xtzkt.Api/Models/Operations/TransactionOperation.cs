@@ -134,7 +134,7 @@ public class XMichelsonTransactionOperation : MichelsonTransactionOperation
     public long GasRefund { get; set; }
 }
 
-public class XEvmTransactionOperation : TransactionOperation
+public class XEvmTransactionOperation : TransactionOperation, IBridgeTicketTransfersSource
 {
     /// <summary>
     /// Transaction type it was sent as (`legacy`, `dynamic_fee`, `set_code`, ...),
@@ -179,6 +179,16 @@ public class XEvmTransactionOperation : TransactionOperation
 
     /// <summary>Number of EIP-7702 delegations set by the operation, if any.</summary>
     public int? Eip7702DelegationCount { get; set; }
+
+    /// <summary>Number of bridge ticket transfers caused by the operation, if any.</summary>
+    public int? BridgeTicketTransfers { get; set; }
+
+    /// <summary>
+    /// Id of the deposit operation the operation claimed off the queue, if it was a call to a bridge's
+    /// claim entrypoint. Mind that this is the deposit's `id`, not its `depositId` (the queue nonce).
+    /// </summary>
+    [JsonConverter(typeof(Int64StringNullableConverter))]
+    public long? ClaimDepositId { get; set; }
 }
 
 public class XEvmMichelsonTransactionOperation : TransactionOperation, ITicketTransfersSource
@@ -251,7 +261,7 @@ public class XEvmMichelsonTransactionOperation : TransactionOperation, ITicketTr
     public int? Eip7702DelegationCount { get; set; }
 }
 
-public class XMichelsonEvmTransactionOperation : TransactionOperation
+public class XMichelsonEvmTransactionOperation : TransactionOperation, IBridgeTicketTransfersSource
 {
     /// <summary>Amount the Michelson sender sent (mutez).</summary>
     public long AmountSent { get; set; }
@@ -308,4 +318,14 @@ public class XMichelsonEvmTransactionOperation : TransactionOperation
 
     /// <summary>Arguments the gateway was called with, in Micheline format.</summary>
     public IMicheline? GatewayParametersRaw { get; set; }
+
+    /// <summary>Number of bridge ticket transfers caused by the operation, if any.</summary>
+    public int? BridgeTicketTransfers { get; set; }
+
+    /// <summary>
+    /// Id of the deposit operation the operation claimed off the queue, if it was a call to a bridge's
+    /// claim entrypoint. Mind that this is the deposit's `id`, not its `depositId` (the queue nonce).
+    /// </summary>
+    [JsonConverter(typeof(Int64StringNullableConverter))]
+    public long? ClaimDepositId { get; set; }
 }

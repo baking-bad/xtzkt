@@ -8,6 +8,7 @@ namespace Xtzkt.Data.Models
         public required long Id { get; set; }
         public required int ChainId { get; set; }
         public required int TicketerId { get; set; }
+        public required byte[] WeakHash { get; set; } // keccak256(forged_ticketer || forged_content)
 
         public required int FirstMinterId { get; set; }
         public required int FirstLevel { get; set; }
@@ -23,9 +24,6 @@ namespace Xtzkt.Data.Models
         public BigInteger TotalBurned { get; set; }
         public BigInteger TotalSupply { get; set; }
 
-        public int TypeHash { get; set; }
-        public int ContentHash { get; set; }
-        
         public required byte[] RawType { get; set; }
         public required byte[] RawContent { get; set; }
         public string? JsonContent { get; set; }
@@ -48,7 +46,7 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<Ticket>()
-                .HasIndex(x => new { x.TicketerId, x.TypeHash, x.ContentHash });
+                .HasIndex(x => x.WeakHash);
             #endregion
         }
     }

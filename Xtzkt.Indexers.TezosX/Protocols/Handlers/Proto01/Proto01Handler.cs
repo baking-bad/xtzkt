@@ -170,7 +170,12 @@ class Proto01Handler(
                         }
                     case DelayedEvmDepositOperation dop:
                         {
-                            await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
+                            var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
+                            var logCommit = new LogCommit(this);
+                            await logCommit.ApplyEvmLogs(op, dop.FeederCall.Logs);
+                            foreach (var bridgeCall in dop.BridgeCalls)
+                                if (bridgeCall.Status == OperationStatus.Applied)
+                                    await logCommit.ApplyEvmLogs(op, bridgeCall.Logs);
                             // shoudln't have internal ops
                             break;
                         }
@@ -310,6 +315,8 @@ class Proto01Handler(
         await ticketsCommit.Apply();
         await new TokensCommit(this).Apply(bigMapCommit.Updates);
         await new TokensCommit(this).ApplyEvmTransfers();
+        await new BridgeTicketsCommit(this).Apply();
+        await new DepositClaimCommit(this).Apply();
 
         await new StatisticsCommit(this).Apply();
         await new StateCommit(this).Apply(block);
@@ -322,6 +329,8 @@ class Proto01Handler(
 
         await new StatisticsCommit(this).Revert();
 
+        await new DepositClaimCommit(this).Revert();
+        await new BridgeTicketsCommit(this).Revert(currBlock);
         await new TokensCommit(this).Revert(currBlock);
         await new TicketsCommit(this).Revert(currBlock);
         await new BigMapCommit(this).Revert(currBlock);

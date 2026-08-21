@@ -85,6 +85,12 @@ public class EvmLog : Log
     public long? OriginationId { get; set; }
 
     /// <summary>
+    /// Id of the deposit operation, emitted the log (if any).
+    /// </summary>
+    [JsonConverter(typeof(Int64StringNullableConverter))]
+    public long? DepositId { get; set; }
+
+    /// <summary>
     /// Indexed event topics, where the first one is usually the event signature hash.
     /// </summary>
     [JsonConverter(typeof(HexListConverter))]

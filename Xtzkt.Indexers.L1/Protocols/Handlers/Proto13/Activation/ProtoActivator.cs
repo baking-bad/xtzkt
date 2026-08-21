@@ -26,7 +26,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto13
         protected override Sampler GetSampler(IEnumerable<(int id, long stake)> selection)
         {
             var sorted = selection.OrderByDescending(x =>
-                Base58.Parse(Cache.Addresses.GetBaker(x.id).Hash), new BytesComparer());
+                Base58.Parse(Cache.Addresses.GetBaker(x.id).Hash), BytesComparer.Instance);
 
             return new Sampler(sorted.Select(x => x.id).ToArray(), sorted.Select(x => x.stake).ToArray());
         }
@@ -145,7 +145,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto13
                     };
 
                     var viewsBytes = newScript.Views?
-                        .OrderBy(x => x, new BytesComparer())
+                        .OrderBy(x => x, BytesComparer.Instance)
                         .SelectMany(x => x)
                         .ToArray()
                         ?? [];

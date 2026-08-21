@@ -1,5 +1,5 @@
 Everything that happened, from one of three angles: an account, a block, or an operation group.
-Operations and token/ticket transfers come back merged into a single **stream** sorted by `id`,
+Operations and token, ticket and bridge ticket transfers come back merged into a single **stream** sorted by `id`,
 so an entire flow can be reconstructed from one request.
 
 ### Good to know

@@ -21,12 +21,17 @@ public abstract class XEvmAddress(AddressType type) : XAddress(Runtime.Evm, type
     [Column(nameof(LogsCount))]
     public int LogsCount { get; set; }
 
+    public int ActiveBridgeTicketsCount { get; set; }
+    public int BridgeTicketBalancesCount { get; set; }
+    public int BridgeTicketTransfersCount { get; set; }
+
     #region helpers
     public override bool IsEmpty() =>
         base.IsEmpty() &&
         BlocksCount == 0 &&
         Eip7702DelegationCount == 0 &&
-        LogsCount == 0;
+        LogsCount == 0 &&
+        BridgeTicketTransfersCount == 0;
     #endregion
 }
 

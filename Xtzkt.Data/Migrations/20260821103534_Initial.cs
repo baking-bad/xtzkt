@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Xtzkt.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class T0 : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -157,6 +157,9 @@ namespace Xtzkt.Data.Migrations
                     DepositOpsCount = table.Column<int>(type: "integer", nullable: true),
                     Balance18 = table.Column<BigInteger>(type: "numeric", nullable: true),
                     Eip7702DelegationCount = table.Column<int>(type: "integer", nullable: true),
+                    ActiveBridgeTicketsCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketBalancesCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketTransfersCount = table.Column<int>(type: "integer", nullable: true),
                     OwnerId = table.Column<int>(type: "integer", nullable: true),
                     Eip7702DelegateId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -479,6 +482,72 @@ namespace Xtzkt.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BridgeTicketBalances",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChainId = table.Column<int>(type: "integer", nullable: false),
+                    TicketId = table.Column<long>(type: "bigint", nullable: false),
+                    AddressId = table.Column<int>(type: "integer", nullable: false),
+                    FirstLevel = table.Column<int>(type: "integer", nullable: false),
+                    FirstTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastLevel = table.Column<int>(type: "integer", nullable: false),
+                    LastTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TransfersCount = table.Column<int>(type: "integer", nullable: false),
+                    Balance = table.Column<BigInteger>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BridgeTicketBalances", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BridgeTickets",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChainId = table.Column<int>(type: "integer", nullable: false),
+                    WeakHash = table.Column<byte[]>(type: "bytea", nullable: false),
+                    FirstLevel = table.Column<int>(type: "integer", nullable: false),
+                    FirstTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastLevel = table.Column<int>(type: "integer", nullable: false),
+                    LastTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TransfersCount = table.Column<int>(type: "integer", nullable: false),
+                    BalancesCount = table.Column<int>(type: "integer", nullable: false),
+                    HoldersCount = table.Column<int>(type: "integer", nullable: false),
+                    TotalMinted = table.Column<BigInteger>(type: "numeric", nullable: false),
+                    TotalBurned = table.Column<BigInteger>(type: "numeric", nullable: false),
+                    TotalSupply = table.Column<BigInteger>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BridgeTickets", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BridgeTicketTransfers",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChainId = table.Column<int>(type: "integer", nullable: false),
+                    TicketId = table.Column<long>(type: "bigint", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Amount = table.Column<BigInteger>(type: "numeric", nullable: false),
+                    FromId = table.Column<int>(type: "integer", nullable: true),
+                    ToId = table.Column<int>(type: "integer", nullable: true),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: true),
+                    DepositId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BridgeTicketTransfers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Chains",
                 columns: table => new
                 {
@@ -585,7 +654,10 @@ namespace Xtzkt.Data.Migrations
                     MichelsonProtocol = table.Column<string>(type: "text", nullable: true),
                     MichelsonBlock = table.Column<string>(type: "text", nullable: true),
                     DepositOpsCount = table.Column<int>(type: "integer", nullable: true),
-                    Eip7702DelegationCount = table.Column<int>(type: "integer", nullable: true)
+                    Eip7702DelegationCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketsCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketBalancesCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketTransfersCount = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -795,6 +867,10 @@ namespace Xtzkt.Data.Migrations
                     TicketHash = table.Column<byte[]>(type: "bytea", nullable: true),
                     ProxyId = table.Column<int>(type: "integer", nullable: true),
                     DepositId = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    ClaimTransactionId = table.Column<long>(type: "bigint", nullable: true),
+                    SubsCounter = table.Column<int>(type: "integer", nullable: true),
+                    LogsCount = table.Column<int>(type: "integer", nullable: true),
+                    BridgeTicketTransfers = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
@@ -989,6 +1065,7 @@ namespace Xtzkt.Data.Migrations
                     Guessed = table.Column<bool>(type: "boolean", nullable: true),
                     TransactionId = table.Column<long>(type: "bigint", nullable: true),
                     OriginationId = table.Column<long>(type: "bigint", nullable: true),
+                    DepositId = table.Column<long>(type: "bigint", nullable: true),
                     Topics = table.Column<byte[][]>(type: "bytea[]", nullable: true),
                     Data = table.Column<byte[]>(type: "bytea", nullable: true),
                     Type = table.Column<byte[]>(type: "bytea", nullable: true),
@@ -1932,6 +2009,7 @@ namespace Xtzkt.Data.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ChainId = table.Column<int>(type: "integer", nullable: false),
                     TicketerId = table.Column<int>(type: "integer", nullable: false),
+                    WeakHash = table.Column<byte[]>(type: "bytea", nullable: false),
                     FirstMinterId = table.Column<int>(type: "integer", nullable: false),
                     FirstLevel = table.Column<int>(type: "integer", nullable: false),
                     FirstTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -1943,8 +2021,6 @@ namespace Xtzkt.Data.Migrations
                     TotalMinted = table.Column<BigInteger>(type: "numeric", nullable: false),
                     TotalBurned = table.Column<BigInteger>(type: "numeric", nullable: false),
                     TotalSupply = table.Column<BigInteger>(type: "numeric", nullable: false),
-                    TypeHash = table.Column<int>(type: "integer", nullable: false),
-                    ContentHash = table.Column<int>(type: "integer", nullable: false),
                     RawType = table.Column<byte[]>(type: "bytea", nullable: false),
                     RawContent = table.Column<byte[]>(type: "bytea", nullable: false),
                     JsonContent = table.Column<string>(type: "jsonb", nullable: true)
@@ -2128,6 +2204,8 @@ namespace Xtzkt.Data.Migrations
                     Input = table.Column<byte[]>(type: "bytea", nullable: true),
                     Output = table.Column<byte[]>(type: "bytea", nullable: true),
                     Result = table.Column<string>(type: "jsonb", nullable: true),
+                    BridgeTicketTransfers = table.Column<int>(type: "integer", nullable: true),
+                    ClaimDepositId = table.Column<long>(type: "bigint", nullable: true),
                     GatewayParametersRaw = table.Column<byte[]>(type: "bytea", nullable: true)
                 },
                 constraints: table =>
@@ -2457,6 +2535,21 @@ namespace Xtzkt.Data.Migrations
                 columns: new[] { "ChainId", "Level" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_BridgeTicketBalances_AddressId_TicketId",
+                table: "BridgeTicketBalances",
+                columns: new[] { "AddressId", "TicketId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BridgeTickets_WeakHash",
+                table: "BridgeTickets",
+                column: "WeakHash");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BridgeTicketTransfers_ChainId_Level",
+                table: "BridgeTicketTransfers",
+                columns: new[] { "ChainId", "Level" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Commitments_AddressId",
                 table: "Commitments",
                 column: "AddressId");
@@ -2497,6 +2590,12 @@ namespace Xtzkt.Data.Migrations
                 name: "IX_DelegatorCycles_Cycle",
                 table: "DelegatorCycles",
                 column: "Cycle");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DepositOps_DepositId_Partial",
+                table: "DepositOps",
+                column: "DepositId",
+                filter: "\"DepositId\" is not null");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DepositOps_Level",
@@ -2882,9 +2981,9 @@ namespace Xtzkt.Data.Migrations
                 columns: new[] { "AddressId", "TicketId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tickets_TicketerId_TypeHash_ContentHash",
+                name: "IX_Tickets_WeakHash",
                 table: "Tickets",
-                columns: new[] { "TicketerId", "TypeHash", "ContentHash" });
+                column: "WeakHash");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TicketTransfers_ChainId_Level",
@@ -3000,6 +3099,15 @@ namespace Xtzkt.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Blocks");
+
+            migrationBuilder.DropTable(
+                name: "BridgeTicketBalances");
+
+            migrationBuilder.DropTable(
+                name: "BridgeTickets");
+
+            migrationBuilder.DropTable(
+                name: "BridgeTicketTransfers");
 
             migrationBuilder.DropTable(
                 name: "Chains");

@@ -192,7 +192,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
         {
             var sorted = selection
                 .OrderByDescending(x => x.stake)
-                .ThenByDescending(x => Base58.Parse(Cache.Addresses.GetBaker(x.id).Hash), new BytesComparer());
+                .ThenByDescending(x => Base58.Parse(Cache.Addresses.GetBaker(x.id).Hash), BytesComparer.Instance);
 
             return new Sampler([..sorted.Select(x => x.id)], [..sorted.Select(x => x.stake)]);
         }

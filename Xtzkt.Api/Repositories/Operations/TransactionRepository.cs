@@ -129,6 +129,8 @@ public class TransactionRepository(
                         }
                         break;
                     case "eip7702DelegationCount": columns.Add(@"""Eip7702DelegationCount"""); break;
+                    case "bridgeTicketTransfers":  columns.Add(@"""BridgeTicketTransfers"""); break;
+                    case "claimDepositId":         columns.Add(@"""ClaimDepositId"""); break;
                     case "roundingLoss":           columns.Add(@"""RoundingLoss"""); break;
                     case "alias":                  columns.Add(@"""AliasId"""); break;
                     case "gateway":                columns.Add(@"""GatewayId"""); break;
@@ -169,6 +171,7 @@ public class TransactionRepository(
             .Where(@"""Guessed""",        filter.Guessed)
             .Where(@"""AliasId""",        filter.Alias?.Id)
             .Where(@"""GatewayId""",      filter.Gateway?.Id)
+            .Where(@"""ClaimDepositId""", filter.ClaimDepositId)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -214,6 +217,7 @@ public class TransactionRepository(
             .Where(@"""Guessed""",        filter.Guessed)
             .Where(@"""AliasId""",        filter.Alias?.Id)
             .Where(@"""GatewayId""",      filter.Gateway?.Id)
+            .Where(@"""ClaimDepositId""", filter.ClaimDepositId)
             .Build();
 
         await using var db = await _dataSource.OpenConnectionAsync();
@@ -333,6 +337,8 @@ public class TransactionRepository(
                     Output = row.Output,
                     Result = row.Result,
                     Eip7702DelegationCount = row.Eip7702DelegationCount,
+                    BridgeTicketTransfers = row.BridgeTicketTransfers,
+                    ClaimDepositId = row.ClaimDepositId,
                 },
                 Data.Models.Direction.XEvmMichelson => new XEvmMichelsonTransactionOperation
                 {
@@ -419,6 +425,8 @@ public class TransactionRepository(
                     GatewayEntrypoint = row.GatewayEntrypoint,
                     GatewayParameters = row.GatewayParameters,
                     GatewayParametersRaw = Decode.ToMicheline((byte[]?)row.GatewayParametersRaw),
+                    BridgeTicketTransfers = row.BridgeTicketTransfers,
+                    ClaimDepositId = row.ClaimDepositId,
                 },
                 _ => throw new InvalidOperationException("Failed to read TransactionOperation")
             };
@@ -648,6 +656,12 @@ public class TransactionRepository(
                     break;
                 case "eip7702DelegationCount":
                     foreach (var row in rows) result[j++][i] = row.Eip7702DelegationCount;
+                    break;
+                case "bridgeTicketTransfers":
+                    foreach (var row in rows) result[j++][i] = row.BridgeTicketTransfers;
+                    break;
+                case "claimDepositId":
+                    foreach (var row in rows) result[j++][i] = row.ClaimDepositId?.ToString();
                     break;
                 case "roundingLoss":
                     foreach (var row in rows) result[j++][i] = row.RoundingLoss;

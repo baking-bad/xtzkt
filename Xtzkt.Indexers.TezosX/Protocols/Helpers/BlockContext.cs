@@ -31,6 +31,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         public List<EvmTokenTransferData> EvmTokenTransfers { get; set; } = [];
         #endregion
 
+        #region bridge tickets
+        public List<BridgeTicketUpdateData> BridgeTicketUpdates { get; set; } = [];
+        #endregion
+
         public IEnumerable<IOperation> EnumerateOps()
         {
             var ops = Enumerable.Empty<IOperation>();
@@ -71,6 +75,13 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         TokenTags Type,
         string From,
         string To,
+        BigInteger Amount,
+        ISourceOperation Op);
+
+    public record BridgeTicketUpdateData(
+        byte[] TicketHash,
+        string? From,
+        string? To,
         BigInteger Amount,
         ISourceOperation Op);
 }

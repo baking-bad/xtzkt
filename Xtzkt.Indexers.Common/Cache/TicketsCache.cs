@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Helpers;
 using Xtzkt.Indexers.Common.Utils;
 
 namespace Xtzkt.Indexers.Common.Cache;
@@ -84,27 +85,22 @@ public class TicketsCache(XtzktContext db, ChainConfig chain)
         }
     }
 
-    public async Task Preload(IEnumerable<(int, byte[], int, byte[], int)> keys)
+    public async Task Preload(IEnumerable<(int TicketerId, TicketIdentity Identity)> keys)
     {
-        var missed = keys.Where(x => !CachedByKey.ContainsKey((x.Item1, x.Item2, x.Item4))).ToHashSet();
+        var missed = keys
+            .Where(x => !CachedByKey.ContainsKey((x.TicketerId, x.Identity.RawType, x.Identity.RawContent)))
+            .Select(x => x.Identity.WeakHash)
+            .DistinctBy(x => (HashableBytes)x)
+            .ToList();
+
         if (missed.Count != 0)
         {
-            for (int i = 0, n = 2048; i < missed.Count; i += n)
-            {
-                var corteges = string.Join(',', missed.Skip(i).Take(n).Select(x => $"({x.Item1}, '{x.Item3}', '{x.Item5}')"));
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                var items = await Db.Tickets
-                    .FromSqlRaw($"""
-                        SELECT *
-                        FROM "Tickets"
-                        WHERE ("TicketerId", "TypeHash", "ContentHash") IN ({corteges})
-                        """)
-                    .ToListAsync();
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            var items = await Db.Tickets
+                .Where(x => x.ChainId == Chain.Id && missed.Contains(x.WeakHash))
+                .ToListAsync();
 
-                foreach (var item in items)
-                    Add(item);
-            }
+            foreach (var item in items)
+                Add(item);
         }
     }
 }

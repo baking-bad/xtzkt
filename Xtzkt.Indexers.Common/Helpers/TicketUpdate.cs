@@ -1,5 +1,8 @@
 ﻿using System.Numerics;
+using Netezos.Encoding;
+using Netezos.Forging;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Utils.Crypto;
 
 namespace Xtzkt.Indexers.Common.Helpers;
 
@@ -16,8 +19,10 @@ public class TicketIdentity
     public required byte[] RawContent { get; set; }
     public string? JsonContent { get; set; }
 
-    public int ContentHash { get; set; }
-    public int TypeHash { get; set; }
+    byte[]? _WeakHash = null;
+    public byte[] WeakHash => _WeakHash ??= Keccak256.GetHashBytes([
+        .. LocalForge.ForgeAddress(Ticketer),
+        .. LocalForge.ForgeMicheline(Micheline.FromBytes(RawContent))]);
 
     public override bool Equals(object? obj)
     {
@@ -29,7 +34,7 @@ public class TicketIdentity
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Ticketer.GetHashCode(), ContentHash, TypeHash);
+        return HashCode.Combine(Ticketer.GetHashCode(), RawType.GetHashCodeExt(), RawContent.GetHashCodeExt());
     }
 }
 

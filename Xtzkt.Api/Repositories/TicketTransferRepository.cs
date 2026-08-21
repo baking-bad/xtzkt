@@ -67,9 +67,7 @@ public class TicketTransferRepository(
             columns.Add(@"t.""RawType"" as ""Ticket_RawType""");
             columns.Add(@"t.""RawContent"" as ""Ticket_RawContent""");
             columns.Add(@"t.""JsonContent"" as ""Ticket_JsonContent""");
-            columns.Add(@"t.""TypeHash"" as ""Ticket_TypeHash""");
-            columns.Add(@"t.""ContentHash"" as ""Ticket_ContentHash""");
-            columns.Add(@"t.""TotalSupply"" as ""Ticket_TotalSupply""");
+            columns.Add(@"t.""WeakHash"" as ""Ticket_WeakHash""");
         }
         else
         {
@@ -95,9 +93,7 @@ public class TicketTransferRepository(
                             columns.Add(@"t.""RawType"" as ""Ticket_RawType""");
                             columns.Add(@"t.""RawContent"" as ""Ticket_RawContent""");
                             columns.Add(@"t.""JsonContent"" as ""Ticket_JsonContent""");
-                            columns.Add(@"t.""TypeHash"" as ""Ticket_TypeHash""");
-                            columns.Add(@"t.""ContentHash"" as ""Ticket_ContentHash""");
-                            columns.Add(@"t.""TotalSupply"" as ""Ticket_TotalSupply""");
+                            columns.Add(@"t.""WeakHash"" as ""Ticket_WeakHash""");
                         }
                         else
                         {
@@ -108,9 +104,7 @@ public class TicketTransferRepository(
                                 case "ticketer":    columns.Add(@"tt.""TicketerId"" as ""Ticket_TicketerId"""); break;
                                 case "rawType":     columns.Add(@"t.""RawType"" as ""Ticket_RawType"""); break;
                                 case "rawContent":  columns.Add(@"t.""RawContent"" as ""Ticket_RawContent"""); break;
-                                case "typeHash":    columns.Add(@"t.""TypeHash"" as ""Ticket_TypeHash"""); break;
-                                case "contentHash": columns.Add(@"t.""ContentHash"" as ""Ticket_ContentHash"""); break;
-                                case "totalSupply": columns.Add(@"t.""TotalSupply"" as ""Ticket_TotalSupply"""); break;
+                                case "weakHash":    columns.Add(@"t.""WeakHash"" as ""Ticket_WeakHash"""); break;
                                 case "content":
                                     if (subField.Path == null)
                                     {
@@ -151,8 +145,7 @@ public class TicketTransferRepository(
             .Where(@"t.""RawType""",               filter.Ticket?.RawType)
             .Where(@"t.""RawContent""",            filter.Ticket?.RawContent)
             .Where(@"t.""JsonContent""",           filter.Ticket?.Content)
-            .Where(@"t.""TypeHash""",              filter.Ticket?.TypeHash)
-            .Where(@"t.""ContentHash""",           filter.Ticket?.ContentHash)
+            .Where(@"t.""WeakHash""",              filter.Ticket?.WeakHash)
             .Where(@"tt.""FromId""",               filter.From?.Id)
             .Where(@"tt.""ToId""",                 filter.To?.Id)
             .Where(@"tt.""Amount""",               filter.Amount)
@@ -182,7 +175,7 @@ public class TicketTransferRepository(
             .From(@"""TicketTransfers""", "tt");
 
         if (filter.Ticket?.RawType != null || filter.Ticket?.RawContent != null || filter.Ticket?.Content != null ||
-            filter.Ticket?.TypeHash != null || filter.Ticket?.ContentHash != null)
+            filter.Ticket?.WeakHash != null)
             sql.InnerJoin(@"""Tickets""", "t", @"""Id""", @"tt.""TicketId""");
 
         var (query, parameters) = sql
@@ -201,8 +194,7 @@ public class TicketTransferRepository(
             .Where(@"t.""RawType""",               filter.Ticket?.RawType)
             .Where(@"t.""RawContent""",            filter.Ticket?.RawContent)
             .Where(@"t.""JsonContent""",           filter.Ticket?.Content)
-            .Where(@"t.""TypeHash""",              filter.Ticket?.TypeHash)
-            .Where(@"t.""ContentHash""",           filter.Ticket?.ContentHash)
+            .Where(@"t.""WeakHash""",              filter.Ticket?.WeakHash)
             .Where(@"tt.""FromId""",               filter.From?.Id)
             .Where(@"tt.""ToId""",                 filter.To?.Id)
             .Where(@"tt.""Amount""",               filter.Amount)
@@ -231,9 +223,7 @@ public class TicketTransferRepository(
                 RawType = Micheline.FromBytes((byte[])row.Ticket_RawType),
                 RawContent = Micheline.FromBytes((byte[])row.Ticket_RawContent),
                 Content = row.Ticket_JsonContent,
-                TypeHash = row.Ticket_TypeHash,
-                ContentHash = row.Ticket_ContentHash,
-                TotalSupply = row.Ticket_TotalSupply,
+                WeakHash = row.Ticket_WeakHash,
             },
             From = _addressCache.GetInfo((int?)row.FromId),
             To = _addressCache.GetInfo((int?)row.ToId),
@@ -328,9 +318,7 @@ public class TicketTransferRepository(
                         RawType = Micheline.FromBytes((byte[])row.Ticket_RawType),
                         RawContent = Micheline.FromBytes((byte[])row.Ticket_RawContent),
                         Content = row.Ticket_JsonContent,
-                        TypeHash = row.Ticket_TypeHash,
-                        ContentHash = row.Ticket_ContentHash,
-                        TotalSupply = row.Ticket_TotalSupply,
+                        WeakHash = row.Ticket_WeakHash,
                     };
                     break;
                 case "ticket.id":
@@ -360,14 +348,8 @@ public class TicketTransferRepository(
                 case "ticket.content":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Ticket_JsonContent;
                     break;
-                case "ticket.typeHash":
-                    foreach (var row in rows) result[j++][i] = row.Ticket_TypeHash;
-                    break;
-                case "ticket.contentHash":
-                    foreach (var row in rows) result[j++][i] = row.Ticket_ContentHash;
-                    break;
-                case "ticket.totalSupply":
-                    foreach (var row in rows) result[j++][i] = row.Ticket_TotalSupply;
+                case "ticket.weakHash":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[])row.Ticket_WeakHash);
                     break;
                 default:
                     if (fields[i].Full.StartsWith("ticket.content."))

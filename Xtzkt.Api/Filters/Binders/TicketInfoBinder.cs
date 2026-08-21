@@ -15,8 +15,7 @@ public class TicketInfoBinder(IModelMetadataProvider _metadata, IModelBinderFact
         var rawType = await bindingContext.BindChild<MichelineParameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.RawType)}");
         var rawContent = await bindingContext.BindChild<MichelineParameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.RawContent)}");
         var content = await bindingContext.BindChild<JsonParameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.Content)}");
-        var typeHash = await bindingContext.BindChild<Int32Parameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.TypeHash)}");
-        var contentHash = await bindingContext.BindChild<Int32Parameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.ContentHash)}");
+        var weakHash = await bindingContext.BindChild<HexBytesParameter>(_metadata, _factory, $"{param}.{nameof(TicketInfoParameter.WeakHash)}");
 
         id ??= await bindingContext.BindChild<Int64Parameter>(_metadata, _factory, param);
 
@@ -24,7 +23,7 @@ public class TicketInfoBinder(IModelMetadataProvider _metadata, IModelBinderFact
             return;
 
         bindingContext.Result = ModelBindingResult.Success(
-            id == null && ticketer == null && rawType == null && rawContent == null && content == null && typeHash == null && contentHash == null
+            id == null && ticketer == null && rawType == null && rawContent == null && content == null && weakHash == null
                 ? null
                 : new TicketInfoParameter
                 {
@@ -33,8 +32,7 @@ public class TicketInfoBinder(IModelMetadataProvider _metadata, IModelBinderFact
                     RawType = rawType,
                     RawContent = rawContent,
                     Content = content,
-                    TypeHash = typeHash,
-                    ContentHash = contentHash,
+                    WeakHash = weakHash,
                 });
     }
 }

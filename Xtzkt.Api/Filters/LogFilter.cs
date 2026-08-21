@@ -127,6 +127,15 @@ public class LogFilter : INormalizable
     public Int64NullParameter? OriginationId { get; set; }
 
     /// <summary>
+    /// Filters by the deposit operation that emitted the log (`evm` only).
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?depositId=123`.
+    /// </summary>
+    public Int64NullParameter? DepositId { get; set; }
+
+    /// <summary>
     /// Filters by the first event topic, which is usually the event signature hash (`evm` only).
     ///
     /// Click on the parameter to expand more details.
@@ -176,6 +185,7 @@ public class LogFilter : INormalizable
         Guessed == null &&
         TransactionId == null &&
         OriginationId == null &&
+        DepositId == null &&
         Topic0 == null &&
         Topic1 == null &&
         Topic2 == null &&
@@ -195,6 +205,7 @@ public class LogFilter : INormalizable
         ($"{name}.guessed", Guessed),
         ($"{name}.transactionId", TransactionId),
         ($"{name}.originationId", OriginationId),
+        ($"{name}.depositId", DepositId),
         ($"{name}.topic0", Topic0),
         ($"{name}.topic1", Topic1),
         ($"{name}.topic2", Topic2),

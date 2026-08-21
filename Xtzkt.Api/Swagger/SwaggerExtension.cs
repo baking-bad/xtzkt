@@ -99,7 +99,8 @@ static class SwaggerExtension
                     _ when path.StartsWith("/v1/assets") => 0,
                     _ when path.StartsWith("/v1/tokens") => 1,
                     _ when path.StartsWith("/v1/tickets") => 2,
-                    _ => 3,
+                    _ when path.StartsWith("/v1/bridge_tickets") => 3,
+                    _ => 4,
                 };
 
                 foreach (var tag in doc.Tags!)
@@ -132,6 +133,7 @@ static class SwaggerExtension
                     nameof(ChainInfoParameter),
                     nameof(TokenInfoParameter),
                     nameof(TicketInfoParameter),
+                    nameof(BridgeTicketInfoParameter),
                     nameof(BigMapInfoParameter),
                     nameof(BigMapKeyInfoParameter),
                     nameof(ContractInfoParameter),

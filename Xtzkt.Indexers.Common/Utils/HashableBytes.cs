@@ -4,7 +4,7 @@ namespace Xtzkt.Indexers.Common.Utils;
 
 public class HashableBytes(byte[] bytes)
 {
-    readonly byte[] Bytes = bytes;
+    public byte[] Bytes { get; } = bytes;
 
     public static implicit operator HashableBytes(byte[] array) => new(array);
     public override bool Equals(object? obj) => obj is HashableBytes hb && hb.Bytes.IsEqual(Bytes);

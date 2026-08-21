@@ -17,3 +17,12 @@ public interface ITicketTransfersSource
     long Id { get; }
     int? TicketTransfers { get; }
 }
+
+/// <summary>
+/// An operation that can cause bridge ticket transfers.
+/// </summary>
+public interface IBridgeTicketTransfersSource
+{
+    long Id { get; }
+    int? BridgeTicketTransfers { get; }
+}

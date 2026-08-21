@@ -40,6 +40,7 @@ public enum AllBlockEvents
     Tokens                  = 0b_0000_0001_0000_0000,
     Events                  = 0b_0000_0010_0000_0000,
     Tickets                 = 0b_0000_0100_0000_0000,
+    BridgeTickets           = 0b_0100_0000_0000_0000,
 }
 
 [Flags]

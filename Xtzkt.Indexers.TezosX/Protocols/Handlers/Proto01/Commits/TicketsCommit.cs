@@ -4,6 +4,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
+using Xtzkt.Indexers.Common.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
@@ -31,7 +32,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 
             #region precache
             var addressesSet = new HashSet<string>();
-            var ticketsSet = new HashSet<(int, byte[], int, byte[], int)>();
+            var ticketsSet = new HashSet<(int, TicketIdentity)>();
             var balancesSet = new HashSet<(int, long)>();
 
             foreach (var (ticket, updates) in Updates.SelectMany(x => x.Value))
@@ -46,7 +47,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             foreach (var (ticket, _) in Updates.SelectMany(x => x.Value))
             {
                 if (Cache.Addresses.TryGetCached(ticket.Ticketer, out var ticketer))
-                    ticketsSet.Add((ticketer.Id, ticket.RawType, ticket.TypeHash, ticket.RawContent, ticket.ContentHash));
+                    ticketsSet.Add((ticketer.Id, ticket));
             }
 
             await Cache.Tickets.Preload(ticketsSet);
@@ -73,7 +74,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 
             foreach (var (_, opUpdates) in Updates.OrderBy(kv => kv.Key.Id))
             {
-                foreach (var (ticketIdentity, ticketUpdates) in opUpdates.OrderBy(x => x.Value[0].Op.Id).ThenBy(x => x.Key.ContentHash + x.Key.TypeHash))
+                foreach (var (ticketIdentity, ticketUpdates) in opUpdates
+                    .OrderBy(x => x.Value[0].Op.Id)
+                    .ThenBy(x => x.Key.WeakHash, BytesComparer.Instance)
+                    .ThenBy(x => x.Key.RawType, BytesComparer.Instance))
                 {
                     var ticketer = (Cache.Addresses.GetCached(ticketIdentity.Ticketer) as XMichelsonContract)!;
                     var ticket = GetOrCreateTicket(ticketUpdates[0].Op, ticketer, ticketIdentity);
@@ -160,11 +164,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                     TotalBurned = BigInteger.Zero,
                     TotalMinted = BigInteger.Zero,
                     TotalSupply = BigInteger.Zero,
+                    WeakHash = ticketToken.WeakHash,
                     RawType = ticketToken.RawType,
                     RawContent = ticketToken.RawContent,
                     JsonContent = ticketToken.JsonContent,
-                    ContentHash = ticketToken.ContentHash,
-                    TypeHash = ticketToken.TypeHash,
                 };
 
                 Db.Tickets.Add(ticket);

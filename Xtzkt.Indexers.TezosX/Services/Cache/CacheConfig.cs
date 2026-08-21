@@ -9,6 +9,8 @@ namespace Xtzkt.Indexers.TezosX.Services
         public CacheSize? BigMapKeys { get; set; }
         public CacheSize? BigMaps { get; set; }
         public CacheSize? Blocks { get; set; }
+        public CacheSize? BridgeTicketBalances { get; set; }
+        public CacheSize? BridgeTickets { get; set; }
         public CacheSize? Periods { get; set; }
         public CacheSize? Proposals { get; set; }
         public CacheSize? RefutationGames { get; set; }

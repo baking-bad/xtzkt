@@ -170,6 +170,9 @@ public class AddressRepository(
                     // XEvm
                     case "eip7702DelegationCount": columns.Add(@"""Eip7702DelegationCount"""); break;
                     case "eip7702Delegate":        columns.Add(@"""Eip7702DelegateId"""); break;
+                    case "activeBridgeTicketsCount": columns.Add(@"""ActiveBridgeTicketsCount"""); break;
+                    case "bridgeTicketBalancesCount": columns.Add(@"""BridgeTicketBalancesCount"""); break;
+                    case "bridgeTicketTransfersCount": columns.Add(@"""BridgeTicketTransfersCount"""); break;
                     // XEvmAlias / XMichelsonAlias
                     case "owner":   columns.Add(@"""OwnerId"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
@@ -571,6 +574,9 @@ public class AddressRepository(
                 MigrationsCount = row.MigrationsCount,
                 AliasesCount = row.AliasesCount,
                 DepositOpsCount = row.DepositOpsCount,
+                ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                 Counter = row.Counter,
                 Balance = row.Balance,
                 BlocksCount = row.BlocksCount,
@@ -601,6 +607,9 @@ public class AddressRepository(
                 MigrationsCount = row.MigrationsCount,
                 AliasesCount = row.AliasesCount,
                 DepositOpsCount = row.DepositOpsCount,
+                ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                 Counter = row.Counter,
                 Balance = row.Balance,
                 BlocksCount = row.BlocksCount,
@@ -632,6 +641,9 @@ public class AddressRepository(
                 MigrationsCount = row.MigrationsCount,
                 AliasesCount = row.AliasesCount,
                 DepositOpsCount = row.DepositOpsCount,
+                ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                 Counter = row.Counter,
                 Balance = row.Balance,
                 BlocksCount = row.BlocksCount,
@@ -1121,6 +1133,9 @@ public class AddressRepository(
                     MigrationsCount = row.MigrationsCount,
                     AliasesCount = row.AliasesCount,
                     DepositOpsCount = row.DepositOpsCount,
+                    ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                    BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                    BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                     Counter = row.Counter,
                     Balance = (BigInteger)row.Balance18,
                     BlocksCount = row.BlocksCount,
@@ -1151,6 +1166,9 @@ public class AddressRepository(
                     MigrationsCount = row.MigrationsCount,
                     AliasesCount = row.AliasesCount,
                     DepositOpsCount = row.DepositOpsCount,
+                    ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                    BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                    BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                     Counter = row.Counter,
                     Balance = (BigInteger)row.Balance18,
                     BlocksCount = row.BlocksCount,
@@ -1182,6 +1200,9 @@ public class AddressRepository(
                     MigrationsCount = row.MigrationsCount,
                     AliasesCount = row.AliasesCount,
                     DepositOpsCount = row.DepositOpsCount,
+                    ActiveBridgeTicketsCount = row.ActiveBridgeTicketsCount,
+                    BridgeTicketBalancesCount = row.BridgeTicketBalancesCount,
+                    BridgeTicketTransfersCount = row.BridgeTicketTransfersCount,
                     Counter = row.Counter,
                     Balance = (BigInteger)row.Balance18,
                     BlocksCount = row.BlocksCount,
@@ -1415,6 +1436,15 @@ public class AddressRepository(
                     break;
                 case "depositOpsCount":
                     foreach (var row in rows) result[j++][i] = row.DepositOpsCount;
+                    break;
+                case "activeBridgeTicketsCount":
+                    foreach (var row in rows) result[j++][i] = row.ActiveBridgeTicketsCount;
+                    break;
+                case "bridgeTicketBalancesCount":
+                    foreach (var row in rows) result[j++][i] = row.BridgeTicketBalancesCount;
+                    break;
+                case "bridgeTicketTransfersCount":
+                    foreach (var row in rows) result[j++][i] = row.BridgeTicketTransfersCount;
                     break;
                 case "smartRollupBonds":
                     foreach (var row in rows) result[j++][i] = row.SmartRollupBonds;

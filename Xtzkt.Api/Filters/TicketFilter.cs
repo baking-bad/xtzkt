@@ -43,22 +43,14 @@ public class TicketFilter : INormalizable
     public AddressInfoParameter? FirstMinter { get; set; }
 
     /// <summary>
-    /// Filters by 32-bit hash of the ticket content type.
+    /// Filters by weak hash of the ticket (the content type is not hashed, so tickets whose
+    /// types encode their content identically share it).
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?typeHash=123456`.
+    /// Example: `?weakHash=0x...`.
     /// </summary>
-    public Int32Parameter? TypeHash { get; set; }
-
-    /// <summary>
-    /// Filters by 32-bit hash of the ticket content.
-    ///
-    /// Click on the parameter to expand more details.
-    ///
-    /// Example: `?contentHash=123456`.
-    /// </summary>
-    public Int32Parameter? ContentHash { get; set; }
+    public HexBytesParameter? WeakHash { get; set; }
 
     /// <summary>
     /// Filters by ticket content type in Micheline format (specified as a JSON value).
@@ -128,8 +120,7 @@ public class TicketFilter : INormalizable
         Chain == null &&
         Ticketer == null &&
         FirstMinter == null &&
-        TypeHash == null &&
-        ContentHash == null &&
+        WeakHash == null &&
         RawType == null &&
         RawContent == null &&
         Content == null &&
@@ -143,8 +134,7 @@ public class TicketFilter : INormalizable
         ($"{name}.chain", Chain),
         ($"{name}.ticketer", Ticketer),
         ($"{name}.firstMinter", FirstMinter),
-        ($"{name}.typeHash", TypeHash),
-        ($"{name}.contentHash", ContentHash),
+        ($"{name}.weakHash", WeakHash),
         ($"{name}.rawType", RawType),
         ($"{name}.rawContent", RawContent),
         ($"{name}.content", Content),

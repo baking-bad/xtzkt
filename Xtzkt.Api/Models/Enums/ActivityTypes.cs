@@ -46,8 +46,9 @@ public class ActivityTypes
 
     public const string TicketTransfer = "ticket_transfer";
     public const string TokenTransfer = "token_transfer";
+    public const string BridgeTicketTransfer = "bridge_ticket_transfer";
     public const string Baking = "baking";
-    
+
     public static bool IsValid(string value) => value switch
     {
         Activation => true,
@@ -94,6 +95,7 @@ public class ActivityTypes
 
         TicketTransfer => true,
         TokenTransfer => true,
+        BridgeTicketTransfer => true,
         Baking => true,
         _ => false
     };
@@ -144,6 +146,7 @@ public class ActivityTypes
 
         TicketTransfer,
         TokenTransfer,
+        BridgeTicketTransfer,
         Baking,
     ];
 }

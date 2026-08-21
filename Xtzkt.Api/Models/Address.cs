@@ -407,6 +407,15 @@ public abstract class XEvmAddressBase : XAddressBase
     /// as well, if they have an EIP-7702 delegation.
     /// </summary>
     public int LogsCount { get; set; }
+
+    /// <summary>Number of bridge tickets the address currently holds (non-zero balances).</summary>
+    public int ActiveBridgeTicketsCount { get; set; }
+
+    /// <summary>Number of bridge tickets the address ever held, including the ones spent to zero.</summary>
+    public int BridgeTicketBalancesCount { get; set; }
+
+    /// <summary>Number of bridge ticket transfers the address took part in.</summary>
+    public int BridgeTicketTransfersCount { get; set; }
 }
 
 public class XEvmUser : XEvmAddressBase

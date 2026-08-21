@@ -568,8 +568,6 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                             RawType = rawType,
                             RawContent = rawContent,
                             JsonContent = jsonContent,
-                            TypeHash = MichelsonScript.GetHash(rawType),
-                            ContentHash = MichelsonScript.GetHash(rawContent)
                         },
                         Updates = list
                     });

@@ -39,16 +39,10 @@ public class TicketInfoParameter : INormalizable
     public JsonParameter? Content { get; set; }
 
     /// <summary>
-    /// Filters by 32-bit hash of the ticket content type.
+    /// Filters by weak hash of the ticket (the content type is not hashed, so tickets whose types encode their content identically share it).
     /// Click on the parameter to expand more details.
     /// </summary>
-    public Int32Parameter? TypeHash { get; set; }
-
-    /// <summary>
-    /// Filters by 32-bit hash of the ticket content.
-    /// Click on the parameter to expand more details.
-    /// </summary>
-    public Int32Parameter? ContentHash { get; set; }
+    public HexBytesParameter? WeakHash { get; set; }
 
     public virtual bool IsEmpty() =>
         Id == null &&
@@ -56,8 +50,7 @@ public class TicketInfoParameter : INormalizable
         RawType == null &&
         RawContent == null &&
         Content == null &&
-        TypeHash == null &&
-        ContentHash == null;
+        WeakHash == null;
 
     public virtual string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
@@ -65,6 +58,5 @@ public class TicketInfoParameter : INormalizable
         ($"{name}.rawType", RawType),
         ($"{name}.rawContent", RawContent),
         ($"{name}.content", Content),
-        ($"{name}.typeHash", TypeHash),
-        ($"{name}.contentHash", ContentHash));
+        ($"{name}.weakHash", WeakHash));
 }

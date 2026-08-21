@@ -17,6 +17,10 @@ public class XChain() : Chain(Layer.TezosX)
     #region counts
     public int DepositOpsCount { get; set; }
     public int Eip7702DelegationCount { get; set; }
+
+    public int BridgeTicketsCount { get; set; }
+    public int BridgeTicketBalancesCount { get; set; }
+    public int BridgeTicketTransfersCount { get; set; }
     #endregion
 }
 

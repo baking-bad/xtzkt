@@ -48,6 +48,13 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
 
     [Column(nameof(Eip7702DelegationCount))]
     public int? Eip7702DelegationCount { get; set; }
+
+    [Column(nameof(BridgeTicketTransfers))]
+    public int? BridgeTicketTransfers { get; set; }
+
+    // id of the deposit operation this operation claims
+    [Column(nameof(ClaimDepositId))]
+    public long? ClaimDepositId { get; set; }
 }
 
 public enum EvmOpType

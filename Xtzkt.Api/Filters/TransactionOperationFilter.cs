@@ -100,6 +100,17 @@ public class TransactionOperationFilter : ManagerOperationFilter
     /// </summary>
     public AddressInfoNullParameter? Gateway { get; set; }
 
+    /// <summary>
+    /// Filters by the deposit operation the transaction claimed off the queue (Tezos X bridge claims
+    /// only). This is the deposit's `id`, not its `depositId` — use `?claimDepositId.null=false`
+    /// to get all the claims.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Examples: `?claimDepositId=123`, `?claimDepositId.null=false`.
+    /// </summary>
+    public Int64NullParameter? ClaimDepositId { get; set; }
+
     [JsonIgnore]
     internal OrParameter? Or { get; set; }
 
@@ -115,6 +126,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
         Guessed == null &&
         Alias == null &&
         Gateway == null &&
+        ClaimDepositId == null &&
         Or == null;
 
     public override string Normalize(string name) => base.Normalize(name) + ResponseCacheService.BuildKey("",
@@ -128,5 +140,6 @@ public class TransactionOperationFilter : ManagerOperationFilter
         ($"{name}.guessed", Guessed),
         ($"{name}.alias", Alias),
         ($"{name}.gateway", Gateway),
+        ($"{name}.claimDepositId", ClaimDepositId),
         ($"{name}.or", Or));
 }

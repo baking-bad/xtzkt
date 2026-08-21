@@ -49,11 +49,16 @@ public class Ticket
     /// <summary>Total supply.</summary>
     public BigInteger TotalSupply { get; set; }
 
-    /// <summary>32-bit hash of the ticket content type (helps to find similar tickets).</summary>
-    public int TypeHash { get; set; }
-
-    /// <summary>32-bit hash of the ticket content (helps to find similar tickets).</summary>
-    public int ContentHash { get; set; }
+    /// <summary>
+    /// Canonical hash of the ticket: `keccak256` of the ticketer address and the ticket content,
+    /// both in their binary forms — the same hash bridged tickets are identified by on Tezos X,
+    /// so it can be used to match a ticket across the layers.
+    ///
+    /// Note, the content type is not hashed, so tickets of the same ticketer whose types encode
+    /// their content identically (`nat` and `int`, `bytes` and `address`, ...) share the hash.
+    /// </summary>
+    [JsonConverter(typeof(HexConverter))]
+    public required byte[] WeakHash { get; set; }
 
     /// <summary>Ticket content type in Micheline format.</summary>
     public required IMicheline RawType { get; set; }

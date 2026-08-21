@@ -12,6 +12,8 @@ namespace Xtzkt.Indexers.TezosX.Services
         public BigMapKeysCache BigMapKeys { get; }
         public BigMapsCache BigMaps { get; }
         public XBlocksCache Blocks { get; }
+        public BridgeTicketBalancesCache BridgeTicketBalances { get; }
+        public BridgeTicketsCache BridgeTickets { get; }
         public XProtocolsCache Protocols { get; }
         public AbiCache Abi { get; }
         public SchemasCache Schemas { get; }
@@ -32,6 +34,8 @@ namespace Xtzkt.Indexers.TezosX.Services
             BigMapKeys = new(db, chain);
             BigMaps = new(db, chain);
             Blocks = new(db, Chain, chain);
+            BridgeTicketBalances = new(db);
+            BridgeTickets = new(db, chain);
             Protocols = new(db, chain);
             Abi = new(db);
             Schemas = new(db);
@@ -52,6 +56,8 @@ namespace Xtzkt.Indexers.TezosX.Services
             BigMapKeys.Reset();
             BigMaps.Reset();
             Blocks.Reset();
+            BridgeTicketBalances.Reset();
+            BridgeTickets.Reset();
             await Protocols.ResetAsync();
             Abi.Reset();
             Schemas.Reset();
@@ -71,6 +77,8 @@ namespace Xtzkt.Indexers.TezosX.Services
             BigMapKeys.Trim();
             BigMaps.Trim();
             Blocks.Trim();
+            BridgeTicketBalances.Trim();
+            BridgeTickets.Trim();
             Abi.Trim();
             Schemas.Trim();
             StakerCycles.Trim();
@@ -93,6 +101,8 @@ namespace Xtzkt.Indexers.TezosX.Services
             BigMapKeysCache.Configure(cacheConfig.BigMapKeys);
             BigMapsCache.Configure(cacheConfig.BigMaps);
             BlocksCache.Configure(cacheConfig.Blocks);
+            BridgeTicketBalancesCache.Configure(cacheConfig.BridgeTicketBalances);
+            BridgeTicketsCache.Configure(cacheConfig.BridgeTickets);
             PeriodsCache.Configure(cacheConfig.Periods);
             ProposalsCache.Configure(cacheConfig.Proposals);
             RefutationGameCache.Configure(cacheConfig.RefutationGames);

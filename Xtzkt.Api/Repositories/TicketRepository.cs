@@ -70,8 +70,7 @@ public class TicketRepository(
                     case "totalMinted":    columns.Add(@"""TotalMinted"""); break;
                     case "totalBurned":    columns.Add(@"""TotalBurned"""); break;
                     case "totalSupply":    columns.Add(@"""TotalSupply"""); break;
-                    case "typeHash":       columns.Add(@"""TypeHash"""); break;
-                    case "contentHash":    columns.Add(@"""ContentHash"""); break;
+                    case "weakHash":       columns.Add(@"""WeakHash"""); break;
                     case "rawType":        columns.Add(@"""RawType"""); break;
                     case "rawContent":     columns.Add(@"""RawContent"""); break;
                     case "content":
@@ -97,8 +96,7 @@ public class TicketRepository(
             .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""TicketerId""",     filter.Ticketer?.Id)
             .Where(@"""FirstMinterId""",  filter.FirstMinter?.Id)
-            .Where(@"""TypeHash""",       filter.TypeHash)
-            .Where(@"""ContentHash""",    filter.ContentHash)
+            .Where(@"""WeakHash""",       filter.WeakHash)
             .Where(@"""RawType""",        filter.RawType)
             .Where(@"""RawContent""",     filter.RawContent)
             .Where(@"""JsonContent""",    filter.Content)
@@ -131,8 +129,7 @@ public class TicketRepository(
             .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""TicketerId""",     filter.Ticketer?.Id)
             .Where(@"""FirstMinterId""",  filter.FirstMinter?.Id)
-            .Where(@"""TypeHash""",       filter.TypeHash)
-            .Where(@"""ContentHash""",    filter.ContentHash)
+            .Where(@"""WeakHash""",       filter.WeakHash)
             .Where(@"""RawType""",        filter.RawType)
             .Where(@"""RawContent""",     filter.RawContent)
             .Where(@"""JsonContent""",    filter.Content)
@@ -165,8 +162,7 @@ public class TicketRepository(
             TotalMinted = row.TotalMinted,
             TotalBurned = row.TotalBurned,
             TotalSupply = row.TotalSupply,
-            TypeHash = row.TypeHash,
-            ContentHash = row.ContentHash,
+            WeakHash = row.WeakHash,
             RawType = Micheline.FromBytes((byte[])row.RawType),
             RawContent = Micheline.FromBytes((byte[])row.RawContent),
             Content = row.JsonContent,
@@ -261,11 +257,8 @@ public class TicketRepository(
                 case "totalSupply":
                     foreach (var row in rows) result[j++][i] = row.TotalSupply;
                     break;
-                case "typeHash":
-                    foreach (var row in rows) result[j++][i] = row.TypeHash;
-                    break;
-                case "contentHash":
-                    foreach (var row in rows) result[j++][i] = row.ContentHash;
+                case "weakHash":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[])row.WeakHash);
                     break;
                 case "rawType":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.RawType);

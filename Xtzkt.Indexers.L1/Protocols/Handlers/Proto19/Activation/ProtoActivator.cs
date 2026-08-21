@@ -317,7 +317,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
             {
                 var baker = Cache.Addresses.GetBaker(x.id);
                 return new byte[] { (byte)baker.PublicKey![0] }.Concat(Base58.Parse(baker.Hash));
-            }, new BytesComparer());
+            }, BytesComparer.Instance);
 
             return new Sampler([..sorted.Select(x => x.id)], [..sorted.Select(x => x.stake)]);
         }

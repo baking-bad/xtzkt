@@ -67,6 +67,9 @@ public class DepositRepository(
                     case "ticketHash":     columns.Add(@"""TicketHash"""); break;
                     case "proxy":          columns.Add(@"""ProxyId"""); break;
                     case "depositId":      columns.Add(@"""DepositId"""); break;
+                    case "claimTransactionId": columns.Add(@"""ClaimTransactionId"""); break;
+                    case "logsCount":      columns.Add(@"""LogsCount"""); break;
+                    case "bridgeTicketTransfers": columns.Add(@"""BridgeTicketTransfers"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
                 }
             }
@@ -83,11 +86,13 @@ public class DepositRepository(
             .Where(@"""Hash""",           filter.Hash)
             .Where(@"""Status""",         filter.Status)
             .Where(@"""InboxLevel""",     filter.InboxLevel)
+            .Where(@"""InboxMessageId""", filter.InboxMessageId)
             .Where(@"""ReceiverId""",     filter.Receiver?.Id)
             .Where(@"""ProxyId""",        filter.Proxy?.Id)
             .Where(@"""Type""",           filter.Type)
             .Where(@"""TicketHash""",     filter.TicketHash)
             .Where(@"""DepositId""",      filter.DepositId)
+            .Where(@"""ClaimTransactionId""", filter.ClaimTransactionId)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -116,11 +121,13 @@ public class DepositRepository(
             .Where(@"""Hash""",       filter.Hash)
             .Where(@"""Status""",     filter.Status)
             .Where(@"""InboxLevel""", filter.InboxLevel)
+            .Where(@"""InboxMessageId""", filter.InboxMessageId)
             .Where(@"""ReceiverId""", filter.Receiver?.Id)
             .Where(@"""ProxyId""",    filter.Proxy?.Id)
             .Where(@"""Type""",       filter.Type)
             .Where(@"""TicketHash""", filter.TicketHash)
             .Where(@"""DepositId""",  filter.DepositId)
+            .Where(@"""ClaimTransactionId""", filter.ClaimTransactionId)
             .Build();
 
         await using var db = await _dataSource.OpenConnectionAsync();
@@ -164,6 +171,9 @@ public class DepositRepository(
                     TicketHash = row.TicketHash,
                     Proxy = _addressCache.GetInfo((int?)row.ProxyId),
                     DepositId = row.DepositId,
+                    ClaimTransactionId = row.ClaimTransactionId,
+                    LogsCount = row.LogsCount,
+                    BridgeTicketTransfers = row.BridgeTicketTransfers,
                 },
                 _ => throw new InvalidOperationException("Failed to read DepositOperation")
             };
@@ -265,6 +275,15 @@ public class DepositRepository(
                     break;
                 case "depositId":
                     foreach (var row in rows) result[j++][i] = row.DepositId;
+                    break;
+                case "claimTransactionId":
+                    foreach (var row in rows) result[j++][i] = row.ClaimTransactionId?.ToString();
+                    break;
+                case "logsCount":
+                    foreach (var row in rows) result[j++][i] = row.LogsCount;
+                    break;
+                case "bridgeTicketTransfers":
+                    foreach (var row in rows) result[j++][i] = row.BridgeTicketTransfers;
                     break;
             }
         }

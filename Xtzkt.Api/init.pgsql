@@ -91,6 +91,32 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Blocks_MichelsonHash"
     ON "Blocks" ("MichelsonHash")
     WHERE "MichelsonHash" IS NOT NULL;
 
+-- BridgeTicketBalances
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketBalances_TicketId_Id"
+    ON "BridgeTicketBalances" ("TicketId", "Id");
+
+-- BridgeTicketTransfers
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketTransfers_FromId_Id"
+    ON "BridgeTicketTransfers" ("FromId", "Id")
+    WHERE "FromId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketTransfers_ToId_Id"
+    ON "BridgeTicketTransfers" ("ToId", "Id")
+    WHERE "ToId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketTransfers_TicketId_Id"
+    ON "BridgeTicketTransfers" ("TicketId", "Id");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketTransfers_TransactionId"
+    ON "BridgeTicketTransfers" ("TransactionId")
+    WHERE "TransactionId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_BridgeTicketTransfers_DepositId"
+    ON "BridgeTicketTransfers" ("DepositId")
+    WHERE "DepositId" IS NOT NULL;
+
 -- DalEntrapmentEvidenceOps
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DalEntrapmentEvidenceOps_Hash"
@@ -117,6 +143,17 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_ReceiverId"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_ProxyId"
     ON "DepositOps" ("ProxyId")
     WHERE "ProxyId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_InboxLevel_InboxMessageId"
+    ON "DepositOps" ("InboxLevel", "InboxMessageId");
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_ClaimTransactionId"
+    ON "DepositOps" ("ClaimTransactionId")
+    WHERE "ClaimTransactionId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_DepositOps_Id_Queued"
+    ON "DepositOps" ("Id")
+    WHERE "DepositId" IS NOT NULL AND "ClaimTransactionId" IS NULL;
 
 -- DrainDelegateOps
 
@@ -158,6 +195,10 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_TransactionId"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_OriginationId"
     ON "Logs" ("OriginationId")
     WHERE "OriginationId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_DepositId"
+    ON "Logs" ("DepositId")
+    WHERE "DepositId" IS NOT NULL;
 
 -- NonceRevelationOps
 
@@ -276,8 +317,8 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Storages_MigrationId"
 
 -- Tickets
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tickets_ContentHash"
-    ON "Tickets" ("ContentHash");
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Tickets_TicketerId_Id"
+    ON "Tickets" ("TicketerId", "Id");
 
 -- TicketBalances
 
@@ -394,6 +435,10 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TransactionOps_AliasId_Id"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TransactionOps_GatewayId_Id"
     ON "TransactionOps" ("GatewayId", "Id")
     WHERE "GatewayId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_TransactionOps_ClaimDepositId"
+    ON "TransactionOps" ("ClaimDepositId")
+    WHERE "ClaimDepositId" IS NOT NULL;
 
 -- TransferTicketOps
 

@@ -49,6 +49,13 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
     [Column(nameof(Result))]
     public string? Result { get; set; }
 
+    [Column(nameof(BridgeTicketTransfers))]
+    public int? BridgeTicketTransfers { get; set; }
+
+    // id of the deposit operation this operation claims
+    [Column(nameof(XEvmTransactionOperation.ClaimDepositId))]
+    public long? ClaimDepositId { get; set; }
+
 
     [Column(nameof(AliasId))]
     public int AliasId { get; set; }

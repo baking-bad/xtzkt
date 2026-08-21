@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Text.Json.Serialization;
 using Netezos.Encoding;
 
@@ -22,12 +21,10 @@ public class TicketInfo
     /// <summary>Ticket content in JSON format.</summary>
     public RawJson? Content { get; set; }
 
-    /// <summary>32-bit hash of the ticket content type.</summary>
-    public int TypeHash { get; set; }
-
-    /// <summary>32-bit hash of the ticket content.</summary>
-    public int ContentHash { get; set; }
-
-    /// <summary>Total supply.</summary>
-    public BigInteger TotalSupply { get; set; }
+    /// <summary>
+    /// Canonical hash of the ticket: `keccak256` of the ticketer address and the ticket content,
+    /// both in their binary forms (the content type is not hashed).
+    /// </summary>
+    [JsonConverter(typeof(HexConverter))]
+    public required byte[] WeakHash { get; set; }
 }

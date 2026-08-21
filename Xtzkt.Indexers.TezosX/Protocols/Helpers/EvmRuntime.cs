@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Utils;
+using Xtzkt.Utils.Crypto;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
@@ -63,7 +64,16 @@ public static class EvmRuntime
 
     // call(string,(string,string)[],bytes,uint8)
     public const string CallSelector = "0xfa591a56";
+
+    // drains a queued FA deposit; unchanged since the queue appeared in the kernel
+    public static readonly byte[] FaClaimSelector = Selector("claim(uint256)");
+
+    // drains a queued XTZ deposit; exists since the XTZ bridge got a queue of its own
+    public static readonly byte[] XtzClaimSelector = Selector("claim_xtz(uint256)");
     #endregion
+
+    static byte[] Selector(string signature) =>
+        Keccak256.GetHashBytes(Utf8.GetBytes(signature))[..4];
 
     public static string GetAlias(string address)
     {

@@ -19,6 +19,7 @@ public class ActivityRepository(
     MigrationRepository _migrationRepo,
     TokenTransferRepository _tokenTransferRepo,
     TicketTransferRepository _ticketTransferRepo,
+    BridgeTicketTransferRepository _bridgeTicketTransferRepo,
     BlockRepository _blockRepo,
     ChainCache _chainCache,
     AddressCache _addressCache)
@@ -95,6 +96,9 @@ public class ActivityRepository(
         if (types.Contains(ActivityTypes.TicketTransfer))
             tasks.Add(_ticketTransferRepo.Activity(addresses, roles, filter.Chain, filter.Timestamp, pagination));
 
+        if (types.Contains(ActivityTypes.BridgeTicketTransfer))
+            tasks.Add(_bridgeTicketTransferRepo.Activity(addresses, roles, filter.Chain, filter.Timestamp, pagination));
+
         await Task.WhenAll(tasks);
 
         return Paginate(tasks.SelectMany(x => x.Result), pagination);
@@ -153,6 +157,9 @@ public class ActivityRepository(
         if (events.HasFlag(Data.Models.AllBlockEvents.Tickets) && types.Contains(ActivityTypes.TicketTransfer))
             tasks.Add(_ticketTransferRepo.Activity(filter.Level, filter.Chain, pagination));
 
+        if (events.HasFlag(Data.Models.AllBlockEvents.BridgeTickets) && types.Contains(ActivityTypes.BridgeTicketTransfer))
+            tasks.Add(_bridgeTicketTransferRepo.Activity(filter.Level, filter.Chain, pagination));
+
         await Task.WhenAll(tasks);
 
         return Paginate(tasks.SelectMany(x => x.Result), pagination);
@@ -166,19 +173,21 @@ public class ActivityRepository(
         if (types.Count == 0)
             return [];
 
-        var tasks = new List<Task<IEnumerable<IOpgActivity>>>(7)
+        var tasks = new List<Task<IEnumerable<IOpgActivity>>>(8)
         {
+            Task.FromResult<IEnumerable<IOpgActivity>>([]),
             Task.FromResult<IEnumerable<IOpgActivity>>([]),
             Task.FromResult<IEnumerable<IOpgActivity>>([]),
             Task.FromResult<IEnumerable<IOpgActivity>>([]),
         };
         var hasTokenTransfers = types.Contains(ActivityTypes.TokenTransfer);
         var hasTicketTransfers = types.Contains(ActivityTypes.TicketTransfer);
+        var hasBridgeTicketTransfers = types.Contains(ActivityTypes.BridgeTicketTransfer);
 
         // amend cursor pagination for transfers phase
         var (extPagination, idCursor) = ExtendPagination(pagination);
 
-        if (types.Contains(ActivityTypes.Transaction) || hasTokenTransfers || hasTicketTransfers)
+        if (types.Contains(ActivityTypes.Transaction) || hasTokenTransfers || hasTicketTransfers || hasBridgeTicketTransfers)
             tasks[0] = _transactionRepo.Activity(filter.Hash, filter.Chain, extPagination);
 
         if (types.Contains(ActivityTypes.Origination) || hasTokenTransfers)
@@ -186,6 +195,9 @@ public class ActivityRepository(
 
         if (types.Contains(ActivityTypes.TransferTicket) || hasTicketTransfers)
             tasks[2] = _transferTicketRepo.Activity(filter.Hash, filter.Chain, extPagination);
+
+        if (types.Contains(ActivityTypes.Deposit) || hasBridgeTicketTransfers)
+            tasks[3] = _depositRepo.Activity(filter.Hash, filter.Chain, extPagination);
 
         if (types.Contains(ActivityTypes.Reveal))
             tasks.Add(_revealRepo.Activity(filter.Hash, filter.Chain, pagination));
@@ -196,12 +208,9 @@ public class ActivityRepository(
         if (types.Contains(ActivityTypes.RegisterConstant))
             tasks.Add(_registerConstantRepo.Activity(filter.Hash, filter.Chain, pagination));
 
-        if (types.Contains(ActivityTypes.Deposit))
-            tasks.Add(_depositRepo.Activity(filter.Hash, filter.Chain, pagination));
-
         await Task.WhenAll(tasks);
 
-        if (hasTokenTransfers || hasTicketTransfers)
+        if (hasTokenTransfers || hasTicketTransfers || hasBridgeTicketTransfers)
         {
             if (hasTokenTransfers)
             {
@@ -222,9 +231,20 @@ public class ActivityRepository(
                     tasks.Add(_ticketTransferRepo.Activity(transactionIds, transferTicketIds, pagination));
             }
 
+            if (hasBridgeTicketTransfers)
+            {
+                // OfType<T> is used deliberately, to filter out non-evm txs and michelson deposits
+                var transactionIds = tasks[0].Result.OfType<IBridgeTicketTransfersSource>().Where(x => x.BridgeTicketTransfers > 0).Select(x => x.Id).ToList();
+                var depositIds = tasks[3].Result.OfType<IBridgeTicketTransfersSource>().Where(x => x.BridgeTicketTransfers > 0).Select(x => x.Id).ToList();
+
+                if (transactionIds.Count != 0 || depositIds.Count != 0)
+                    tasks.Add(_bridgeTicketTransferRepo.Activity(transactionIds, depositIds, pagination));
+            }
+
             if (!types.Contains(ActivityTypes.Transaction)) tasks[0] = Task.FromResult<IEnumerable<IOpgActivity>>([]);
             if (!types.Contains(ActivityTypes.Origination)) tasks[1] = Task.FromResult<IEnumerable<IOpgActivity>>([]);
             if (!types.Contains(ActivityTypes.TransferTicket)) tasks[2] = Task.FromResult<IEnumerable<IOpgActivity>>([]);
+            if (!types.Contains(ActivityTypes.Deposit)) tasks[3] = Task.FromResult<IEnumerable<IOpgActivity>>([]);
 
             await Task.WhenAll(tasks);
         }

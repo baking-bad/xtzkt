@@ -273,8 +273,6 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                             RawType = rawType,
                             RawContent = rawContent,
                             JsonContent = jsonContent,
-                            TypeHash = MichelsonScript.GetHash(rawType),
-                            ContentHash = MichelsonScript.GetHash(rawContent)
                         },
                         Updates = list
                     });

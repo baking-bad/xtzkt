@@ -25,5 +25,6 @@ namespace Xtzkt.Api.Models.Abstract
     [JsonDerivedType(typeof(XMichelsonOriginationOperation), $"{ActivityTypes.Origination}:{Envs.XMichelson}")]
     [JsonDerivedType(typeof(TokenTransfer), ActivityTypes.TokenTransfer)]
     [JsonDerivedType(typeof(TicketTransfer), ActivityTypes.TicketTransfer)]
+    [JsonDerivedType(typeof(BridgeTicketTransfer), ActivityTypes.BridgeTicketTransfer)]
     public interface IOpgActivity : IActivity { }
 }

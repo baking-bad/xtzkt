@@ -14,8 +14,8 @@ using Xtzkt.Data;
 namespace Xtzkt.Data.Migrations
 {
     [DbContext(typeof(XtzktContext))]
-    [Migration("20260815085225_T0")]
-    partial class T0
+    [Migration("20260821103534_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -798,6 +798,142 @@ namespace Xtzkt.Data.Migrations
                     b.HasDiscriminator<int>("Layer");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.BridgeTicket", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("BalancesCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ChainId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FirstLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FirstTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HoldersCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LastLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<BigInteger>("TotalBurned")
+                        .HasColumnType("numeric");
+
+                    b.Property<BigInteger>("TotalMinted")
+                        .HasColumnType("numeric");
+
+                    b.Property<BigInteger>("TotalSupply")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("TransfersCount")
+                        .HasColumnType("integer");
+
+                    b.Property<byte[]>("WeakHash")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeakHash");
+
+                    b.ToTable("BridgeTickets");
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.BridgeTicketBalance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AddressId")
+                        .HasColumnType("integer");
+
+                    b.Property<BigInteger>("Balance")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ChainId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FirstLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FirstTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LastLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("TicketId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TransfersCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddressId", "TicketId");
+
+                    b.ToTable("BridgeTicketBalances");
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.BridgeTicketTransfer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<BigInteger>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ChainId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("DepositId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("FromId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("TicketId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ToId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("TransactionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChainId", "Level");
+
+                    b.ToTable("BridgeTicketTransfers");
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.Chain", b =>
@@ -3627,9 +3763,6 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ContentHash")
-                        .HasColumnType("integer");
-
                     b.Property<int>("FirstLevel")
                         .HasColumnType("integer");
 
@@ -3674,12 +3807,13 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("TransfersCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TypeHash")
-                        .HasColumnType("integer");
+                    b.Property<byte[]>("WeakHash")
+                        .IsRequired()
+                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TicketerId", "TypeHash", "ContentHash");
+                    b.HasIndex("WeakHash");
 
                     b.ToTable("Tickets");
                 });
@@ -4899,6 +5033,15 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.Chain");
 
+                    b.Property<int>("BridgeTicketBalancesCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BridgeTicketTransfersCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BridgeTicketsCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("DepositOpsCount")
                         .HasColumnType("integer");
 
@@ -4942,14 +5085,29 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("Amount18");
 
+                    b.Property<int?>("BridgeTicketTransfers")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("ClaimTransactionId")
+                        .HasColumnType("bigint");
+
                     b.Property<BigInteger?>("DepositId")
                         .HasColumnType("numeric");
+
+                    b.Property<int?>("LogsCount")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("ProxyId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SubsCounter")
+                        .HasColumnType("integer");
+
                     b.Property<byte[]>("TicketHash")
                         .HasColumnType("bytea");
+
+                    b.HasIndex(new[] { "DepositId" }, "IX_DepositOps_DepositId_Partial")
+                        .HasFilter("\"DepositId\" is not null");
 
                     b.HasDiscriminator().HasValue(0);
                 });
@@ -4998,6 +5156,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<byte[]>("Data")
                         .IsRequired()
                         .HasColumnType("bytea");
+
+                    b.Property<long?>("DepositId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("OriginationId")
                         .HasColumnType("bigint");
@@ -5755,6 +5916,16 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("Amount18");
 
+                    b.Property<int?>("BridgeTicketTransfers")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("BridgeTicketTransfers");
+
+                    b.Property<long?>("ClaimDepositId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ClaimDepositId");
+
                     b.Property<BigInteger>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("numeric")
@@ -5841,6 +6012,16 @@ namespace Xtzkt.Data.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("Amount");
+
+                    b.Property<int?>("BridgeTicketTransfers")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("BridgeTicketTransfers");
+
+                    b.Property<long?>("ClaimDepositId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ClaimDepositId");
 
                     b.Property<long>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
@@ -6107,6 +6288,9 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.XAddress");
 
+                    b.Property<int>("ActiveBridgeTicketsCount")
+                        .HasColumnType("integer");
+
                     b.Property<BigInteger>("Balance")
                         .HasColumnType("numeric")
                         .HasColumnName("Balance18");
@@ -6115,6 +6299,12 @@ namespace Xtzkt.Data.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("BlocksCount");
+
+                    b.Property<int>("BridgeTicketBalancesCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BridgeTicketTransfersCount")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Counter")
                         .ValueGeneratedOnUpdateSometimes()

@@ -35,6 +35,7 @@ public enum XBlockEvents
     Tokens                  = AllBlockEvents.Tokens,
     Events                  = AllBlockEvents.Events,
     Tickets                 = AllBlockEvents.Tickets,
+    BridgeTickets           = AllBlockEvents.BridgeTickets,
 }
 
 [Flags]

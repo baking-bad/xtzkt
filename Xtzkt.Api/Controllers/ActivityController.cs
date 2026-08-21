@@ -16,7 +16,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// Get account activity
     /// </summary>
     /// <remarks>
-    /// Returns everything the specified account took part in — operations, token and ticket transfers —
+    /// Returns everything the specified account took part in — operations, token, ticket and bridge ticket transfers —
     /// merged into a single stream sorted by `id`, so an account history can be rendered from one request.
     /// Each item carries an `activity` field telling you which kind it is, and which model to expect.
     ///
@@ -43,7 +43,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// Get block activity
     /// </summary>
     /// <remarks>
-    /// Returns everything that happened in the specified block — operations, token and ticket transfers —
+    /// Returns everything that happened in the specified block — operations, token, ticket and bridge ticket transfers —
     /// merged into a single stream sorted by `id`, so a block can be rendered from one request.
     /// Each item carries an `activity` field telling you which kind it is, and which model to expect.
     ///
@@ -69,7 +69,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// </summary>
     /// <remarks>
     /// Returns everything that happened under a single operation hash — all the operations of the group,
-    /// their internal operations, and the token and ticket transfers they caused — sorted by `id`.
+    /// their internal operations, and the token, ticket and bridge ticket transfers they caused — sorted by `id`.
     /// Each item carries an `activity` field telling you which kind it is, and which model to expect.
     ///
     /// This is what you want for an "operation details": one request gives you the whole picture,

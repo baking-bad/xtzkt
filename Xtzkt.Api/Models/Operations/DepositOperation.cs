@@ -48,12 +48,19 @@ public class XMichelsonDepositOperation : DepositOperation
     public long Amount { get; set; }
 }
 
-public class XEvmDepositOperation : DepositOperation
+public class XEvmDepositOperation : DepositOperation, IBridgeTicketTransfersSource
 {
-    /// <summary>Deposited amount (18 decimals).</summary>
+    /// <summary>
+    /// Deposited amount: 18 decimals for `xtz`, ticket units for `fa` — the bridge credits FA tickets
+    /// one to one, so an `fa` amount is not scaled.
+    /// </summary>
     public BigInteger Amount { get; set; }
 
-    /// <summary>Hash of the L1 ticket backing the deposited token (`fa` deposits only).</summary>
+    /// <summary>
+    /// Hash of the L1 ticket backing the deposited token (`fa` deposits only). It's the same hash
+    /// `/v1/bridge_tickets` and `/v1/tickets` expose as `weakHash`, so it links the deposit to the
+    /// bridge ticket it credits and to the L1 ticket behind it.
+    /// </summary>
     [JsonConverter(typeof(HexConverter))]
     public byte[]? TicketHash { get; set; }
 
@@ -61,8 +68,23 @@ public class XEvmDepositOperation : DepositOperation
     public AddressInfo? Proxy { get; set; }
 
     /// <summary>
-    /// Queue id of the deposit. Set when the deposit was queued instead of being credited right away —
-    /// the funds stay on the bridge until it's claimed with this id.
+    /// Queue nonce of the deposit — the id the bridge's claim entrypoint takes, not an entity id
+    /// (that's `id`). Set when the deposit was queued instead of being credited right away, and the
+    /// funds stay on the bridge until it's claimed with this nonce. Mind that the two bridges number
+    /// their queues independently, so a nonce is only unique together with `type`.
     /// </summary>
     public BigInteger? DepositId { get; set; }
+
+    /// <summary>
+    /// Id of the transaction that claimed the deposit off the queue. A deposit with a `depositId`
+    /// and no `claimTransactionId` is still queued, waiting to be claimed.
+    /// </summary>
+    [JsonConverter(typeof(Int64StringNullableConverter))]
+    public long? ClaimTransactionId { get; set; }
+
+    /// <summary>Number of logs (events) emitted by the operation, if any.</summary>
+    public int? LogsCount { get; set; }
+
+    /// <summary>Number of bridge ticket transfers caused by the operation, if any.</summary>
+    public int? BridgeTicketTransfers { get; set; }
 }

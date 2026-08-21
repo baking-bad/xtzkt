@@ -1,7 +1,9 @@
 ﻿namespace Xtzkt.Indexers.Common.Utils;
 
-public class BytesComparer : IComparer<byte[]>
-{        
+public sealed class BytesComparer : IComparer<byte[]>
+{
+    public static readonly BytesComparer Instance = new();
+
     public int Compare(byte[]? x, byte[]? y)
     {
         if (x == null)

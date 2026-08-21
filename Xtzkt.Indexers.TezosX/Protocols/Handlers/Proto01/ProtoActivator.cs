@@ -174,7 +174,7 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         };
 
         var viewsBytes = script.Views?
-            .OrderBy(x => x, new BytesComparer())
+            .OrderBy(x => x, BytesComparer.Instance)
             .SelectMany(x => x)
             .ToArray()
             ?? [];

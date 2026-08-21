@@ -22,11 +22,14 @@ public class TicketsController(
     /// </summary>
     /// <remarks>
     /// Returns tickets — protocol-level assets minted by a contract (the ticketer) with arbitrary
-    /// Michelson content attached. A ticket is identified by its ticketer plus its content,
-    /// so one contract can issue many different tickets.
+    /// Michelson content attached. A ticket is identified by its ticketer plus the type and the value
+    /// of that content, so one contract can issue many different tickets.
     ///
-    /// `typeHash` and `contentHash` are the cheap way to find tickets of the same shape:
-    /// filter by them instead of comparing raw Micheline client-side.
+    /// `weakHash` is the cheap way to find a ticket: filter by it instead of comparing raw Micheline
+    /// client-side. It's computed the same way Tezos X identifies bridged tickets, so it also matches
+    /// a ticket to its counterpart in `/v1/bridge_tickets`. Mind that it doesn't cover the content type,
+    /// so tickets whose types encode their content identically share it — compare `rawType` to tell
+    /// such tickets apart.
     /// </remarks>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Ticket>>> Get(TicketFilter filter, Pagination pagination, Selection selection)

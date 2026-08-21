@@ -244,8 +244,6 @@ partial class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(proto
                         RawType = rawType,
                         RawContent = rawContent,
                         JsonContent = jsonContent,
-                        TypeHash = MichelsonScript.GetHash(rawType),
-                        ContentHash = MichelsonScript.GetHash(rawContent)
                     },
                     Updates = list
                 });

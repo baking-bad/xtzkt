@@ -113,6 +113,10 @@ namespace Xtzkt.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketBalance> TicketBalances { get; set; }
         public DbSet<TicketTransfer> TicketTransfers { get; set; }
+
+        public DbSet<BridgeTicket> BridgeTickets { get; set; }
+        public DbSet<BridgeTicketBalance> BridgeTicketBalances { get; set; }
+        public DbSet<BridgeTicketTransfer> BridgeTicketTransfers { get; set; }
         #endregion
 
         #region tokens
@@ -230,6 +234,10 @@ namespace Xtzkt.Data
             modelBuilder.BuildTicketModel();
             modelBuilder.BuildTicketBalanceModel();
             modelBuilder.BuildTicketTransferModel();
+
+            modelBuilder.BuildBridgeTicketModel();
+            modelBuilder.BuildBridgeTicketBalanceModel();
+            modelBuilder.BuildBridgeTicketTransferModel();
             #endregion
 
             #region tokens
