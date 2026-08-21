@@ -120,10 +120,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             #region init
             var block = Context.Block;
 
-            var (type, amount, receiverAddress, inboxLevel, inboxMessageId, proxyAddress, ticketHash) = deposit is DelayedDeposit xtzDeposit
-                ? (DepositType.Xtz, xtzDeposit.Amount, xtzDeposit.Receiver, xtzDeposit.InboxLevel, xtzDeposit.InboxMessageId, null, null)
-                : deposit is DelayedFaDeposit faDeposit
-                    ? (DepositType.Fa, faDeposit.Amount, faDeposit.Receiver, faDeposit.InboxLevel, faDeposit.InboxMessageId, faDeposit.Proxy, faDeposit.TicketHash)
+            var (amount, receiverAddress, inboxLevel, inboxMessageId) = deposit is DelayedDeposit xtzDeposit
+                ? (xtzDeposit.Amount, xtzDeposit.Receiver, xtzDeposit.InboxLevel, xtzDeposit.InboxMessageId)
+                : deposit is DelayedFaDeposit
+                    ? throw new NotImplementedException("FA deposits are not supported by the Michelson runtime")
                     : throw new InvalidOperationException("Invalid deposit type");
 
             var receiver = await GetOrCreateXMichelsonAddress(receiverAddress);
@@ -144,7 +144,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                 ReceiverId = receiver.Id,
                 InboxLevel = inboxLevel,
                 InboxMessageId = inboxMessageId,
-                Type = type,
+                Type = DepositType.Xtz,
                 // TODO: extract deposit id when they implement queue
             };
             #endregion
