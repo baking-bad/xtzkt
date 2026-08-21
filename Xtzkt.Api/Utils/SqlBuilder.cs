@@ -1034,7 +1034,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             foreach (var (field, asc) in sort.Cols)
             {
                 if (!spec.TryGetValue(field, out var item))
-                    throw new BadRequestException(nameof(Pagination.Sort), $"Sort by {field} is not allowed");
+                    throw new BadRequestException(nameof(Pagination.Sort), $"Sort by {field} is not allowed. Allowed fields: {string.Join(", ", spec.Keys)}");
 
                 _sorting.Add((field, item.column, asc));
             }

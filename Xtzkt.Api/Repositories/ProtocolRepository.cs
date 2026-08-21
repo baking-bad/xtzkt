@@ -12,7 +12,7 @@ namespace Xtzkt.Api.Repositories;
 
 public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",         (@"""Id""",         "integer") },
         { "firstLevel", (@"""FirstLevel""", "integer") },

@@ -12,7 +12,7 @@ public class BridgeTicketRepository(
     ChainCache _chainCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"""Id""",             "bigint") },
         { "firstLevel",     (@"""FirstLevel""",     "integer") },

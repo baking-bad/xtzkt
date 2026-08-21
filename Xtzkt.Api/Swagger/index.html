@@ -234,6 +234,28 @@
             border-bottom-color: var(--border) !important;
         }
 
+        .api-content div[data-section-id^="section/"] {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .api-content div[data-section-id^="section/"] > div:first-child > div {
+            padding-top: 12px !important;
+            padding-bottom: 0 !important;
+        }
+
+        .api-content div[data-section-id^="section/"] > div:first-child > div > h2 {
+            margin-bottom: 12px !important;
+        }
+
+        .api-content div[data-section-id^="section/"] > div:only-child > div {
+            padding-top: 48px !important;
+        }
+
+        .api-content div[data-section-id^="section/"] > div:only-child > div > h2 {
+            margin-bottom: 0 !important;
+        }
+
         .api-content h1 > a::before,
         .api-content h2 > a::before {
             background-image: none !important;

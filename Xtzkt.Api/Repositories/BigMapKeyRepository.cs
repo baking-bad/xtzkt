@@ -14,7 +14,7 @@ public class BigMapKeyRepository(
     AddressCache _addressCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"bk.""Id""",             "bigint") },
         { "firstLevel",     (@"bk.""FirstLevel""",     "integer") },

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 using Xtzkt.Api.Filters.Parameters;
@@ -12,6 +13,52 @@ namespace Xtzkt.Api.Swagger;
 
 static class SwaggerExtension
 {
+    static readonly Dictionary<Type, IEnumerable<string>> SortableFields = new()
+    {
+        { typeof(Models.Address),              Repositories.AddressRepository.SortSpec.Keys },
+        { typeof(Models.BigMap),               Repositories.BigMapRepository.SortSpec.Keys },
+        { typeof(Models.BigMapKey),            Repositories.BigMapKeyRepository.SortSpec.Keys },
+        { typeof(Models.BigMapUpdate),         Repositories.BigMapUpdateRepository.SortSpec.Keys },
+        { typeof(Models.Block),                Repositories.BlockRepository.SortSpec.Keys },
+        { typeof(Models.BridgeTicket),         Repositories.BridgeTicketRepository.SortSpec.Keys },
+        { typeof(Models.BridgeTicketBalance),  Repositories.BridgeTicketBalanceRepository.SortSpec.Keys },
+        { typeof(Models.BridgeTicketTransfer), Repositories.BridgeTicketTransferRepository.SortSpec.Keys },
+        { typeof(Models.Chain),                [Repositories.ChainRepository.SortField] },
+        { typeof(Models.Eip7702Delegation),    Repositories.Eip7702DelegationRepository.SortSpec.Keys },
+        { typeof(Models.Log),                  Repositories.LogRepository.SortSpec.Keys },
+        { typeof(Models.Protocol),             Repositories.ProtocolRepository.SortSpec.Keys },
+        { typeof(Models.Software),             Repositories.SoftwareRepository.SortSpec.Keys },
+        { typeof(Models.Storage),              Repositories.StorageRepository.SortSpec.Keys },
+        { typeof(Models.Ticket),               Repositories.TicketRepository.SortSpec.Keys },
+        { typeof(Models.TicketBalance),        Repositories.TicketBalanceRepository.SortSpec.Keys },
+        { typeof(Models.TicketTransfer),       Repositories.TicketTransferRepository.SortSpec.Keys },
+        { typeof(Models.Token),                Repositories.TokenRepository.SortSpec.Keys },
+        { typeof(Models.TokenBalance),         Repositories.TokenBalanceRepository.SortSpec.Keys },
+        { typeof(Models.TokenTransfer),        Repositories.TokenTransferRepository.SortSpec.Keys },
+
+        { typeof(Models.Operations.DepositOperation),              Repositories.Operations.DepositRepository.SortSpec.Keys },
+        { typeof(Models.Operations.IncreasePaidStorageOperation),  Repositories.Operations.IncreasePaidStorageRepository.SortSpec.Keys },
+        { typeof(Models.Operations.MigrationOperation),            Repositories.Operations.MigrationRepository.SortSpec.Keys },
+        { typeof(Models.Operations.OriginationOperation),          Repositories.Operations.OriginationRepository.SortSpec.Keys },
+        { typeof(Models.Operations.RegisterConstantOperation),     Repositories.Operations.RegisterConstantRepository.SortSpec.Keys },
+        { typeof(Models.Operations.RevealOperation),               Repositories.Operations.RevealRepository.SortSpec.Keys },
+        { typeof(Models.Operations.TransactionOperation),          Repositories.Operations.TransactionRepository.SortSpec.Keys },
+        { typeof(Models.Operations.TransferTicketOperation),       Repositories.Operations.TransferTicketRepository.SortSpec.Keys },
+
+        { typeof(Models.Abstract.IActivity),    Repositories.ActivityRepository.SortFields },
+        { typeof(Models.Abstract.IOpgActivity), Repositories.ActivityRepository.SortFields },
+    };
+
+    static Type ItemType(ApiDescription api)
+    {
+        var type = api.SupportedResponseTypes.FirstOrDefault(x => x.StatusCode == 200)?.Type
+            ?? throw new Exception($"No 200 response type for '{api.RelativePath}'");
+
+        return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+            ? type.GetGenericArguments()[0]
+            : type;
+    }
+
     public static IServiceCollection AddSwagger(this IServiceCollection services)
     {
         return services.AddOpenApi(options =>
@@ -59,9 +106,20 @@ static class SwaggerExtension
             options.AddOperationTransformer((op, ctx, ct) =>
             {
                 if (op.Parameters != null)
+                {
                     foreach (var p in op.Parameters.Where(x => x.In == ParameterLocation.Query))
                         if (p is OpenApiParameter _p && _p.Name != null)
                             _p.Name = JsonNamingPolicy.CamelCase.ConvertName(_p.Name);
+
+                    if (op.Parameters.FirstOrDefault(x => x.Name == "sort") is OpenApiParameter sort)
+                    {
+                        var item = ItemType(ctx.Description);
+                        if (!SortableFields.TryGetValue(item, out var fields))
+                            throw new Exception($"Unregistered sortable model '{item.Name}'");
+
+                        sort.Description += $"\n\nAllowed fields: `{string.Join("`, `", fields)}`.";
+                    }
+                }
                 return Task.CompletedTask;
             });
             options.AddDocumentTransformer((doc, ctx, ct) =>

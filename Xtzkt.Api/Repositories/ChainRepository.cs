@@ -8,7 +8,7 @@ namespace Xtzkt.Api.Repositories;
 
 public class ChainRepository(ChainCache _chainCache)
 {
-    const string SortField = "id";
+    public const string SortField = "id";
 
     IEnumerable<Data.Models.Chain> FromCache(ChainFilter filter)
     {
@@ -26,7 +26,7 @@ public class ChainRepository(ChainCache _chainCache)
         {
             foreach (var (field, _) in pagination.Sort.Cols)
                 if (field != SortField)
-                    throw new BadRequestException(nameof(Pagination.Sort), $"Sort by {field} is not allowed");
+                    throw new BadRequestException(nameof(Pagination.Sort), $"Sort by {field} is not allowed. Allowed fields: {SortField}");
 
             asc = pagination.Sort.Cols[0].asc;
         }

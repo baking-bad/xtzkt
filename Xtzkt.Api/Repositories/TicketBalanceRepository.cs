@@ -14,7 +14,7 @@ public class TicketBalanceRepository(
     AddressCache _addressCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"tb.""Id""",             "bigint") },
         { "balance",        (@"tb.""Balance""",        "numeric") },

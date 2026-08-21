@@ -15,7 +15,7 @@ public class BigMapUpdateRepository(
     AddressCache _addressCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"bu.""Id""",        "bigint") },
         { "level",     (@"bu.""Level""",     "integer") },

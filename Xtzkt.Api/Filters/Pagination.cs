@@ -8,6 +8,11 @@ namespace Xtzkt.Api.Filters;
 public class Pagination : INormalizable
 {
     /// <summary>
+    /// Upper bound for Offset to encourage using Cursor instead.
+    /// </summary>
+    public const int MaxOffset = 100_000;
+
+    /// <summary>
     /// Comma-separated list of fields (with optional sort direction) to sort by.
     ///
     /// Examples: `?sort=id`, `?sort=id.desc`, `?sort=balance.desc,id.asc`.
@@ -24,10 +29,12 @@ public class Pagination : INormalizable
     public CursorParameter? Cursor { get; set; }
 
     /// <summary>
-    /// Number of items to skip. Simple, but gets slower the deeper you go — prefer `cursor` for long lists.
+    /// Number of items to skip (0-100000). Simple, but gets slower the deeper you go, and it is capped
+    /// for that reason — use `cursor` to page beyond the cap, and for long lists in general.
     ///
     /// Example: `?offset=100`.
     /// </summary>
+    [Range(0, MaxOffset, ErrorMessage = "Must be between {1} and {2}. To page deeper use `cursor` instead (see /#section/Get-Started/Pagination-and-sorting).")]
     public int Offset { get; set; } = 0;
 
     /// <summary>

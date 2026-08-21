@@ -14,7 +14,7 @@ public class StorageRepository(
     AddressCache _addressCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",    (@"s.""Id""",    "bigint") },
         { "level", (@"s.""Level""", "integer") },

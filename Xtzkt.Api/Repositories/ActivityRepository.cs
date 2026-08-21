@@ -256,12 +256,14 @@ public class ActivityRepository(
         return Paginate(items, pagination);
     }
 
+    public static readonly string[] SortFields = ["id", "timestamp"];
+
     static void ValidatePagination(CursorPagination pagination)
     {
         if (pagination.Sort == null)
             pagination.Sort = new() { Cols = [("id", true)] };
-        else if (pagination.Sort.Cols.Any(x => x.field != "timestamp" && x.field != "id"))
-            throw new BadRequestException(nameof(pagination.Sort), "This endpoint allows sorting by 'timestamp' and/or 'id' only.");
+        else if (pagination.Sort.Cols.Any(x => !SortFields.Contains(x.field)))
+            throw new BadRequestException(nameof(pagination.Sort), $"Sort by {pagination.Sort.Cols.First(x => !SortFields.Contains(x.field)).field} is not allowed. Allowed fields: {string.Join(", ", SortFields)}");
     }
 
     static IEnumerable<T> Paginate<T>(IEnumerable<T> items, CursorPagination pagination) where T : IActivity

@@ -16,7 +16,7 @@ public class TicketTransferRepository(
     AddressCache _addressCache,
     NpgsqlDataSource _dataSource)
 {
-    static readonly SortSpec SortSpec = new("id")
+    public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"tt.""Id""",        "bigint") },
         { "level",     (@"tt.""Level""",     "integer") },
