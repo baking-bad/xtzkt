@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using Xtzkt.Data.Models;
-using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
+using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
