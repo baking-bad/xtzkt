@@ -1,0 +1,68 @@
+[
+  {
+    "type": "function",
+    "name": "withdraw_base58",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "target"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "event",
+    "name": "Deposit",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inbox_level"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inbox_msg_id"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Withdrawal",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "sender"
+      },
+      {
+        "indexed": false,
+        "type": "bytes22",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "withdrawalId"
+      }
+    ]
+  }
+]

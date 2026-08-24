@@ -12,6 +12,7 @@ public interface IEvmRpc
     Task<JsonElement> GetTransactionCount(string address, int level);
     Task<JsonElement> GetBalanceEarliest(string address);
     Task<JsonElement> GetCodeEarliest(string address);
+    Task<JsonElement> GetCode(string address, int level);
 
     Task<BigInteger[]> DebugBalances(IEnumerable<string> addresses, int level);
 }

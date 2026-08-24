@@ -2,7 +2,7 @@
 using System.Text.Json;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
 public class MetaBlock : IMetaBlock
 {

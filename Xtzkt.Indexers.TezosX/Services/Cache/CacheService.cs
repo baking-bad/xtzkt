@@ -14,6 +14,7 @@ namespace Xtzkt.Indexers.TezosX.Services
         public XBlocksCache Blocks { get; }
         public BridgeTicketBalancesCache BridgeTicketBalances { get; }
         public BridgeTicketsCache BridgeTickets { get; }
+        public DelayedTransactionsCache DelayedTransactions { get; }
         public XProtocolsCache Protocols { get; }
         public AbiCache Abi { get; }
         public SchemasCache Schemas { get; }
@@ -36,6 +37,7 @@ namespace Xtzkt.Indexers.TezosX.Services
             Blocks = new(db, Chain, chain);
             BridgeTicketBalances = new(db);
             BridgeTickets = new(db, chain);
+            DelayedTransactions = new();
             Protocols = new(db, chain);
             Abi = new(db);
             Schemas = new(db);
@@ -58,6 +60,7 @@ namespace Xtzkt.Indexers.TezosX.Services
             Blocks.Reset();
             BridgeTicketBalances.Reset();
             BridgeTickets.Reset();
+            DelayedTransactions.Reset();
             await Protocols.ResetAsync();
             Abi.Reset();
             Schemas.Reset();
@@ -79,6 +82,7 @@ namespace Xtzkt.Indexers.TezosX.Services
             Blocks.Trim();
             BridgeTicketBalances.Trim();
             BridgeTickets.Trim();
+            DelayedTransactions.Trim();
             Abi.Trim();
             Schemas.Trim();
             StakerCycles.Trim();
@@ -103,6 +107,7 @@ namespace Xtzkt.Indexers.TezosX.Services
             BlocksCache.Configure(cacheConfig.Blocks);
             BridgeTicketBalancesCache.Configure(cacheConfig.BridgeTicketBalances);
             BridgeTicketsCache.Configure(cacheConfig.BridgeTickets);
+            DelayedTransactionsCache.Configure(cacheConfig.DelayedTransactions);
             PeriodsCache.Configure(cacheConfig.Periods);
             ProposalsCache.Configure(cacheConfig.Proposals);
             RefutationGameCache.Configure(cacheConfig.RefutationGames);

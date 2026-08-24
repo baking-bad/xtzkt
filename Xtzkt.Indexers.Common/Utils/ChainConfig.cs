@@ -6,7 +6,6 @@ public class ChainConfig
 {
     public required int Id { get; set; }
     public string? Network { get; set; }
-    public int? MichelsonActivationLevel { get; set; }
 }
 
 public static class ChainConfigExt

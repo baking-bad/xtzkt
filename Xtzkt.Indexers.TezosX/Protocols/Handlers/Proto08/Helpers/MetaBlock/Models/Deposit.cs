@@ -2,9 +2,9 @@
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
-public class DelayedEvmDepositOperation(DelayedTransaction deposit, EvmOperation feederCall, IReadOnlyList<EvmInternalOperation> bridgeCalls) : IMetaOperationContent
+public class DelayedEvmDepositOperation(IDelayedTransaction deposit, EvmOperation feederCall, IReadOnlyList<EvmInternalOperation> bridgeCalls) : IMetaOperationContent
 {
-    public DelayedTransaction Deposit { get; } = deposit;
+    public IDelayedTransaction Deposit { get; } = deposit;
     public EvmOperation FeederCall { get; } = feederCall;
     public IReadOnlyList<EvmInternalOperation> BridgeCalls { get; } = bridgeCalls;
 
@@ -14,9 +14,9 @@ public class DelayedEvmDepositOperation(DelayedTransaction deposit, EvmOperation
     }
 }
 
-public class DelayedMichelsonDepositOperation(DelayedTransaction deposit, MichelsonOperation feederCall, IReadOnlyList<MichelsonInternalOperation> bridgeCalls) : IMetaOperationContent
+public class DelayedMichelsonDepositOperation(IDelayedTransaction deposit, MichelsonOperation feederCall, IReadOnlyList<MichelsonInternalOperation> bridgeCalls) : IMetaOperationContent
 {
-    public DelayedTransaction Deposit { get; } = deposit;
+    public IDelayedTransaction Deposit { get; } = deposit;
     public MichelsonOperation FeederCall { get; } = feederCall;
     public IReadOnlyList<MichelsonInternalOperation> BridgeCalls { get; } = bridgeCalls;
 

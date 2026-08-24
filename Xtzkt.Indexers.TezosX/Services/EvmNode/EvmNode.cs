@@ -34,6 +34,12 @@ public sealed class EvmNode : IDisposable
         return Base58.Convert(payload[1..21], Prefixes.sr1);
     }
 
+    public async Task<int?> GetMichelsonActivationLevel()
+    {
+        var result = await PostAsync("tez_getMichelsonActivationLevel");
+        return result.OptionalInt32();
+    }
+
     public Task<JsonElement> GetHead(bool withTxs = false)
     {
         return PostAsync("eth_getBlockByNumber", "latest", withTxs);
@@ -113,6 +119,44 @@ public sealed class EvmNode : IDisposable
                     throw new Exception($"{method} failed with error {error.RequiredInt32("code")}: {error.RequiredString("message")}");
 
                 results[i] = response.Required("result");
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "RPC batch request failed");
+            throw;
+        }
+    }
+
+    public async Task<(JsonElement? Result, JsonElement? Error)[]> PostBatchRawAsync(params (string, object[])[] batch)
+    {
+        try
+        {
+            var requests = new JsonRpcRequest[batch.Length];
+            for (int i = 0; i < batch.Length; i++)
+            {
+                var (method, args) = batch[i];
+                requests[i] = new(i, method, args);
+            }
+
+            var responses = (await _client.PostAsync("", JsonSerializer.Serialize(requests)))
+                .EnumerateArray()
+                .ToDictionary(x => x.RequiredInt32("id"));
+
+            var results = new (JsonElement? Result, JsonElement? Error)[batch.Length];
+            for (int i = 0; i < batch.Length; i++)
+            {
+                var (method, _) = batch[i];
+
+                if (!responses.TryGetValue(i, out var response))
+                    throw new Exception($"{method} response misssed");
+
+                if (response.TryGetProperty("error", out var error))
+                    results[i] = (null, error);
+                else
+                    results[i] = (response.Required("result"), null);
             }
 
             return results;

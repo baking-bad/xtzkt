@@ -1,12 +1,11 @@
-﻿using System.Text.Json;
-using Xtzkt.Data.Models;
+﻿using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Services;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
-public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, CacheService cache, ILogger logger)
+public partial class MetaBlockBuilder(IEvmRpc evmRpc, CacheService cache, ILogger logger)
 {
     public async Task<IMetaBlock> GetNextBlock(XChain state)
     {
@@ -14,17 +13,12 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
 
         var t1 = GetBlueprint(level);
         var t2 = evmRpc.GetBlockData(level);
-        var t3 = level >= state.MichelsonActivationLevel
-            ? tezRpc.GetBlockAsync(level)
-            : Task.FromResult<JsonElement>(default);
 
-        await Task.WhenAll(t1, t2, t3);
+        await Task.WhenAll(t1, t2);
 
         var blueprint = t1.Result;
-        var (evmBlock, evmReceipts, evmTraces) = t2.Result;
+        var (evmBlock, evmReceipts, _) = t2.Result;
         var evmReceiptsDict = evmReceipts.EnumerateArray().ToDictionary(x => x.RequiredString("transactionHash"));
-        var evmTracesDict = evmTraces.EnumerateArray().ToDictionary(x => x.RequiredString("txHash"), x => x.Required("result"));
-        var michelsonBlock = t3.Result.ValueKind != JsonValueKind.Undefined ? t3.Result : (JsonElement?)null;
 
         if (evmBlock.RequiredString("parentHash") != blueprint.Predecessor)
             throw new Exception("Inconsistent evm inputs");
@@ -32,57 +26,21 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
         if (evmBlock.RequiredHexTimestamp32("timestamp") != blueprint.Timestamp)
             throw new Exception("Inconsistent evm inputs");
 
-        if (michelsonBlock != null && michelsonBlock.Value.Required("header").RequiredDateTime("timestamp") != blueprint.Timestamp)
-            throw new Exception("Inconsistent michlson inputs");
-
         var _queuesByHash = new Dictionary<string, Queue<IMetaContent>>();
-        var _queuesByCracId = new Dictionary<string, Queue<IMetaContent>>();
 
         foreach (var tx in evmBlock.RequiredArray("transactions").EnumerateArray())
         {
             var hash = tx.RequiredString("hash");
-            var batch = new EvmBatch(tx, evmReceiptsDict[hash], evmTracesDict[hash]);
+            var batch = new EvmBatch(tx, evmReceiptsDict[hash]);
 
             var queue = new Queue<IMetaContent>();
             foreach (var op in batch.Operations)
-            {
                 queue.Enqueue(op);
-                foreach (var internalOp in op.Internals)
-                    queue.Enqueue(internalOp);
-            }
 
-            if (batch.CracId is string cracId)
-                _queuesByCracId.Add(cracId, queue);
-            else
-                _queuesByHash.Add(batch.Hash, queue);
+            _queuesByHash.Add(batch.Hash, queue);
         }
 
-        var michelsonBatches = michelsonBlock?
-            .RequiredArray("operations", 4)[3]
-            .EnumerateArray()
-            .ToList()
-            ?? [];
-
-        var index = 0;
-        foreach (var batchJson in michelsonBatches)
-        {
-            var batch = new MichelsonBatch(index++, batchJson);
-
-            var queue = new Queue<IMetaContent>();
-            foreach (var op in batch.Operations)
-            {
-                queue.Enqueue(op);
-                foreach (var internalOp in op.Internals)
-                    queue.Enqueue(internalOp);
-            }
-
-            if (batch.CracId is string cracId)
-                _queuesByCracId.Add(cracId, queue);
-            else
-                _queuesByHash.Add(batch.Hash, queue);
-        }
-
-        var reader = new MetaBlockReader(blueprint.DelayedTransactions, _queuesByHash, _queuesByCracId);
+        var reader = new MetaBlockReader(blueprint.DelayedTransactions, _queuesByHash);
         var batches = new List<IMetaBatch>();
 
         foreach (var hash in blueprint.DelayedTransactions.Select(x => x.Hash))
@@ -113,9 +71,6 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
         if (_queuesByHash.Values.Any(x => x.Count != 0))
             throw new Exception("Not all operations were consumed");
 
-        if (_queuesByCracId.Values.Any(x => x.Count != 0))
-            throw new Exception("Not all crac internals were consumed");
-
         return new MetaBlock
         {
             Level = blueprint.Level,
@@ -124,7 +79,7 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
             Batches = batches,
             Delayed = blueprint.DelayedTransactions,
             EvmBlock = evmBlock,
-            MichelsonBlock = michelsonBlock,
+            MichelsonBlock = null,
             KernelUpgrade = blueprint.KernelUpgrade,
             KernelUpgradeTime = blueprint.KernelUpgradeTime,
         };

@@ -3,9 +3,9 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
-public class MetaBlockReader(List<DelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops, Dictionary<string, Queue<IMetaContent>> cracs)
+public class MetaBlockReader(List<IDelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops, Dictionary<string, Queue<IMetaContent>> cracs)
 {
-    readonly List<DelayedTransaction> Delayed = delayed;
+    readonly List<IDelayedTransaction> Delayed = delayed;
     readonly Dictionary<string, Queue<IMetaContent>> Operations = ops;
     readonly Dictionary<string, Queue<IMetaContent>> Cracs = cracs;
 
@@ -74,7 +74,7 @@ public class MetaBlockReader(List<DelayedTransaction> delayed, Dictionary<string
 
                     if (op.From == EvmRuntime.DepositOrigin)
                     {
-                        if (Delayed.FirstOrDefault(x => x.Hash == op.Batch.Hash) is DelayedTransaction delayedEop &&
+                        if (Delayed.FirstOrDefault(x => x.Hash == op.Batch.Hash) is IDelayedTransaction delayedEop &&
                             delayedEop is DelayedDeposit or DelayedFaDeposit)
                         {
                             var feederCall = op;
@@ -226,7 +226,7 @@ public class MetaBlockReader(List<DelayedTransaction> delayed, Dictionary<string
                     
                     if (op.From == MichelsonRuntime.DepositOrigin)
                     {
-                        if (Delayed.FirstOrDefault(x => x.Hash == op.Batch.Hash) is DelayedTransaction delayedMop &&
+                        if (Delayed.FirstOrDefault(x => x.Hash == op.Batch.Hash) is IDelayedTransaction delayedMop &&
                             delayedMop is DelayedDeposit or DelayedFaDeposit)
                         {
                             var feederCall = op;

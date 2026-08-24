@@ -46,18 +46,14 @@ namespace Xtzkt.Indexers.TezosX
             var state = Cache.Chain.Get();
             Db.TryAttach(state);
 
-            if (state.MichelsonActivationLevel is null)
-            {
-                var michelsonActivationLevel = await EvmRpc.GetMichelsonActivationLevel();
-                state.MichelsonActivationLevel = michelsonActivationLevel.OptionalInt32();
-            }
+            await CheckMichelsonActivationLevel(state);
 
             Logger.LogDebug("Begin DB transaction");
             using var tx = await Db.Database.BeginTransactionAsync();
             var txClosed = false;
             try
             {
-                for (int i = 0; i < 256 && state.Level < head; i++)
+                for (int i = 0; i < 1 && state.Level < head; i++)
                 {
                     if (state.KernelUpgrade != null && !migrating)
                     {
@@ -213,6 +209,11 @@ namespace Xtzkt.Indexers.TezosX
             return state.KernelUpgradeTime <= timestamp;
         }
 
+        protected virtual Task CheckMichelsonActivationLevel(XChain state)
+        {
+            return Task.CompletedTask;
+        }
+
         protected void ValidateBlock(IMetaBlock block, XChain state)
         {
             if (block.Level == 0) return;
@@ -233,12 +234,6 @@ namespace Xtzkt.Indexers.TezosX
 
             if (block.MichelsonBlock?.Required("header").RequiredString("predecessor") != state.MichelsonBlock)
                 throw new ValidationException("Invalid Michelson predecessor", true);
-        }
-
-        protected ProtocolHandler WithContext(BlockContext context)
-        {
-            Context = context;
-            return this;
         }
 
         async Task<BlockContext> ActivateContext(XChain state, IMetaBlock block)

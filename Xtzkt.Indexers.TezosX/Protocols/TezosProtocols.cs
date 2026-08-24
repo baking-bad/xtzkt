@@ -9,6 +9,7 @@ namespace Xtzkt.Indexers.TezosX
 
         public static void AddTezosProtocols(this IServiceCollection services)
         {
+            services.AddScoped<Proto01Handler>();
             services.AddScoped<Proto08Handler>();
         }
 
@@ -28,8 +29,13 @@ namespace Xtzkt.Indexers.TezosX
         {
             return kernel switch
             {
-                "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166" => throw new NotImplementedException("Etherlink mainnet isn't yet supported"),
+                // Genesis
+                "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166" => services.GetRequiredService<Proto01Handler>(),
+                "0x00d84727b4afdae430cb694115a672bebfe6cd8c6ccc358298bd29f496c3626519" => services.GetRequiredService<Proto01Handler>(),
+                "0x00e58c94bd5a793b09e8b127a1fcf4958c72ca6f86078a78760b41415fb3a7801d" => services.GetRequiredService<Proto01Handler>(),
+                "0x00157c3416b2fcf3b3df1e09a2a5f72e293a9037f9cc94a51a0567393e525ced4b" => services.GetRequiredService<Proto01Handler>(),
                 "0x00985fe6f477169765206cfa26dbe7d58b333989d733363c9c648cc2707697df21" => throw new NotImplementedException("Etherlink shadownet isn't yet supported"),
+                // Tezos X
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto08Handler>(), // v0.1
                 "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a" => services.GetRequiredService<Proto08Handler>(), // v0.7
                 "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f" => services.GetRequiredService<Proto08Handler>(), // v0.9

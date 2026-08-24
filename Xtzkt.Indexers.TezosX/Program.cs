@@ -119,6 +119,7 @@ while (true)
         if (chain == null)
         {
             var rollupAddress = await node.GetRollupAddress();
+            var michelsonActivationLevel = await node.GetMichelsonActivationLevel();
             var network = chainConfig.Network ?? chainId switch
             {
                 "0xa729" => "mainnet",
@@ -143,7 +144,7 @@ while (true)
                 Network = network,
                 RollupAddress = rollupAddress,
                 Kernel = kernelVersion,
-                MichelsonActivationLevel = chainConfig.MichelsonActivationLevel,
+                MichelsonActivationLevel = michelsonActivationLevel,
                 Level = -1,
                 Timestamp = DateTimeOffset.MinValue.UtcDateTime,
                 Hash = string.Empty,

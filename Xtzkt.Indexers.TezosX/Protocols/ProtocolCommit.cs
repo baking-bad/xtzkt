@@ -21,7 +21,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         protected readonly ILogger Logger = protocol.Logger;
 
         #region addresses
-        protected async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)
+        protected virtual async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XEvmAddress address)
                 return address;
@@ -46,7 +46,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             }
         }
 
-        protected async Task<XEvmUser> GetOrCreateXEvmUser(string hash)
+        protected virtual async Task<XEvmUser> GetOrCreateXEvmUser(string hash)
         {
             var address = await Cache.Addresses.GetOrDefaultAsync(hash);
             if (address is XEvmUser user)

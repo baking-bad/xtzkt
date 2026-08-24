@@ -3,22 +3,37 @@ using System.Text.Json;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Services;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Evm;
 
 class EvmRpc(EvmNode node) : IEvmRpc
 {
     static readonly object Tracer = new { tracer = "callTracer", onlyTopCall = false, withLog = true };
+    static readonly JsonElement EmptyArray = JsonSerializer.Deserialize<JsonElement>("[]");
 
     protected readonly EvmNode Node = node;
 
     public async Task<(JsonElement block, JsonElement receipts, JsonElement traces)> GetBlockData(int level)
     {
-        var res = await Node.PostBatchAsync(
+        var res = await Node.PostBatchRawAsync(
             ("eth_getBlockByNumber", [level.ToString(), true]),
             ("eth_getBlockReceipts", [level.ToString()]),
             ("debug_traceBlockByNumber", [level.ToString(), Tracer]));
 
-        return (res[0], res[1], res[2]);
+        if (res[0].Error is JsonElement error0)
+            throw new Exception($"eth_getBlockByNumber failed with error {error0.RequiredInt32("code")}: {error0.RequiredString("message")}");
+
+        if (res[1].Error is JsonElement error1)
+            throw new Exception($"eth_getBlockReceipts failed with error {error1.RequiredInt32("code")}: {error1.RequiredString("message")}");
+
+        if (res[2].Error is JsonElement error2)
+        {
+            if (error2.RequiredInt32("code") == -32603) // tracer is not activated
+                res[2] = (EmptyArray, null);
+            else
+                throw new Exception($"debug_traceBlockByNumber failed with error {error2.RequiredInt32("code")}: {error2.RequiredString("message")}");
+        }
+
+        return (res[0].Result!.Value, res[1].Result!.Value, res[2].Result!.Value);
     }
 
     public Task<JsonElement> GetBlueprint(int level)

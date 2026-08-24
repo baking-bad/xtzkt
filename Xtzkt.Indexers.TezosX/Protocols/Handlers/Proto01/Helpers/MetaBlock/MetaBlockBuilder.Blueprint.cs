@@ -1,13 +1,13 @@
-﻿using Netezos;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text.Json;
+using Netezos;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Utils.Crypto;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
 public partial class MetaBlockBuilder
 {
@@ -47,11 +47,8 @@ public partial class MetaBlockBuilder
 
         var stream = new RlpStream([.. chunks.OrderBy(x => x.ChunkIndex).SelectMany(x => x.Chunk)]);
         var rlp = stream.Read();
-        if (stream.CanRead || rlp as RlpList is not [.. var v, RlpItem r1, RlpList r2, RlpList r3, RlpItem r4])
+        if (stream.CanRead || rlp as RlpList is not [RlpItem r1, RlpList r2, RlpList r3, RlpItem r4])
             throw new FormatException("Invalid Blueprint format");
-
-        if (v is not [] and [RlpItem { Data: not [1] }])
-            throw new NotSupportedException("Not supported Blueprint version");
 
         if (DateTime.UnixEpoch.AddSeconds(HexNumber.GetInt64Reverse(r4.Data)) != timestamp)
             throw new Exception("Inconsistent timestamp");
@@ -105,7 +102,7 @@ public partial class MetaBlockBuilder
         foreach (var x in json.RequiredArray("delayed_transactions").EnumerateArray())
         {
             var hash = x[1].RequiredHexBytes();
-            cache.DelayedTransactions.Add(Xtzkt.Utils.Encoding.Hex.GetString(hash), new DelayedTransaction(
+            cache.DelayedTransactions.Add(Hex.Convert(hash), new DelayedTransaction(
                 level,
                 x[0].RequiredString(),
                 hash,
@@ -130,15 +127,13 @@ public partial class MetaBlockBuilder
         throw new Exception($"Delayed transaction {hash} applied in block {level} wasn't found in the {DelayedTransactionsLookback} preceding blueprints");
     }
 
-    static IDelayedTransaction ParseDelayedTransaction(DelayedTransaction cached)
+    static IDelayedTransaction ParseDelayedTransaction(DelayedTransaction delayedTransaction)
     {
-        return cached.Kind switch
+        return delayedTransaction.Kind switch
         {
-            "deposit" => ParseDelayedDeposit(cached.Hash, cached.Payload),
-            "fa_deposit" => ParseDelayedFaDeposit(cached.Hash, cached.Payload),
-            "transaction" => ParseDelayedEvmTransaction(cached.Hash),
-            "operation" => ParseDelayedMichelsonOperation(cached.Hash),
-            _ => throw new FormatException("Invalid delayed transactions format"),
+            "deposit" => ParseDelayedDeposit(delayedTransaction.Hash, delayedTransaction.Payload),
+            "transaction" => ParseDelayedEvmTransaction(delayedTransaction.Hash),
+            _ => throw new NotSupportedException($"Delayed transaction '{delayedTransaction.Kind}' is not supported by this kernel"),
         };
     }
 
@@ -148,63 +143,18 @@ public partial class MetaBlockBuilder
         if (stream.Read() is not RlpList rlp || stream.CanRead)
             throw new FormatException("Invalid delayed deposit rlp");
 
-        if (rlp is [RlpItem e0, RlpItem e1, RlpItem e2, RlpItem e3])
+        if (rlp is [RlpItem e0, RlpItem e1])
         {
             return new DelayedDeposit
             {
                 Hash = Hex.Convert(hash),
                 Amount = new BigInteger(e0.Data, true, true),
                 Receiver = Hex.Convert(e1.Data),
-                InboxLevel = HexNumber.GetInt32(e2.Data),
-                InboxMessageId = HexNumber.GetInt32(e3.Data),
-            };
-        }
-        else if (rlp is [RlpItem m0, RlpList ml, RlpItem m2, RlpItem m3] && ml is [RlpItem { Data: [1] }, RlpItem m1])
-        {
-            return new DelayedDeposit
-            {
-                Hash = Netezos.Encoding.Base58.Convert(hash, Prefixes.o),
-                Amount = new BigInteger(m0.Data, true, true),
-                Receiver = (m1.Data[0], m1.Data[1]) switch
-                {
-                    (0, 0) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz1),
-                    (0, 1) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz2),
-                    (0, 2) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz3),
-                    (0, 3) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz4),
-                    (1, _) when m1.Data[^1] == 0 => Netezos.Encoding.Base58.Convert(m1.Data[1..^1], Prefixes.KT1),
-                    _ => throw new FormatException("Invalid Tezos address"),
-                },
-                InboxLevel = HexNumber.GetInt32(m2.Data),
-                InboxMessageId = HexNumber.GetInt32(m3.Data),
+                InboxLevel = 0,
+                InboxMessageId = 0,
             };
         }
         throw new FormatException("Invalid delayed deposit rlp");
-    }
-
-    public static DelayedFaDeposit ParseDelayedFaDeposit(byte[] hash, byte[] bytes)
-    {
-        var stream = new RlpStream(bytes);
-        if (stream.Read() is not RlpList rlp || stream.CanRead)
-            throw new FormatException("Invalid delayed fa deposit rlp");
-
-        if (rlp is [RlpItem e0, RlpItem e1, RlpList e2, RlpItem e3, RlpItem e4, RlpItem e5])
-        {
-            return new DelayedFaDeposit
-            {
-                Hash = Hex.Convert(hash),
-                Amount = new BigInteger(e0.Data, true, true),
-                Receiver = Hex.Convert(e1.Data),
-                Proxy = e2 is [RlpItem _e2]
-                    ? Hex.Convert(_e2.Data)
-                    : e2 is []
-                        ? null
-                        : throw new FormatException("Invalid delayed fa deposit rlp"),
-                TicketHash = e3.Data,
-                InboxLevel = HexNumber.GetInt32(e4.Data),
-                InboxMessageId = HexNumber.GetInt32(e5.Data),
-            };
-        }
-        throw new FormatException("Invalid delayed fa deposit rlp");
     }
 
     public static DelayedEvmTransaction ParseDelayedEvmTransaction(byte[] hash)
@@ -215,22 +165,9 @@ public partial class MetaBlockBuilder
         };
     }
 
-    public static DelayedMichelsonOperation ParseDelayedMichelsonOperation(byte[] hash)
-    {
-        return new DelayedMichelsonOperation
-        {
-            Hash = Netezos.Encoding.Base58.Convert(hash, Prefixes.o),
-        };
-    }
-
     protected static string GetTransactionHash(byte[] bytes)
     {
-        if (bytes[0] == 0)
-            return Netezos.Encoding.Base58.Convert(Blake2Fast.Blake2b.ComputeHash(32, bytes.AsSpan(1)), Prefixes.o);
-
-        //TODO: fix it
-        //return Keccak256.GetHash(bytes);
-        return Keccak256.GetHash(bytes[1..]);
+        return Keccak256.GetHash(bytes);
     }
 }
 

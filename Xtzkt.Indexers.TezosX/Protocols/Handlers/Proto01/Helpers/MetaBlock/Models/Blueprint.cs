@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
 public class Blueprint
 {
@@ -26,23 +26,9 @@ public class DelayedDeposit : IDelayedTransaction
     public int InboxMessageId { get; init; }
 }
 
-public class DelayedFaDeposit : IDelayedTransaction
-{
-    public required string Hash { get; init; }
-    public BigInteger Amount { get; init; }
-    public required string Receiver { get; init; }
-    public string? Proxy { get; init; }
-    public required byte[] TicketHash { get; init; }
-    public int InboxLevel { get; init; }
-    public int InboxMessageId { get; init; }
-}
 
 public class DelayedEvmTransaction : IDelayedTransaction
 {
     public required string Hash { get; init; }
 }
 
-public class DelayedMichelsonOperation : IDelayedTransaction
-{
-    public required string Hash { get; init; }
-}

@@ -1,18 +1,17 @@
 ﻿using Xtzkt.Data.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Services;
-using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers
 {
     public class ProtoHelpers(ProtocolHandler protocol) : IHelpers
     {
         protected readonly IEvmRpc EvmRpc = protocol.EvmRpc;
-        protected readonly IMichelsonRpc MichelsonRpc = protocol.MichelsonRpc;
         protected readonly CacheService Cache = protocol.Cache;
         protected readonly ILogger Logger = protocol.Logger;
 
         public Task<IMetaBlock> GetMetaBlock(XChain state)
-            => new MetaBlockBuilder(EvmRpc, MichelsonRpc, Cache, Logger).GetNextBlock(state);
+            => new MetaBlockBuilder(EvmRpc, Cache, Logger).GetNextBlock(state);
     }
 }

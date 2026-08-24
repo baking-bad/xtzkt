@@ -4,6 +4,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
+using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
@@ -13,7 +14,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
         const string XtzQueuedDepositTopic = "0x1db8461f75e6c8b8303be39f8f9e8641e37968c840ff0f8e465cf3c9b18d9d7d";
         const string FaQueuedDepositTopic = "0xb02d79c5657e344e23d91529b954c3087c60a974d598939583904a4f0b959614";
 
-        public async Task<XEvmDepositOperation> ApplyEvm(string hash, DelayedTransaction deposit, JsonElement feederReceipt)
+        public async Task<XEvmDepositOperation> ApplyEvm(string hash, IDelayedTransaction deposit, JsonElement feederReceipt)
         {
             #region init
             var block = Context.Block;
@@ -115,7 +116,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             return op;
         }
 
-        public async Task ApplyMichelson(string hash, DelayedTransaction deposit, JsonElement feederContent)
+        public async Task ApplyMichelson(string hash, IDelayedTransaction deposit, JsonElement feederContent)
         {
             #region init
             var block = Context.Block;

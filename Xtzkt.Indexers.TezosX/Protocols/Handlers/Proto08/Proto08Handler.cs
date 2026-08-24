@@ -402,4 +402,13 @@ class Proto08Handler(
         await new BlockCommit(this).Revert();
         await new StateCommit(this).Revert();
     }
+
+    protected override async Task CheckMichelsonActivationLevel(XChain state)
+    {
+        if (state.MichelsonActivationLevel is null)
+        {
+            var michelsonActivationLevel = await EvmRpc.GetMichelsonActivationLevel();
+            state.MichelsonActivationLevel = michelsonActivationLevel.OptionalInt32();
+        }
+    }
 }
