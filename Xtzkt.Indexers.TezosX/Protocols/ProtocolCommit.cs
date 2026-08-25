@@ -18,6 +18,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         protected readonly XtzktContext Db = protocol.Db;
         protected readonly CacheService Cache = protocol.Cache;
         protected readonly ProtocolHandler Proto = protocol;
+        protected readonly BatchContext Batch = protocol.Batch;
         protected readonly BlockContext Context = protocol.Context;
         protected readonly IEvmRuntime EvmRuntime = protocol.EvmRuntime;
         protected readonly IMichelsonRuntime MichelsonRuntime = protocol.MichelsonRuntime;

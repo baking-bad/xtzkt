@@ -113,7 +113,7 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Cache.Chain.Get().LogsCount++;
             Context.Block.Events |= XBlockEvents.Events;
 
-            Db.Logs.Add(evmLog);
+            Batch.Logs.Add(evmLog);
 
             if (addressEip7702Delegate == null) // we don't index EIP7702-delegated token contracts
             {
@@ -191,7 +191,7 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         block.Events |= XBlockEvents.Events;
         #endregion
 
-        Db.Logs.Add(log);
+        Batch.Logs.Add(log);
     }
 
     public async Task RevertLogs(XBlock block)

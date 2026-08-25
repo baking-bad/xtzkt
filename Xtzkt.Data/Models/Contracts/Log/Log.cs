@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace Xtzkt.Data.Models;
 
@@ -18,6 +20,39 @@ public abstract class Log(Runtime runtime)
     public string? Name { get; set; }
     public string? Payload { get; set; }
     public bool? Guessed { get; set; }
+
+    #region binary writer
+    private protected const string BinaryColumns = $"""
+        "{nameof(Id)}",
+        "{nameof(Runtime)}",
+        "{nameof(ChainId)}",
+        "{nameof(Level)}",
+        "{nameof(Timestamp)}",
+        "{nameof(AddressId)}",
+        "{nameof(ContractTypeHash)}",
+        "{nameof(ContractCodeHash)}",
+        "{nameof(Name)}",
+        "{nameof(Payload)}",
+        "{nameof(Guessed)}"
+        """;
+
+    private protected void WriteBinaryBase(NpgsqlBinaryImporter writer)
+    {
+        writer.StartRow();
+
+        writer.Write(Id, NpgsqlDbType.Bigint);
+        writer.Write((int)Runtime, NpgsqlDbType.Integer);
+        writer.Write(ChainId, NpgsqlDbType.Integer);
+        writer.Write(Level, NpgsqlDbType.Integer);
+        writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
+        writer.Write(AddressId, NpgsqlDbType.Integer);
+        writer.Write(ContractTypeHash, NpgsqlDbType.Integer);
+        writer.Write(ContractCodeHash, NpgsqlDbType.Integer);
+        writer.WriteNullable(Name, NpgsqlDbType.Text);
+        writer.WriteNullable(Payload, NpgsqlDbType.Jsonb);
+        writer.WriteNullable(Guessed, NpgsqlDbType.Boolean);
+    }
+    #endregion
 }
 
 public static class LogModel

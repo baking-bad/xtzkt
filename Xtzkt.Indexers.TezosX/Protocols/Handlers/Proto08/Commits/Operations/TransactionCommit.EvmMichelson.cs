@@ -172,7 +172,7 @@ partial class TransactionCommit
         }
         #endregion
 
-        Db.TransactionOps.Add(op);
+        Batch.TransactionOps.Add(op);
         Context.TransactionOps.Add(op);
 
         return (op, target, bigmapDiffs, ticketUpdates);
@@ -330,7 +330,7 @@ partial class TransactionCommit
         }
         #endregion
 
-        Db.TransactionOps.Add(op);
+        Batch.TransactionOps.Add(op);
         Context.TransactionOps.Add(op);
 
         return (op, target, bigmapDiffs, ticketUpdates);
@@ -399,7 +399,6 @@ partial class TransactionCommit
         Cache.Chain.Get().TransactionOpsCount--;
         #endregion
 
-        Db.TransactionOps.Remove(op);
         Cache.Chain.ReleaseOperationId();
     }
 
@@ -465,7 +464,6 @@ partial class TransactionCommit
         Cache.Chain.Get().TransactionOpsCount--;
         #endregion
 
-        Db.TransactionOps.Remove(op);
         Cache.Chain.ReleaseOperationId();
     }
 }

@@ -136,7 +136,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto02Commit(protoc
         }
         #endregion
 
-        Db.TransactionOps.Add(op);
+        Batch.TransactionOps.Add(op);
         Context.TransactionOps.Add(op);
 
         return op;
@@ -245,7 +245,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto02Commit(protoc
         }
         #endregion
 
-        Db.TransactionOps.Add(op);
+        Batch.TransactionOps.Add(op);
         Context.TransactionOps.Add(op);
 
         return op;
@@ -295,7 +295,6 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto02Commit(protoc
         Cache.Chain.Get().TransactionOpsCount--;
         #endregion
 
-        Db.TransactionOps.Remove(op);
         Cache.Chain.ReleaseOperationId();
     }
 
@@ -346,7 +345,6 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto02Commit(protoc
         Cache.Chain.Get().TransactionOpsCount--;
         #endregion
 
-        Db.TransactionOps.Remove(op);
         Cache.Chain.ReleaseOperationId();
     }
 

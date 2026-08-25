@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Numerics;
 
@@ -23,6 +25,38 @@ public class XBlock() : Block(Layer.TezosX)
 
     [Column(nameof(MichelsonHash))]
     public string? MichelsonHash { get; set; }
+
+    #region binary writer
+    public static void Write(NpgsqlConnection conn, IEnumerable<XBlock> blocks)
+    {
+        using var writer = conn.BeginBinaryImport($"""
+            COPY "{nameof(XtzktContext.Blocks)}" (
+                {BinaryColumns},
+                "{nameof(Events)}",
+                "{nameof(Operations)}",
+                "{nameof(L1Block.BakerFees)}18",
+                "{nameof(BurnedFees)}18",
+                "{nameof(L1Block.ProposerId)}",
+                "{nameof(MichelsonHash)}"
+            )
+            FROM STDIN (FORMAT BINARY)
+            """);
+
+        foreach (var block in blocks)
+        {
+            block.WriteBinaryBase(writer);
+
+            writer.Write((int)block.Events, NpgsqlDbType.Integer);
+            writer.Write((long)block.Operations, NpgsqlDbType.Bigint);
+            writer.Write(block.DaFees, NpgsqlDbType.Numeric);
+            writer.Write(block.BurnedFees, NpgsqlDbType.Numeric);
+            writer.WriteNullable(block.SequencerPoolId, NpgsqlDbType.Integer);
+            writer.WriteNullable(block.MichelsonHash, NpgsqlDbType.Text);
+        }
+
+        writer.Complete();
+    }
+    #endregion
 }
 
 [Flags]

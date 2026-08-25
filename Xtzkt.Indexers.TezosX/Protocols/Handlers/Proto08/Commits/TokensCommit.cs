@@ -141,14 +141,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                     .Where(x => txIds.Contains(x.Id))
                     .ToDictionaryAsync(x => x.Id, x => (x as IBigmapOperation)!);
 
-                // TODO: remove this
-                var pendingTxs = Db.ChangeTracker.Entries()
-                    .Where(x => x.State == EntityState.Added && x.Entity is TransactionOperation tx &&
-                        txIds.Contains(tx.Id))
-                    .Select(x => x.Entity)
-                    .OfType<TransactionOperation>();
-
-                foreach (var tx in pendingTxs)
+                // transactions from earlier blocks of the current batch are not yet in the DB
+                foreach (var tx in Batch.TransactionOps.Where(x => txIds.Contains(x.Id)))
                     txs.Add(tx.Id, (tx as IBigmapOperation)!);
 
                 var origIds = pendingUpdates
@@ -187,16 +181,13 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                     .OrderBy(x => x.Id)
                     .ToListAsync();
 
-                // TODO: remove this
-                pendingTransfers.AddRange(Db.ChangeTracker.Entries()
-                    .Where(x => x.State == EntityState.Added && x.Entity is TransactionOperation tx &&
-                        contracts.Contains(tx.TargetId) &&
-                        tx.Status == OperationStatus.Applied &&
-                        tx.Entrypoint == "transfer" &&
-                        tx.TokenTransfers == null &&
-                        tx.Level < block.Level)
-                    .Select(x => x.Entity)
-                    .OfType<TransactionOperation>()
+                // transactions from earlier blocks of the current batch are not yet in the DB
+                pendingTransfers.AddRange(Batch.TransactionOps
+                    .Where(x => contracts.Contains(x.TargetId) &&
+                                x.Status == OperationStatus.Applied &&
+                                x.Entrypoint == "transfer" &&
+                                x.TokenTransfers == null &&
+                                x.Level < block.Level)
                     .OrderBy(x => x.Id));
                 #endregion
 
@@ -220,7 +211,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                     {
                         var opBlock = Cache.Blocks.GetCached(tx.Level);
                         opBlocks.Add(tx.Level, opBlock);
-                        Db.TryAttach(opBlock);
+                        if (!Batch.Contains(opBlock)) Db.TryAttach(opBlock);
                     }
 
                     var tokens = new Dictionary<BigInteger, (
@@ -253,7 +244,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                     {
                         var opBlock = Cache.Blocks.GetCached(op.Level);
                         opBlocks.Add(op.Level, opBlock);
-                        Db.TryAttach(opBlock);
+                        if (!Batch.Contains(opBlock)) Db.TryAttach(opBlock);
                     }
 
                     if (!ops.TryGetValue(op, out var opCtx))
@@ -691,7 +682,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 contract.LastLevel = Math.Max(contract.LastLevel, op.Level);
                 contract.LastTimestamp = contract.LastTimestamp > op.Timestamp ? contract.LastTimestamp : op.Timestamp;
 
-                Db.TryAttach(block);
+                if (!Batch.Contains(block)) Db.TryAttach(block);
                 block.Events |= XBlockEvents.Tokens;
             }
             return token;

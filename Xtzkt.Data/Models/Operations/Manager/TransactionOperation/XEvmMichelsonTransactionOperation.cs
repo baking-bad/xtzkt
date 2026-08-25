@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models;
@@ -75,6 +77,70 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
 
     [Column(nameof(Eip7702DelegationCount))]
     public int? Eip7702DelegationCount { get; set; }
+
+    #region binary writer
+    public static void Write(NpgsqlConnection conn, IEnumerable<XEvmMichelsonTransactionOperation> ops)
+    {
+        using var writer = conn.BeginBinaryImport($"""
+            COPY "{nameof(XtzktContext.TransactionOps)}" (
+                {BinaryColumns},
+                "{nameof(OpType)}",
+                "{nameof(OpCode)}",
+                "{nameof(GasPrice)}",
+                "{nameof(MaxFeePerGas)}",
+                "{nameof(MaxPriorityFeePerGas)}",
+                "{nameof(EffectiveGasPrice)}",
+                "{nameof(DaFee)}18",
+                "{nameof(GasFee)}18",
+                "{nameof(XEvmTransactionOperation.Amount)}18",
+                "{nameof(RoundingLoss)}",
+                "{nameof(XMichelsonTransactionOperation.Amount)}",
+                "{nameof(StorageId)}",
+                "{nameof(BigMapUpdates)}",
+                "{nameof(TicketTransfers)}",
+                "{nameof(AddressRegistryIndex)}",
+                "{nameof(ParametersRaw)}",
+                "{nameof(AliasId)}",
+                "{nameof(GatewayId)}",
+                "{nameof(GatewayEntrypoint)}",
+                "{nameof(GatewayParameters)}",
+                "{nameof(GatewayInput)}",
+                "{nameof(Eip7702DelegationCount)}"
+            )
+            FROM STDIN (FORMAT BINARY)
+            """);
+
+        foreach (var op in ops)
+        {
+            op.WriteBinaryBase(writer);
+
+            writer.Write((int)op.OpType, NpgsqlDbType.Integer);
+            writer.Write((int)op.OpCode, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.GasPrice, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.MaxFeePerGas, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.MaxPriorityFeePerGas, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.EffectiveGasPrice, NpgsqlDbType.Numeric);
+            writer.Write(op.DaFee, NpgsqlDbType.Numeric);
+            writer.Write(op.GasFee, NpgsqlDbType.Numeric);
+            writer.Write(op.AmountSent, NpgsqlDbType.Numeric);
+            writer.Write(op.RoundingLoss, NpgsqlDbType.Numeric);
+            writer.Write(op.AmountReceived, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.StorageId, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.BigMapUpdates, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.TicketTransfers, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.AddressRegistryIndex, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.ParametersRaw, NpgsqlDbType.Bytea);
+            writer.Write(op.AliasId, NpgsqlDbType.Integer);
+            writer.Write(op.GatewayId, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.GatewayEntrypoint, NpgsqlDbType.Text);
+            writer.WriteNullable(op.GatewayParameters, NpgsqlDbType.Jsonb);
+            writer.WriteNullable(op.GatewayInput, NpgsqlDbType.Bytea);
+            writer.WriteNullable(op.Eip7702DelegationCount, NpgsqlDbType.Integer);
+        }
+
+        writer.Complete();
+    }
+    #endregion
 }
 
 public static class XEvmMichelsonTransactionOperationModel

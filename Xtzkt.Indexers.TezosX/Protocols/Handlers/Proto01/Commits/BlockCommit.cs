@@ -22,7 +22,7 @@ class BlockCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
 
         Cache.Chain.Get().BlocksCount++;
         Cache.Blocks.Add(Context.Block);
-        Db.Blocks.Add(Context.Block);
+        Batch.Blocks.Add(Context.Block);
     }
 
     public virtual async Task Revert()

@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models;
@@ -55,6 +57,56 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
     // id of the deposit operation this operation claims
     [Column(nameof(ClaimDepositId))]
     public long? ClaimDepositId { get; set; }
+
+    #region binary writer
+    public static void Write(NpgsqlConnection conn, IEnumerable<XEvmTransactionOperation> ops)
+    {
+        using var writer = conn.BeginBinaryImport($"""
+            COPY "{nameof(XtzktContext.TransactionOps)}" (
+                {BinaryColumns},
+                "{nameof(OpType)}",
+                "{nameof(OpCode)}",
+                "{nameof(GasPrice)}",
+                "{nameof(MaxFeePerGas)}",
+                "{nameof(MaxPriorityFeePerGas)}",
+                "{nameof(EffectiveGasPrice)}",
+                "{nameof(DaFee)}18",
+                "{nameof(GasFee)}18",
+                "{nameof(Amount)}18",
+                "{nameof(Input)}",
+                "{nameof(Output)}",
+                "{nameof(Result)}",
+                "{nameof(Eip7702DelegationCount)}",
+                "{nameof(BridgeTicketTransfers)}",
+                "{nameof(ClaimDepositId)}"
+            )
+            FROM STDIN (FORMAT BINARY)
+            """);
+
+        foreach (var op in ops)
+        {
+            op.WriteBinaryBase(writer);
+
+            writer.Write((int)op.OpType, NpgsqlDbType.Integer);
+            writer.Write((int)op.OpCode, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.GasPrice, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.MaxFeePerGas, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.MaxPriorityFeePerGas, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.EffectiveGasPrice, NpgsqlDbType.Numeric);
+            writer.Write(op.DaFee, NpgsqlDbType.Numeric);
+            writer.Write(op.GasFee, NpgsqlDbType.Numeric);
+            writer.Write(op.Amount, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.Input, NpgsqlDbType.Bytea);
+            writer.WriteNullable(op.Output, NpgsqlDbType.Bytea);
+            writer.WriteNullable(op.Result, NpgsqlDbType.Jsonb);
+            writer.WriteNullable(op.Eip7702DelegationCount, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.BridgeTicketTransfers, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.ClaimDepositId, NpgsqlDbType.Bigint);
+        }
+
+        writer.Complete();
+    }
+    #endregion
 }
 
 public enum EvmOpType

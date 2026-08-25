@@ -22,6 +22,7 @@ namespace Xtzkt.Indexers.TezosX
         public readonly XtzktContext Db = db;
         public readonly CacheService Cache = cache;
         public readonly ILogger Logger = logger;
+        public readonly BatchContext Batch = new();
         public BlockContext Context = null!;
 
         protected readonly IMetrics Metrics = metrics;
@@ -66,7 +67,7 @@ namespace Xtzkt.Indexers.TezosX
                             Logger.LogDebug("Save changes");
                             using (Metrics.Measure.Timer.Time(MetricsRegistry.SaveChangesTime))
                             {
-                                Context?.Apply(Db);
+                                Batch.Apply(Db);
                                 await Db.SaveChangesAsync();
                             }
 
@@ -130,7 +131,7 @@ namespace Xtzkt.Indexers.TezosX
                 Logger.LogDebug("Save changes");
                 using (Metrics.Measure.Timer.Time(MetricsRegistry.SaveChangesTime))
                 {
-                    Context.Apply(Db);
+                    Batch.Apply(Db);
                     await Db.SaveChangesAsync();
                 }
 

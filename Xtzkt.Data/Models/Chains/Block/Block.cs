@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Npgsql;
+using NpgsqlTypes;
 using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models;
@@ -17,6 +19,35 @@ public abstract class Block(Layer layer) : ISourceOperation
 
     public int? OpsCounter { get; set; }
     public int? SubsCounter { get; set; }
+
+    #region binary writer
+    private protected const string BinaryColumns = $"""
+        "{nameof(Id)}",
+        "{nameof(Layer)}",
+        "{nameof(ChainId)}",
+        "{nameof(Level)}",
+        "{nameof(Hash)}",
+        "{nameof(Timestamp)}",
+        "{nameof(ProtocolId)}",
+        "{nameof(OpsCounter)}",
+        "{nameof(SubsCounter)}"
+        """;
+
+    private protected void WriteBinaryBase(NpgsqlBinaryImporter writer)
+    {
+        writer.StartRow();
+
+        writer.Write(Id, NpgsqlDbType.Bigint);
+        writer.Write((int)Layer, NpgsqlDbType.Integer);
+        writer.Write(ChainId, NpgsqlDbType.Integer);
+        writer.Write(Level, NpgsqlDbType.Integer);
+        writer.Write(Hash, NpgsqlDbType.Text);
+        writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
+        writer.Write(ProtocolId, NpgsqlDbType.Integer);
+        writer.WriteNullable(OpsCounter, NpgsqlDbType.Integer);
+        writer.WriteNullable(SubsCounter, NpgsqlDbType.Integer);
+    }
+    #endregion
 }
 
 [Flags]

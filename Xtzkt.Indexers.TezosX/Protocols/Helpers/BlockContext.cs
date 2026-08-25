@@ -50,22 +50,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             return ops;
         }
 
-        public void Apply(XtzktContext db)
-        {
-            //var conn = (db.Database.GetDbConnection() as NpgsqlConnection)!;
-
-            //if (TransactionOps.Count != 0)
-            //    MichelsonTransactionOperation.Write(conn, TransactionOps);
-        }
-
         public async Task Revert(XtzktContext db)
         {
-            //if (TransactionOps.Count != 0)
-            //    await db.Database.ExecuteSqlRawAsync($$"""
-            //        DELETE FROM "{{nameof(XtzktContext.TransactionOps)}}"
-            //        WHERE "{{nameof(TransactionOperation.ChainId)}}" = {0}
-            //        AND "{{nameof(TransactionOperation.Level)}}" = {1}
-            //        """, Block.ChainId, Block.Level);
+            if (TransactionOps.Count != 0)
+                await db.Database.ExecuteSqlRawAsync($$"""
+                    DELETE FROM "{{nameof(XtzktContext.TransactionOps)}}"
+                    WHERE "{{nameof(TransactionOperation.ChainId)}}" = {0}
+                    AND "{{nameof(TransactionOperation.Level)}}" = {1}
+                    """, Block.ChainId, Block.Level);
         }
     }
 

@@ -90,7 +90,7 @@ class LogCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
             Cache.Chain.Get().LogsCount++;
             Context.Block.Events |= XBlockEvents.Events;
 
-            Db.Logs.Add(evmLog);
+            Batch.Logs.Add(evmLog);
 
             if (Erc.TryParseTransfers(topics, data, out var tokenType, out var tokenTransfers))
             {
