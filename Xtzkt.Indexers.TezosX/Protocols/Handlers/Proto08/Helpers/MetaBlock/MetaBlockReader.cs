@@ -3,8 +3,10 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
-public class MetaBlockReader(List<IDelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops, Dictionary<string, Queue<IMetaContent>> cracs)
+public class MetaBlockReader(IEvmRuntime evmRuntime, IMichelsonRuntime michelsonRuntime, List<IDelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops, Dictionary<string, Queue<IMetaContent>> cracs)
 {
+    readonly IEvmRuntime EvmRuntime = evmRuntime;
+    readonly IMichelsonRuntime MichelsonRuntime = michelsonRuntime;
     readonly List<IDelayedTransaction> Delayed = delayed;
     readonly Dictionary<string, Queue<IMetaContent>> Operations = ops;
     readonly Dictionary<string, Queue<IMetaContent>> Cracs = cracs;

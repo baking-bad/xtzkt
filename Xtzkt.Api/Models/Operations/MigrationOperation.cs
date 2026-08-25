@@ -46,4 +46,7 @@ public class EvmMigrationOperation : MigrationOperation
 {
     /// <summary>How much the address balance changed, if at all (18 decimals).</summary>
     public BigInteger BalanceChange { get; set; }
+
+    /// <summary>How much the address nonce changed, if at all.</summary>
+    public int NonceChange { get; set; }
 }

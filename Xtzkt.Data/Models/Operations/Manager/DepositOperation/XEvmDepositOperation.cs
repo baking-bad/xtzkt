@@ -5,7 +5,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models;
 
-public class XEvmDepositOperation() : DepositOperation(Runtime.Evm), ISourceOperation, ILogsOperation
+public class XEvmDepositOperation() : DepositOperation(Runtime.Evm), IParentOperation, ISourceOperation, ILogsOperation
 {
     [Column($"{nameof(Amount)}18")]
     public required BigInteger Amount { get; set; }
@@ -19,6 +19,20 @@ public class XEvmDepositOperation() : DepositOperation(Runtime.Evm), ISourceOper
     public int? SubsCounter { get; set; }
     public int? LogsCount { get; set; }
     public int? BridgeTicketTransfers { get; set; }
+
+    #region crutch for nested proxy calls in old etherlink
+    [NotMapped]
+    public int SenderId { get; set; }
+
+    [NotMapped]
+    public int Counter { get; set; }
+
+    [NotMapped]
+    public int GasUsed { get; set; }
+
+    [NotMapped]
+    public int? InternalOperations { get; set; }
+    #endregion
 }
 
 public static class XEvmDepositOperationModel

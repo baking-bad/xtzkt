@@ -102,7 +102,7 @@ partial class TransactionCommit
             GasUsed = gasUsed,
             Status = status,
             Errors = status != OperationStatus.Applied
-                ? trace.OptionalString("revertReason") ?? trace.OptionalString("error")
+                ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
                 : null,
         };
 
@@ -263,7 +263,7 @@ partial class TransactionCommit
             GasUsed = trace.RequiredHexInt32("gasUsed"),
             Status = status,
             Errors = status != OperationStatus.Applied
-                ? trace.OptionalString("revertReason") ?? trace.OptionalString("error")
+                ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
                 : null,
         };
         #endregion

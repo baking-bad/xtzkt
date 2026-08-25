@@ -31,7 +31,9 @@ namespace Xtzkt.Indexers.TezosX
         #region abstract
         public abstract int Version { get; }
         public abstract IEvmRpc EvmRpc { get; }
+        public abstract IEvmRuntime EvmRuntime { get; }
         public abstract IMichelsonRpc MichelsonRpc { get; }
+        public abstract IMichelsonRuntime MichelsonRuntime { get; }
 
         protected abstract IActivator Activator { get; }
         protected abstract IMigrator Migrator { get; }
@@ -53,7 +55,7 @@ namespace Xtzkt.Indexers.TezosX
             var txClosed = false;
             try
             {
-                for (int i = 0; i < 1 && state.Level < head; i++)
+                for (int i = 0; i < 256 && state.Level < head; i++)
                 {
                     if (state.KernelUpgrade != null && !migrating)
                     {

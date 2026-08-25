@@ -14,8 +14,8 @@ using Xtzkt.Data;
 namespace Xtzkt.Data.Migrations
 {
     [DbContext(typeof(XtzktContext))]
-    [Migration("20260821103534_Initial")]
-    partial class Initial
+    [Migration("20260824225652_Triggers")]
+    partial class Triggers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -5200,6 +5200,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<BigInteger>("BalanceChange")
                         .HasColumnType("numeric")
                         .HasColumnName("BalanceChange18");
+
+                    b.Property<int>("NonceChange")
+                        .HasColumnType("integer");
 
                     b.HasDiscriminator().HasValue(0);
                 });

@@ -1,30 +1,38 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Utils;
 
-namespace Xtzkt.Indexers.TezosX.Protocols;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto08;
 
-public static class MichelsonRuntime
+public class MichelsonRuntime : IMichelsonRuntime
 {
-    public const string RuntimeId = "0";
-    public const string NullAddress = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
-    public const string EvmGateway = "KT18oDJJKXMKhfE1bSuAPGp92pYcwVDiqsPw";
-    public const string CracOrigin = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
-    public const string DepositOrigin = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
+    public string RuntimeId => "0";
 
-    public static string GetAlias(string address)
+    #region special addresses
+    public string NullAddress => "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
+
+    public string EvmGateway => "KT18oDJJKXMKhfE1bSuAPGp92pYcwVDiqsPw";
+
+    public string CracOrigin => "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
+
+    public string DepositOrigin => "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
+    #endregion
+
+    #region helpers
+    public string GetAlias(string address)
     {
         return Runtimes.GetMichelsonAlias(address);
     }
 
-    public static int ConvertGas(int evmGas)
+    public int ConvertGas(int evmGas)
     {
         // etherlink/kernel_latest/tezosx-constants/src/lib.rs: EVM_GAS_TO_MILLIGAS
         const int evmGasToMilligas = 22;
         return (evmGas * evmGasToMilligas + 999) / 1000;
     }
 
-    public static bool IsCracCall(string? to, JsonElement content)
+    public bool IsCracCall(string? to, JsonElement content)
     {
         // TODO: figure out how to exclude crac calls that failed before reaching the other side
         // to not consume others' crac calls
@@ -47,7 +55,9 @@ public static class MichelsonRuntime
 
         return false;
     }
+    #endregion
 
+    #region utils
     static JsonElement? GetCombElement(JsonElement value, int index)
     {
         while (index >= 0)
@@ -95,4 +105,5 @@ public static class MichelsonRuntime
                 ? res.GetString()
                 : null;
     }
+    #endregion
 }

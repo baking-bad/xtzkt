@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Evm;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 public class EvmRuntime : IEvmRuntime
 {
@@ -30,6 +30,8 @@ public class EvmRuntime : IEvmRuntime
     #endregion
 
     #region special addresses
+    public string DeadAddress => "0x000000000000000000000000000000000000dead";
+
     public string TezosXCaller => throw new NotImplementedException();
 
     public string DepositOrigin => throw new NotImplementedException();

@@ -6,8 +6,6 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Proto01;
 using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
-using Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Evm;
-using Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Michelson;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
@@ -23,7 +21,9 @@ class Proto01Handler(
 {
     public override int Version => 1;
     public override IEvmRpc EvmRpc { get; } = new EvmRpc(evmRpc);
+    public override IEvmRuntime EvmRuntime { get; } = new EvmRuntime();
     public override IMichelsonRpc MichelsonRpc { get; } = new MichelsonRpc();
+    public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
 
     protected override IActivator Activator => new ProtoActivator(this);
     protected override IHelpers Helpers => new ProtoHelpers(this);

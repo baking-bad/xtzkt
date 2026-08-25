@@ -182,7 +182,7 @@ partial class TransactionCommit
             Spend(sender, op.AmountSent);
             Receive(target!, op.AmountReceived);
 
-            if (target!.Hash == EvmRuntime.NullAddress)
+            if (target!.Hash == EvmRuntime.NullAddress || target!.Hash == EvmRuntime.DeadAddress)
                 Context.Statistics.TotalBanished += op.AmountReceived;
         }
         #endregion
@@ -339,7 +339,7 @@ partial class TransactionCommit
             Spend(sender, op.AmountSent);
             Receive(target, op.AmountReceived);
 
-            if (target.Hash == EvmRuntime.NullAddress)
+            if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
                 Context.Statistics.TotalBanished += op.AmountReceived;
         }
         #endregion

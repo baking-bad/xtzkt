@@ -13,7 +13,7 @@ public class EvmBatch
     public List<EvmOperation> Operations { get; }
     public string? CracId { get; }
 
-    public EvmBatch(JsonElement tx, JsonElement receipt, JsonElement trace)
+    public EvmBatch(IEvmRuntime evmRuntime, JsonElement tx, JsonElement receipt, JsonElement trace)
     {
         Index = receipt.RequiredHexInt32("transactionIndex");
         Hash = tx.RequiredString("hash");
@@ -23,8 +23,8 @@ public class EvmBatch
         if (op.From == op.To)
         {
             var cracReceivedLog = op.Logs.FirstOrDefault(x =>
-                x.RequiredString("address") == EvmRuntime.MichelsonGateway &&
-                x.RequiredArray("topics")[0].RequiredString() == EvmRuntime.CracReceivedTopic);
+                x.RequiredString("address") == evmRuntime.MichelsonGateway &&
+                x.RequiredArray("topics")[0].RequiredString() == evmRuntime.CracReceivedTopic);
 
             if (cracReceivedLog.ValueKind != JsonValueKind.Undefined)
                 CracId = new AbiReader(cracReceivedLog.RequiredHexBytes("data")).ReadString(0);

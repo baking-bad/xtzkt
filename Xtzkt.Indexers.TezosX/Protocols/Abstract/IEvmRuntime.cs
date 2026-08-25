@@ -20,6 +20,7 @@ public interface IEvmRuntime
     #endregion
 
     #region special addresses
+    string DeadAddress { get; }
     string TezosXCaller { get; }
     string DepositOrigin { get; }
     #endregion

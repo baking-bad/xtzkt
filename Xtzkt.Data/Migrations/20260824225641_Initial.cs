@@ -1090,6 +1090,7 @@ namespace Xtzkt.Data.Migrations
                     AddressId = table.Column<int>(type: "integer", nullable: false),
                     ScriptId = table.Column<int>(type: "integer", nullable: true),
                     BalanceChange18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    NonceChange = table.Column<int>(type: "integer", nullable: true),
                     BalanceChange = table.Column<long>(type: "bigint", nullable: true),
                     StorageId = table.Column<long>(type: "bigint", nullable: true),
                     BigMapUpdates = table.Column<int>(type: "integer", nullable: true),

@@ -27,6 +27,8 @@ namespace Xtzkt.Data.Models
         CodeChange,
         Origination,
         RemoveBigMapKey,
+        BurnBalance,
+        AmendAddress,
     }
 
     public static class MigrationOperationModel

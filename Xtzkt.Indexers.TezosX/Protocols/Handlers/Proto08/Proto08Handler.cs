@@ -24,7 +24,9 @@ class Proto08Handler(
 {
     public override int Version => 1;
     public override IEvmRpc EvmRpc { get; } = new EvmRpc(evmRpc);
+    public override IEvmRuntime EvmRuntime { get; } = new EvmRuntime();
     public override IMichelsonRpc MichelsonRpc { get; } = new MichelsonRpc(michelsonRpc);
+    public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
 
     protected override IActivator Activator => new ProtoActivator(this);
     protected override IHelpers Helpers => new ProtoHelpers(this);

@@ -1,9 +1,8 @@
-﻿using System.Numerics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Services;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Evm;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class EvmRpc(EvmNode node) : IEvmRpc
 {
@@ -51,6 +50,21 @@ class EvmRpc(EvmNode node) : IEvmRpc
         return Node.PostAsync("eth_getBalance", address, level.ToString());
     }
 
+    public Task<JsonElement[]> GetBalance(IEnumerable<string> addresses, int level)
+    {
+        return Node.PostBatchAsync([.. addresses.Select(x => ("eth_getBalance", new object[] { x, level.ToString() }))]);
+    }
+
+    public Task<JsonElement[]> GetNonce(IEnumerable<string> addresses, int level)
+    {
+        return Node.PostBatchAsync([.. addresses.Select(x => ("eth_getTransactionCount", new object[] { x, level.ToString() }))]);
+    }
+
+    public Task<JsonElement[]> GetCode(IEnumerable<string> addresses, int level)
+    {
+        return Node.PostBatchAsync([.. addresses.Select(x => ("eth_getCode", new object[] { x, level.ToString() }))]);
+    }
+
     public Task<JsonElement> GetTransactionCount(string address, int level)
     {
         return Node.PostAsync("eth_getTransactionCount", address, level.ToString());
@@ -69,11 +83,5 @@ class EvmRpc(EvmNode node) : IEvmRpc
     public Task<JsonElement> GetCode(string address, int level)
     {
         return Node.PostAsync("eth_getCode", address, level.ToString());
-    }
-
-    public async Task<BigInteger[]> DebugBalances(IEnumerable<string> addresses, int level)
-    {
-        return [..(await Node.PostBatchForwardAsync([..addresses.Select(x => ("eth_getBalance", new object[] { x, level.ToString() }))]))
-        .Select(x => x.RequiredHexBigInteger())];
     }
 }

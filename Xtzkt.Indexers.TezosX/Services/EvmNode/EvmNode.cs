@@ -168,46 +168,6 @@ public sealed class EvmNode : IDisposable
         }
     }
 
-    #region debug
-    public async Task<JsonElement[]> PostBatchForwardAsync((string, object[])[] batch)
-    {
-        try
-        {
-            var requests = new JsonRpcRequest[batch.Length];
-            for (int i = 0; i < batch.Length; i++)
-            {
-                var (method, args) = batch[i];
-                requests[i] = new(i, method, args);
-            }
-
-            var responses = (await _client.PostAsync("?forward=true", JsonSerializer.Serialize(requests)))
-                .EnumerateArray()
-                .ToDictionary(x => x.RequiredInt32("id"));
-
-            var results = new JsonElement[batch.Length];
-            for (int i = 0; i < batch.Length; i++)
-            {
-                var (method, _) = batch[i];
-
-                if (!responses.TryGetValue(i, out var response))
-                    throw new Exception($"{method} response misssed");
-
-                if (response.TryGetProperty("error", out var error))
-                    throw new Exception($"{method} failed with error {error.RequiredInt32("code")}: {error.RequiredString("message")}");
-
-                results[i] = response.Required("result");
-            }
-
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "RPC batch request failed");
-            throw;
-        }
-    }
-    #endregion
-
     class JsonRpcRequest(int id, string method, object[] args)
     {
         [JsonPropertyName("jsonrpc")]

@@ -1,0 +1,30 @@
+[
+  {
+    "type": "function",
+    "name": "withdraw",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "type": "bytes",
+        "name": "routingInfo"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "bytes22",
+        "name": "ticketer"
+      },
+      {
+        "type": "bytes",
+        "name": "content"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

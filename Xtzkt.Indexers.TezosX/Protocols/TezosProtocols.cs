@@ -10,6 +10,7 @@ namespace Xtzkt.Indexers.TezosX
         public static void AddTezosProtocols(this IServiceCollection services)
         {
             services.AddScoped<Proto01Handler>();
+            services.AddScoped<Proto02Handler>();
             services.AddScoped<Proto08Handler>();
         }
 
@@ -34,6 +35,9 @@ namespace Xtzkt.Indexers.TezosX
                 "0x00d84727b4afdae430cb694115a672bebfe6cd8c6ccc358298bd29f496c3626519" => services.GetRequiredService<Proto01Handler>(),
                 "0x00e58c94bd5a793b09e8b127a1fcf4958c72ca6f86078a78760b41415fb3a7801d" => services.GetRequiredService<Proto01Handler>(),
                 "0x00157c3416b2fcf3b3df1e09a2a5f72e293a9037f9cc94a51a0567393e525ced4b" => services.GetRequiredService<Proto01Handler>(),
+                // Bifrost
+                "0x00fda6968ec17ed11dee02dc91d15606e6f02c8d7e00d8baeaee24fc0188898261" => services.GetRequiredService<Proto02Handler>(),
+
                 "0x00985fe6f477169765206cfa26dbe7d58b333989d733363c9c648cc2707697df21" => throw new NotImplementedException("Etherlink shadownet isn't yet supported"),
                 // Tezos X
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto08Handler>(), // v0.1

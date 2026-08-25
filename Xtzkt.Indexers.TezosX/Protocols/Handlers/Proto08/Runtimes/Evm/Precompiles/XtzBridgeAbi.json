@@ -45,11 +45,11 @@
           },
           {
             "type": "uint256",
-            "name": "inbox_level"
+            "name": "inboxLevel"
           },
           {
             "type": "uint256",
-            "name": "inbox_msg_id"
+            "name": "inboxMsgId"
           }
         ]
       }
@@ -87,12 +87,12 @@
       {
         "indexed": false,
         "type": "uint256",
-        "name": "inbox_level"
+        "name": "inboxLevel"
       },
       {
         "indexed": false,
         "type": "uint256",
-        "name": "inbox_msg_id"
+        "name": "inboxMsgId"
       }
     ]
   },
@@ -156,12 +156,12 @@
       {
         "indexed": false,
         "type": "uint256",
-        "name": "inbox_level"
+        "name": "inboxLevel"
       },
       {
         "indexed": false,
         "type": "uint256",
-        "name": "inbox_msg_id"
+        "name": "inboxMsgId"
       }
     ]
   },

@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.Common.Exceptions;
+using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.Common.Extensions;
 
@@ -63,6 +64,15 @@ public static class JsonElementExtension
     {
         return el.TryGetProperty(name, out var res) && res.ValueKind == JsonValueKind.String ? res.GetString()!
             : throw new SerializationException($"Missed required string {name}");
+    }
+
+    public static string? OptionalEscapedString(this JsonElement el, string name)
+    {
+        if (!el.TryGetProperty(name, out var res) || res.ValueKind == JsonValueKind.Null)
+            return null;
+
+        return res.ValueKind == JsonValueKind.String ? Regexes.RestrictedUnicode().Replace(res.GetString()!, Regexes.NullEscapeString).Replace((char)0, Regexes.NullEscapeChar)
+            : throw new SerializationException($"Expected string but got {res.ValueKind}");
     }
 
     public static string? OptionalString(this JsonElement el, string name)

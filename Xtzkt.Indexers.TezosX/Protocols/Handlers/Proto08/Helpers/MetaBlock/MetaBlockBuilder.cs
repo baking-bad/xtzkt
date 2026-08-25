@@ -6,7 +6,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 
-public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, CacheService cache, ILogger logger)
+public partial class MetaBlockBuilder(IEvmRpc evmRpc, IEvmRuntime evmRuntime, IMichelsonRpc tezRpc, IMichelsonRuntime michelsonRuntime, CacheService cache, ILogger logger)
 {
     public async Task<IMetaBlock> GetNextBlock(XChain state)
     {
@@ -41,7 +41,7 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
         foreach (var tx in evmBlock.RequiredArray("transactions").EnumerateArray())
         {
             var hash = tx.RequiredString("hash");
-            var batch = new EvmBatch(tx, evmReceiptsDict[hash], evmTracesDict[hash]);
+            var batch = new EvmBatch(evmRuntime, tx, evmReceiptsDict[hash], evmTracesDict[hash]);
 
             var queue = new Queue<IMetaContent>();
             foreach (var op in batch.Operations)
@@ -66,7 +66,7 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
         var index = 0;
         foreach (var batchJson in michelsonBatches)
         {
-            var batch = new MichelsonBatch(index++, batchJson);
+            var batch = new MichelsonBatch(michelsonRuntime, index++, batchJson);
 
             var queue = new Queue<IMetaContent>();
             foreach (var op in batch.Operations)
@@ -82,7 +82,7 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, IMichelsonRpc tezRpc, Cach
                 _queuesByHash.Add(batch.Hash, queue);
         }
 
-        var reader = new MetaBlockReader(blueprint.DelayedTransactions, _queuesByHash, _queuesByCracId);
+        var reader = new MetaBlockReader(evmRuntime, michelsonRuntime, blueprint.DelayedTransactions, _queuesByHash, _queuesByCracId);
         var batches = new List<IMetaBatch>();
 
         foreach (var hash in blueprint.DelayedTransactions.Select(x => x.Hash))

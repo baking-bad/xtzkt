@@ -3,8 +3,9 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
-public class MetaBlockReader(List<IDelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops)
+public class MetaBlockReader(IEvmRuntime evmRuntime, List<IDelayedTransaction> delayed, Dictionary<string, Queue<IMetaContent>> ops)
 {
+    readonly IEvmRuntime EvmRuntime = evmRuntime;
     readonly List<IDelayedTransaction> Delayed = delayed;
     readonly Dictionary<string, Queue<IMetaContent>> Operations = ops;
 

@@ -170,7 +170,7 @@ partial class OriginationCommit
             GasUsed = trace.RequiredHexInt32("gasUsed") - SubcallsGasUsed(trace),
             Status = status,
             Errors = status != OperationStatus.Applied
-                ? trace.OptionalString("revertReason") ?? trace.OptionalString("error")
+                ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
                 : null,
             NonceConsumed = GetEvmTraceStatus(parent.Status, parentTraceStatus) == OperationStatus.Applied
                 ? true

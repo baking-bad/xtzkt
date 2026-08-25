@@ -38,6 +38,13 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                 InboxLevel = inboxLevel,
                 InboxMessageId = inboxMessageId,
                 Type = type,
+
+                #region crutch for nested proxy calls in old etherlink
+                SenderId = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress)).Id,
+                GasUsed = 0,
+                Counter = 0,
+                InternalOperations = null,
+                #endregion
             };
             #endregion
 

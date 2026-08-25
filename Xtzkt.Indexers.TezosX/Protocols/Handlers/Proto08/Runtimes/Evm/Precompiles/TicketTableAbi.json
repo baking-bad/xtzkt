@@ -5,7 +5,7 @@
     "inputs": [
       {
         "type": "uint256",
-        "name": "ticket_hash"
+        "name": "ticketHash"
       },
       {
         "type": "address",
@@ -25,7 +25,7 @@
     "inputs": [
       {
         "type": "uint256",
-        "name": "ticket_hash"
+        "name": "ticketHash"
       },
       {
         "type": "address",
@@ -61,21 +61,21 @@
           },
           {
             "type": "uint256",
-            "name": "ticket_hash"
+            "name": "ticketHash"
           },
           {
             "type": "uint256",
-            "name": "inbox_level"
+            "name": "inboxLevel"
           },
           {
             "type": "uint256",
-            "name": "inbox_msg_id"
+            "name": "inboxMsgId"
           }
         ]
       },
       {
         "type": "uint256",
-        "name": "deposit_id"
+        "name": "depositId"
       }
     ],
     "outputs": [],
@@ -87,7 +87,7 @@
     "inputs": [
       {
         "type": "uint256",
-        "name": "deposit_id"
+        "name": "depositId"
       }
     ],
     "outputs": [
@@ -109,15 +109,15 @@
           },
           {
             "type": "uint256",
-            "name": "ticket_hash"
+            "name": "ticketHash"
           },
           {
             "type": "uint256",
-            "name": "inbox_level"
+            "name": "inboxLevel"
           },
           {
             "type": "uint256",
-            "name": "inbox_msg_id"
+            "name": "inboxMsgId"
           }
         ]
       }
@@ -130,7 +130,7 @@
     "inputs": [
       {
         "type": "uint256",
-        "name": "deposit_id"
+        "name": "depositId"
       }
     ],
     "outputs": [],

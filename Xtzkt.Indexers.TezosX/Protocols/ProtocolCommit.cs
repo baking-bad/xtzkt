@@ -6,6 +6,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols
@@ -18,6 +19,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         protected readonly CacheService Cache = protocol.Cache;
         protected readonly ProtocolHandler Proto = protocol;
         protected readonly BlockContext Context = protocol.Context;
+        protected readonly IEvmRuntime EvmRuntime = protocol.EvmRuntime;
+        protected readonly IMichelsonRuntime MichelsonRuntime = protocol.MichelsonRuntime;
         protected readonly ILogger Logger = protocol.Logger;
 
         #region addresses
@@ -225,7 +228,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             Db.Addresses.Remove(alias);
         }
 
-        protected async Task BindAliases(XEvmAddress address)
+        protected virtual async Task BindAliases(XEvmAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAddress alias)
             {
@@ -237,7 +240,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             // UPDATE: add other runtimes here, when implemented
         }
 
-        protected async Task UnbindAliases(XEvmAddress address)
+        protected virtual async Task UnbindAliases(XEvmAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAlias alias)
                 DowngradeToXMichelsonGhost(alias, address);
@@ -643,7 +646,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             Db.Addresses.Remove(alias);
         }
 
-        protected async Task BindAliases(XMichelsonAddress address)
+        protected virtual async Task BindAliases(XMichelsonAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(EvmRuntime.GetAlias(address.Hash)) is XEvmAddress alias)
             {
@@ -655,7 +658,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             // UPDATE: add other runtimes here, when implemented
         }
 
-        protected async Task UnbindAliases(XMichelsonAddress address)
+        protected virtual async Task UnbindAliases(XMichelsonAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(EvmRuntime.GetAlias(address.Hash)) is XEvmAlias alias)
                 DowngradeToXEvmUser(alias, address);

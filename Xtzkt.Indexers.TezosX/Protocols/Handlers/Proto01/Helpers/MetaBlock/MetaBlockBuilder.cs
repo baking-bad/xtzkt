@@ -5,7 +5,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 
-public partial class MetaBlockBuilder(IEvmRpc evmRpc, CacheService cache, ILogger logger)
+public partial class MetaBlockBuilder(IEvmRpc evmRpc, IEvmRuntime evmRuntime, CacheService cache, ILogger logger)
 {
     public async Task<IMetaBlock> GetNextBlock(XChain state)
     {
@@ -40,7 +40,7 @@ public partial class MetaBlockBuilder(IEvmRpc evmRpc, CacheService cache, ILogge
             _queuesByHash.Add(batch.Hash, queue);
         }
 
-        var reader = new MetaBlockReader(blueprint.DelayedTransactions, _queuesByHash);
+        var reader = new MetaBlockReader(evmRuntime, blueprint.DelayedTransactions, _queuesByHash);
         var batches = new List<IMetaBatch>();
 
         foreach (var hash in blueprint.DelayedTransactions.Select(x => x.Hash))

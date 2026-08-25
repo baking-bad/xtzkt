@@ -122,7 +122,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01Commit(protoc
                 Spend(sender, op.Amount);
                 Receive(target, op.Amount);
 
-                if (target.Hash == EvmRuntime.NullAddress)
+                if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
                     Context.Statistics.TotalBanished += op.Amount;
             }
         }

@@ -75,7 +75,7 @@ partial class TransactionCommit
             GasUsed = ownGasUsed,
             Status = status,
             Errors = status != OperationStatus.Applied
-                ? trace.OptionalString("revertReason") ?? trace.OptionalString("error")
+                ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
                 : null,
         };
 
@@ -133,7 +133,7 @@ partial class TransactionCommit
                 Spend(sender, op.Amount);
                 Receive(target, op.Amount);
 
-                if (target.Hash == EvmRuntime.NullAddress)
+                if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
                     Context.Statistics.TotalBanished += op.Amount;
             }
         }
@@ -196,7 +196,7 @@ partial class TransactionCommit
             GasUsed = trace.RequiredHexInt32("gasUsed") - SubcallsGasUsed(trace),
             Status = status,
             Errors = status != OperationStatus.Applied
-                ? trace.OptionalString("revertReason") ?? trace.OptionalString("error")
+                ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
                 : null,
         };
         #endregion
@@ -237,12 +237,12 @@ partial class TransactionCommit
                 {
                     Receive(target, op.Amount);
 
-                    if (target.Hash == EvmRuntime.NullAddress)
+                    if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
                         Context.Statistics.TotalBanished += op.Amount;
                 }
                 else
                 {
-                    Context.Statistics.TotalBanished += op.Amount;
+                    Context.Statistics.TotalBurned += op.Amount;
                 }
             }
         }

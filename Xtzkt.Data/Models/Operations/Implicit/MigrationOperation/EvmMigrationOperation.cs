@@ -8,6 +8,8 @@ namespace Xtzkt.Data.Models
     {
         [Column($"{nameof(BalanceChange)}18")]
         public BigInteger BalanceChange { get; set; }
+
+        public int NonceChange { get; set; }
     }
 
     public static class EvmMigrationOperationModel

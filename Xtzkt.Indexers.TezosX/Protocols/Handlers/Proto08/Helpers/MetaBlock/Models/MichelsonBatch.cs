@@ -11,7 +11,7 @@ public class MichelsonBatch
     public List<MichelsonOperation> Operations { get; }
     public string? CracId { get; }
 
-    public MichelsonBatch(int index, JsonElement content)
+    public MichelsonBatch(IMichelsonRuntime michelsonRuntime, int index, JsonElement content)
     {
         Index = index;
         Hash = content.RequiredString("hash");
@@ -19,10 +19,10 @@ public class MichelsonBatch
                 .EnumerateArray()
                 .Select(x => new MichelsonOperation(this, x))];
 
-        if (Operations[0].Internals.Count != 0 && Operations[0].From == MichelsonRuntime.NullAddress)
+        if (Operations[0].Internals.Count != 0 && Operations[0].From == michelsonRuntime.NullAddress)
         {
             var first = Operations[0].Internals[0];
-            if (first.From == MichelsonRuntime.CracOrigin &&
+            if (first.From == michelsonRuntime.CracOrigin &&
                 first.Content.RequiredString("kind") == "event" &&
                 first.Content.RequiredString("tag") == "cross_runtime_call")
                 CracId = first.Content.Required("payload").RequiredString("string");

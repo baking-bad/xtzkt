@@ -6,7 +6,7 @@ using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
+public class ProtoActivator(ProtocolHandler proto) : Proto01Commit(proto), IActivator
 {
     public async Task ActivateEvmContext(XChain state)
     {

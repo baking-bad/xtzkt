@@ -5198,6 +5198,9 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("BalanceChange18");
 
+                    b.Property<int>("NonceChange")
+                        .HasColumnType("integer");
+
                     b.HasDiscriminator().HasValue(0);
                 });
 

@@ -5,7 +5,7 @@ using Xtzkt.Indexers.TezosX.Utils;
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 // Customized helpers due lack of call traces in the genesis era.
-class Proto01Commit(ProtocolHandler protocol) : ProtocolCommit(protocol)
+public class Proto01Commit(ProtocolHandler protocol) : Proto02.Proto02Commit(protocol)
 {
     protected override async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)
     {

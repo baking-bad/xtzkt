@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Runtimes.Michelson;
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class MichelsonRpc : IMichelsonRpc
 {

@@ -57,6 +57,7 @@ public class MigrationRepository(
                     case "kind":           columns.Add(@"""Kind"""); break;
                     case "account":        columns.Add(@"""AddressId"""); break;
                     case "balanceChange":  columns.Add(@"""BalanceChange"""); columns.Add(@"""BalanceChange18"""); columns.Add(@"""Runtime"""); break;
+                    case "nonceChange":    columns.Add(@"""NonceChange"""); break;
                     case "tokenTransfers": columns.Add(@"""TokenTransfers"""); break;
                     case "bigMapUpdates":  columns.Add(@"""BigMapUpdates"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
@@ -136,6 +137,7 @@ public class MigrationRepository(
                     Kind = MigrationKinds.ToString((int)row.Kind),
                     Account = _addressCache.GetInfo((int)row.AddressId),
                     BalanceChange = row.BalanceChange18,
+                    NonceChange = row.NonceChange,
                 },
                 _ => throw new InvalidOperationException("Failed to read MigrationOperation")
             };
@@ -204,6 +206,9 @@ public class MigrationRepository(
                         Data.Models.Runtime.Evm => row.BalanceChange18,
                         _ => throw new InvalidOperationException("Failed to read MigrationOperation")
                     };
+                    break;
+                case "nonceChange":
+                    foreach (var row in rows) result[j++][i] = row.NonceChange;
                     break;
                 case "tokenTransfers":
                     foreach (var row in rows) result[j++][i] = row.TokenTransfers;
