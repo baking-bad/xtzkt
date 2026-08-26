@@ -16,7 +16,7 @@ partial class OriginationCommit
         #region init
         var block = Context.Block;
         var senderAddress = tx.RequiredString("from");
-        var sender = await GetOrCreateXEvmUser(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
@@ -93,7 +93,7 @@ partial class OriginationCommit
             }
             else
             {
-                contract = await CreateXEvmContract(contractAddress, sender);
+                contract = await Helpers.CreateXEvmContract(contractAddress, sender);
             }
 
             // deployed runtime code
@@ -148,7 +148,7 @@ partial class OriginationCommit
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
         var senderAddress = trace.RequiredString("from");
-        var sender = await GetOrCreateXEvmAddress(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
         var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
@@ -218,7 +218,7 @@ partial class OriginationCommit
             }
             else
             {
-                contract = await CreateXEvmContract(contractAddress, sender);
+                contract = await Helpers.CreateXEvmContract(contractAddress, sender);
             }
 
             // deployed runtime code
@@ -308,7 +308,7 @@ partial class OriginationCommit
             }
             else
             {
-                await RemoveXEvmContract(contract, sender);
+                await Helpers.RemoveXEvmContract(contract, sender);
             }
 
             RevertSpend(sender, op.Balance);
@@ -322,7 +322,7 @@ partial class OriginationCommit
         sender.OriginationsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
         Cache.Chain.Get().OriginationOpsCount--;
         #endregion
@@ -375,7 +375,7 @@ partial class OriginationCommit
             }
             else
             {
-                await RemoveXEvmContract(contract, sender);
+                await Helpers.RemoveXEvmContract(contract, sender);
             }
 
             RevertSpend(sender, op.Balance);
@@ -390,7 +390,7 @@ partial class OriginationCommit
         if (op.NonceConsumed == true)
             sender.Counter--;
 
-        if (sender.IsEmpty()) await RemoveXEvmAddress(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
 
         if (initiator != sender)
             initiator.OriginationsCount--;

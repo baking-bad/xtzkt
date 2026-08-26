@@ -9,14 +9,14 @@ using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
 {
-    partial class OriginationCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
+    partial class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         public virtual async Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
         {
             #region init
             var block = Context.Block;
             var senderAddress = tx.RequiredString("from");
-            var sender = await GetOrCreateXEvmUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
             var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
             var gasUsed = receipt.RequiredHexInt32("gasUsed");
@@ -92,7 +92,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
                 }
                 else
                 {
-                    contract = await CreateXEvmContract(contractAddress, sender);
+                    contract = await Helpers.CreateXEvmContract(contractAddress, sender);
                 }
 
                 // deployed runtime code
@@ -147,7 +147,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
             var senderAddress = trace.RequiredString("from");
-            var sender = await GetOrCreateXEvmAddress(senderAddress);
+            var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
 
             var status = GetEvmTraceStatus(parent.Status, traceStatus);
 
@@ -215,7 +215,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
                 }
                 else
                 {
-                    contract = await CreateXEvmContract(contractAddress, sender);
+                    contract = await Helpers.CreateXEvmContract(contractAddress, sender);
                 }
 
                 // deployed runtime code
@@ -305,7 +305,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
                 }
                 else
                 {
-                    await RemoveXEvmContract(contract, sender);
+                    await Helpers.RemoveXEvmContract(contract, sender);
                 }
 
                 RevertSpend(sender, op.Balance);
@@ -319,7 +319,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             sender.OriginationsCount--;
             sender.LastLevel = op.Level;
             sender.LastTimestamp = op.Timestamp;
-            if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
             Cache.Chain.Get().OriginationOpsCount--;
             #endregion
@@ -372,7 +372,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
                 }
                 else
                 {
-                    await RemoveXEvmContract(contract, sender);
+                    await Helpers.RemoveXEvmContract(contract, sender);
                 }
 
                 RevertSpend(sender, op.Balance);
@@ -387,7 +387,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             if (op.NonceConsumed == true)
                 sender.Counter--;
 
-            if (sender.IsEmpty()) await RemoveXEvmAddress(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
 
             if (initiator != sender)
                 initiator.OriginationsCount--;

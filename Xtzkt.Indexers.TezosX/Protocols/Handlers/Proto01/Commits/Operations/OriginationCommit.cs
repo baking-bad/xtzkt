@@ -9,14 +9,14 @@ using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
-    partial class OriginationCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+    partial class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         public virtual async Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, bool isDelayedOp)
         {
             #region init
             var block = Context.Block;
             var senderAddress = tx.RequiredString("from");
-            var sender = await GetOrCreateXEvmUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
             var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
             var gasUsed = receipt.RequiredHexInt32("gasUsed");
@@ -92,7 +92,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                 }
                 else
                 {
-                    contract = await CreateXEvmContract(contractAddress, sender);
+                    contract = await Helpers.CreateXEvmContract(contractAddress, sender);
                 }
 
                 // the deployed runtime code isn't available without traces, so it's read from the node
@@ -182,7 +182,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                 }
                 else
                 {
-                    await RemoveXEvmContract(contract, sender);
+                    await Helpers.RemoveXEvmContract(contract, sender);
                 }
 
                 RevertSpend(sender, op.Balance);
@@ -196,7 +196,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             sender.OriginationsCount--;
             sender.LastLevel = op.Level;
             sender.LastTimestamp = op.Timestamp;
-            if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
             Cache.Chain.Get().OriginationOpsCount--;
             #endregion

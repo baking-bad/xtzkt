@@ -24,7 +24,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             #region init
             var block = Context.Block;
             var senderAddress = content.RequiredString("source");
-            var sender = await GetOrCreateXMichelsonUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXMichelsonUser(senderAddress);
 
             var metadata = content.Required("metadata");
             var result = metadata.Required("operation_result");
@@ -127,7 +127,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 Spend(sender, operation.Balance);
 
                 var contractAddress = result.RequiredArray("originated_contracts", 1)[0].RequiredString();
-                var contract = await CreateXMichelsonContract(contractAddress, sender);
+                var contract = await Helpers.CreateXMichelsonContract(contractAddress, sender);
 
                 Receive(contract, operation.Balance);
                 contract.OriginationsCount++;
@@ -155,7 +155,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
             var senderAddress = content.RequiredString("source");
-            var sender = await GetOrCreateXMichelsonAddress(senderAddress);
+            var sender = await Helpers.GetOrCreateXMichelsonAddress(senderAddress);
             
             var result = content.Required("result");
 
@@ -216,7 +216,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 Spend(sender, operation.Balance);
 
                 var contractAddress = result.RequiredArray("originated_contracts", 1)[0].RequiredString();
-                var contract = await CreateXMichelsonContract(contractAddress, sender);
+                var contract = await Helpers.CreateXMichelsonContract(contractAddress, sender);
 
                 Receive(contract, operation.Balance);
                 contract.OriginationsCount++;
@@ -259,7 +259,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 contract.LastLevel = operation.Level;
                 contract.LastTimestamp = operation.Timestamp;
 
-                await RemoveXMichelsonContract(contract, sender);
+                await Helpers.RemoveXMichelsonContract(contract, sender);
 
                 RevertBurnFee(sender, (operation.StorageFee ?? 0) + (operation.AllocationFee ?? 0));
                 RevertSpend(sender, operation.Balance);
@@ -274,7 +274,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             sender.OriginationsCount--;
             sender.LastLevel = operation.Level;
             sender.LastTimestamp = operation.Timestamp;
-            if (sender.IsEmpty()) await RemoveXMichelsonUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXMichelsonUser(sender);
 
             Cache.Chain.Get().OriginationOpsCount--;
             #endregion
@@ -305,7 +305,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 contract.LastLevel = operation.Level;
                 contract.LastTimestamp = operation.Timestamp;
 
-                await RemoveXMichelsonContract(contract, sender);
+                await Helpers.RemoveXMichelsonContract(contract, sender);
 
                 if (initiator is XMichelsonAddress _initiator)
                     RevertBurnFee(_initiator, (operation.StorageFee ?? 0) + (operation.AllocationFee ?? 0));
@@ -319,7 +319,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             sender.OriginationsCount--;
             sender.LastLevel = operation.Level;
             sender.LastTimestamp = operation.Timestamp;
-            if (sender.IsEmpty()) await RemoveXMichelsonAddress(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXMichelsonAddress(sender);
 
             Cache.Chain.Get().OriginationOpsCount--;
             #endregion

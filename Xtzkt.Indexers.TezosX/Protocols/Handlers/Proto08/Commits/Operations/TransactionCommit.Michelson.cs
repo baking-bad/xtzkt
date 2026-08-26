@@ -22,10 +22,10 @@ partial class TransactionCommit
         #region init
         var block = Context.Block;
         var senderAddress = content.RequiredString("source");
-        var sender = await GetOrCreateXMichelsonUser(senderAddress);
+        var sender = await Helpers.GetOrCreateXMichelsonUser(senderAddress);
 
         var targetAddress = content.RequiredString("destination");
-        var target = await GetOrCreateXMichelsonAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXMichelsonAddress(targetAddress);
 
         var metadata = content.Required("metadata");
         var result = metadata.Required("operation_result");
@@ -181,10 +181,10 @@ partial class TransactionCommit
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
         var senderAddress = content.RequiredString("source");
-        var sender = await GetOrCreateXMichelsonAddress(senderAddress);
+        var sender = await Helpers.GetOrCreateXMichelsonAddress(senderAddress);
 
         var targetAddress = content.RequiredString("destination");
-        var target = await GetOrCreateXMichelsonAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXMichelsonAddress(targetAddress);
 
         var (entrypoint, paramsRaw, paramsJson, guessed) = target is not XMichelsonUser && content.TryGetProperty("parameters", out var parameters)
             ? await ParseParameters(target, parameters)
@@ -320,14 +320,14 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXMichelsonUser(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXMichelsonUser(sender);
 
         if (target != sender)
         {
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXMichelsonAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
         }
 
         Cache.Chain.Get().TransactionOpsCount--;
@@ -367,14 +367,14 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXMichelsonAddress(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXMichelsonAddress(sender);
 
         if (target != sender)
         {
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXMichelsonAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
         }
 
         if (initiator != sender && initiator != target)

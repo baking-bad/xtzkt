@@ -11,7 +11,7 @@ class BlockCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var sequencerPoolAddress = evmBlock.RequiredString("miner");
         if (sequencerPoolAddress != EvmRuntime.NullAddress)
         {
-            var sequencerPool = await GetOrCreateXEvmAddress(sequencerPoolAddress);
+            var sequencerPool = await Helpers.GetOrCreateXEvmAddress(sequencerPoolAddress);
             
             Db.TryAttach(sequencerPool);
             sequencerPool.BlocksCount++;
@@ -34,7 +34,7 @@ class BlockCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             sequencerPool.BlocksCount--;
             sequencerPool.LastLevel = Context.Block.Level;
             sequencerPool.LastTimestamp = Context.Block.Timestamp;
-            if (sequencerPool.IsEmpty()) await RemoveXEvmAddress(sequencerPool);
+            if (sequencerPool.IsEmpty()) await Helpers.RemoveXEvmAddress(sequencerPool);
         }
 
         Cache.Chain.Get().BlocksCount--;

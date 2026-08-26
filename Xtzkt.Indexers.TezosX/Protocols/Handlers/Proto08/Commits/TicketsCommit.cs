@@ -228,9 +228,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
 
         async Task TransferTickets(IOperation op, Ticket ticket, string fromAddress, string toAddress, BigInteger amount)
         {
-            var from = await GetCachedOrCreateXMichelsonAddress(fromAddress);
+            var from = await Helpers.GetCachedOrCreateXMichelsonAddress(fromAddress);
             var fromBalance = GetOrCreateTicketBalance(op, ticket, from);
-            var to = await GetCachedOrCreateXMichelsonAddress(toAddress);
+            var to = await Helpers.GetCachedOrCreateXMichelsonAddress(toAddress);
             var toBalance = GetOrCreateTicketBalance(op, ticket, to);
 
             switch (op)
@@ -323,7 +323,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
 
         async Task MintOrBurnTickets(IOperation op, Ticket ticket, string addressHash, BigInteger amount)
         {
-            var address = await GetCachedOrCreateXMichelsonAddress(addressHash);
+            var address = await Helpers.GetCachedOrCreateXMichelsonAddress(addressHash);
             var balance = GetOrCreateTicketBalance(op, ticket, address);
 
             switch (op)
@@ -623,7 +623,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             }
 
             foreach (var address in addressesToRemove)
-                await RemoveXMichelsonAddress(address);
+                await Helpers.RemoveXMichelsonAddress(address);
 
             await Db.Database.ExecuteSqlRawAsync("""
                 DELETE FROM "TicketTransfers"

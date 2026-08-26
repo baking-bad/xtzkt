@@ -7,7 +7,7 @@ using Xtzkt.Indexers.Common.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
 {
-    partial class TokensCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
+    partial class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         public virtual async Task ApplyEvmTransfers()
         {
@@ -89,7 +89,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
         async Task<XAddress> GetCachedOrCreateXAddress(string hash)
         {
             if (!Cache.Addresses.TryGetCached(hash, out var address))
-                address = await CreateXEvmUser(hash);
+                address = await Helpers.CreateXEvmUser(hash);
             return address;
         }
 
@@ -592,9 +592,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             foreach (var address in addressesToRemove)
             {
                 if (address is XEvmAddress evm)
-                    await RemoveXEvmAddress(evm);
+                    await Helpers.RemoveXEvmAddress(evm);
                 else if (address is XMichelsonAddress mich)
-                    await RemoveXMichelsonAddress(mich);
+                    await Helpers.RemoveXMichelsonAddress(mich);
                 else
                     throw new InvalidOperationException("Invalid address type");
             }

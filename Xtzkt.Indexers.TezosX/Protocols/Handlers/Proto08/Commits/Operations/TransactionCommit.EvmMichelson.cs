@@ -23,16 +23,16 @@ partial class TransactionCommit
         var block = Context.Block;
 
         var senderAddress = tx.RequiredString("from");
-        var sender = await GetOrCreateXEvmUser(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
         var gatewayAddress = tx.RequiredString("to");
         var gateway = (XEvmContract)await Cache.Addresses.GetExistingAsync(gatewayAddress);
 
         var aliasAddress = MichelsonRuntime.GetAlias(senderAddress);
-        var alias = await GetOrCreateXMichelsonAlias(aliasAddress, sender);
+        var alias = await Helpers.GetOrCreateXMichelsonAlias(aliasAddress, sender);
 
         var targetAddress = content.RequiredString("destination");
-        var target = await GetOrCreateXMichelsonAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXMichelsonAddress(targetAddress);
 
         var result = content.Required("result");
 
@@ -190,7 +190,7 @@ partial class TransactionCommit
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
         var senderAddress = trace.RequiredString("from");
-        var sender = await GetOrCreateXEvmAddress(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
         var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
         var gatewayAddress = trace.RequiredString("to");
@@ -206,14 +206,14 @@ partial class TransactionCommit
         else
         {
             var aliasAddress = MichelsonRuntime.GetAlias(senderAddress);
-            alias = await GetOrCreateXMichelsonAlias(aliasAddress, sender);
+            alias = await Helpers.GetOrCreateXMichelsonAlias(aliasAddress, sender);
         }
 
         if (alias.Hash != content.RequiredString("source"))
             throw new ValidationException("Unexpected crac alias");
 
         var targetAddress = content.RequiredString("destination");
-        var target = await GetOrCreateXMichelsonAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXMichelsonAddress(targetAddress);
 
         var result = content.Required("result");
 
@@ -374,7 +374,7 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
         Db.TryAttach(gateway);
         gateway.TransactionsCount--;
@@ -385,7 +385,7 @@ partial class TransactionCommit
         alias.TransactionsCount--;
         alias.LastLevel = op.Level;
         alias.LastTimestamp = op.Timestamp;
-        if (alias.IsEmpty()) await RemoveXMichelsonAlias(alias, sender);
+        if (alias.IsEmpty()) await Helpers.RemoveXMichelsonAlias(alias, sender);
 
         if (target != alias)
         {
@@ -393,7 +393,7 @@ partial class TransactionCommit
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXMichelsonAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
         }
 
         Cache.Chain.Get().TransactionOpsCount--;
@@ -436,7 +436,7 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmAddress(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
 
         Db.TryAttach(gateway);
         gateway.TransactionsCount--;
@@ -447,7 +447,7 @@ partial class TransactionCommit
         alias.TransactionsCount--;
         alias.LastLevel = op.Level;
         alias.LastTimestamp = op.Timestamp;
-        if (alias.IsEmpty()) await RemoveXMichelsonAddress(alias);
+        if (alias.IsEmpty()) await Helpers.RemoveXMichelsonAddress(alias);
 
         if (target != alias)
         {
@@ -455,7 +455,7 @@ partial class TransactionCommit
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXMichelsonAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
         }
 
         if (initiator != sender && initiator != target)

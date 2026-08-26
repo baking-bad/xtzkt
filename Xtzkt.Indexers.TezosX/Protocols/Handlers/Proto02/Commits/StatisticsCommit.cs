@@ -4,7 +4,7 @@ using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-class StatisticsCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
+class StatisticsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
     public virtual async Task Apply()
     {

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Xtzkt.Utils;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils.Abi;
 
@@ -47,7 +48,7 @@ public static class AbiDecoder
         }
 
         // hashed, or unsupported type
-        return Hex.Convert(topic);
+        return Hex.GetString(topic);
     }
 
     public static Dictionary<string, object> Decode(ReadOnlySpan<byte> data, IReadOnlyList<AbiParameter> abi)
@@ -188,7 +189,7 @@ public static class AbiDecoder
             return data[offset + 31] != 0;
 
         if (type == "address")
-            return Hex.Convert(data.Slice(offset + 12, 20));
+            return Hex.GetString(data.Slice(offset + 12, 20));
 
         if (type == "string")
         {
@@ -199,14 +200,14 @@ public static class AbiDecoder
         if (type == "bytes")
         {
             var len = ReadInt32Checked(data, offset);
-            return Hex.Convert(data.Slice(offset + WordSize, len));
+            return Hex.GetString(data.Slice(offset + WordSize, len));
         }
 
         // bytesN
         if (type.StartsWith("bytes"))
         {
             var n = int.Parse(type[5..]);
-            return Hex.Convert(data.Slice(offset, n));
+            return Hex.GetString(data.Slice(offset, n));
         }
 
         // uintN

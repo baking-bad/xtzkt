@@ -15,7 +15,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             #region init
             var block = Context.Block;
             var senderAddress = content.RequiredString("source");
-            var sender = await GetOrCreateXMichelsonUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXMichelsonUser(senderAddress);
 
             var metadata = content.Required("metadata");
             var result = metadata.Required("operation_result");
@@ -145,7 +145,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             sender.RegisterConstantsCount--;
             sender.LastLevel = op.Level;
             sender.LastTimestamp = op.Timestamp;
-            if (sender.IsEmpty()) await RemoveXMichelsonUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXMichelsonUser(sender);
 
             Cache.Chain.Get().RegisterConstantOpsCount--;
             #endregion

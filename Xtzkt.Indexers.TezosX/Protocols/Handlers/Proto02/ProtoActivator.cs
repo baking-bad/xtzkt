@@ -1,9 +1,9 @@
 ﻿using Xtzkt.Data.Models;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-public class ProtoActivator(ProtocolHandler proto) : Proto02Commit(proto), IActivator
+public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
 {
     protected readonly IMichelsonRpc MichelsonRpc = proto.MichelsonRpc;
 
@@ -12,7 +12,7 @@ public class ProtoActivator(ProtocolHandler proto) : Proto02Commit(proto), IActi
         throw new NotImplementedException();
     }
 
-    public Task ActivateMichelsonContext(XChain state, IMetaBlock block)
+    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
     {
         throw new NotImplementedException();
     }

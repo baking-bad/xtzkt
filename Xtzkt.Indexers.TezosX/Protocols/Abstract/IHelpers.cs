@@ -1,8 +1,40 @@
 ﻿using Xtzkt.Data.Models;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 public interface IHelpers
 {
-    Task<IMetaBlock> GetMetaBlock(XChain state);
+    Task<MetaBlock> GetMetaBlock(int level);
+
+    #region addresses
+    Task<XEvmAddress> GetOrCreateXEvmAddress(string hash);
+    Task RemoveXEvmAddress(XEvmAddress address);
+
+    Task<XEvmUser> GetOrCreateXEvmUser(string hash);
+    Task<XEvmUser> CreateXEvmUser(string hash);
+    Task RemoveXEvmUser(XEvmUser user);
+
+    Task<XEvmAlias> GetOrCreateXEvmAlias(string hash, XMichelsonAddress owner);
+    Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner);
+
+    Task<XEvmContract> GetOrCreateXEvmContract(string hash);
+    Task<XEvmContract> CreateXEvmContract(string hash, XEvmAddress creator);
+    XEvmContract UpgradeToXEvmContract(XEvmUser ghost, XEvmAddress creator);
+    Task RemoveXEvmContract(XEvmContract contract, XEvmAddress creator);
+
+    Task<XMichelsonAddress> GetOrCreateXMichelsonAddress(string hash);
+    Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash);
+    Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash, XBlock block);
+    Task RemoveXMichelsonAddress(XMichelsonAddress address);
+
+    Task<XMichelsonUser> GetOrCreateXMichelsonUser(string hash);
+    Task RemoveXMichelsonUser(XMichelsonUser user);
+
+    Task<XMichelsonAlias> GetOrCreateXMichelsonAlias(string hash, XEvmAddress owner);
+    Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner);
+
+    Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator);
+    Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator);
+    #endregion
 }

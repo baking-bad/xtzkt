@@ -3,9 +3,9 @@ using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Proto01;
 using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
-using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
@@ -26,10 +26,11 @@ class Proto01Handler(
     public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
 
     protected override IActivator Activator => new ProtoActivator(this);
-    protected override IHelpers Helpers => new ProtoHelpers(this);
+    IHelpers? _helpers;
+    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
 
-    protected override async Task Commit(IMetaBlock block)
+    protected override async Task Commit(MetaBlock block)
     {
         await new BlockCommit(this).Apply(block.EvmBlock);
 
@@ -37,7 +38,7 @@ class Proto01Handler(
         {
             foreach (var operation in batch.Operations)
             {
-                switch (operation.Content)
+                switch (operation)
                 {
                     case EvmOperation eop:
                         if (eop.To == null)
@@ -51,7 +52,7 @@ class Proto01Handler(
                             await new LogCommit(this).ApplyEvmLogs(op, eop.Logs);
                         }
                         break;
-                    case DelayedEvmDepositOperation dop:
+                    case EvmDeposit dop:
                         {
                             var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
                             var logCommit = new LogCommit(this);

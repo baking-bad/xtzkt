@@ -2,7 +2,7 @@
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
@@ -16,7 +16,7 @@ public class ProtoMigrator(ProtocolHandler proto) : IMigrator
     protected readonly BlockContext Context = proto.Context;
     protected readonly ILogger Logger = proto.Logger;
 
-    public async Task MigrateContext(XChain state, IMetaBlock block)
+    public async Task MigrateContext(XChain state, MetaBlock block)
     {
         #region protocol
         var prev = await Cache.Protocols.GetAsync(state.Kernel);

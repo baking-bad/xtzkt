@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Formats.Cbor;
 using System.Numerics;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils;
 
@@ -67,14 +68,14 @@ public class SolidityMetadata
                     case "bzzr0":
                         if (TryReadByteString(reader, out var _bzzr0))
                         {
-                            bzzr0 = Hex.Convert(_bzzr0);
+                            bzzr0 = Hex.GetString(_bzzr0);
                             match = true;
                         }
                         break;
                     case "bzzr1":
                         if (TryReadByteString(reader, out var _bzzr1))
                         {
-                            bzzr1 = Hex.Convert(_bzzr1);
+                            bzzr1 = Hex.GetString(_bzzr1);
                             match = true;
                         }
                         break;

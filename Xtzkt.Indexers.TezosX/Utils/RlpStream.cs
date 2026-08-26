@@ -1,4 +1,4 @@
-﻿using Netezos.Encoding;
+﻿using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils;
 
@@ -22,7 +22,7 @@ public class RlpItem : IRlpElement
 
     public RlpItem(string hex)
     {
-        Data = Hex.Parse(hex);
+        Data = Hex.GetBytes(hex);
     }
 }
 

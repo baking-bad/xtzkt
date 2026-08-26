@@ -4,9 +4,9 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Proto02;
 using Xtzkt.Indexers.TezosX.Protocols.Proto02.Helpers;
-using Xtzkt.Indexers.TezosX.Protocols.Proto02.Helpers.MetaBlock;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
@@ -27,10 +27,11 @@ class Proto02Handler(
     public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
 
     protected override IActivator Activator => new ProtoActivator(this);
-    protected override IHelpers Helpers => new ProtoHelpers(this);
+    IHelpers? _helpers;
+    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
 
-    protected override async Task Commit(IMetaBlock block)
+    protected override async Task Commit(MetaBlock block)
     {
         await new BlockCommit(this).Apply(block.EvmBlock);
 
@@ -39,7 +40,7 @@ class Proto02Handler(
             IParentOperation? parentOp = null;
             foreach (var operation in batch.Operations)
             {
-                switch (operation.Content)
+                switch (operation)
                 {
                     case EvmOperation eop:
                         switch (eop.Trace.RequiredString("type"))
@@ -68,7 +69,7 @@ class Proto02Handler(
                                 throw new NotImplementedException($"EVM trace type {eop.Trace.RequiredString("type")} is not supported");
                         }
                         break;
-                    case DelayedEvmDepositOperation dop:
+                    case EvmDeposit dop:
                         {
                             var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
                             await new LogCommit(this).ApplyEvmLogs(op, dop.FeederCall.Logs);
@@ -81,7 +82,7 @@ class Proto02Handler(
 
                 foreach (var iop in operation.Internals)
                 {
-                    switch (iop.Content)
+                    switch (iop)
                     {
                         case EvmInternalOperation eiop:
                             switch (eiop.Trace.RequiredString("type"))

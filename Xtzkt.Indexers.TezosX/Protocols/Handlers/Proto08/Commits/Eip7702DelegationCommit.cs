@@ -38,9 +38,9 @@ class Eip7702DelegationCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
                 if (nonce != (ulong)(existingAuthority is XEvmUser existing ? existing.Counter + 1 : 0))
                     throw new Exception("Invalid 'nonce'");
 
-                authority = existingAuthority as XEvmUser ?? await CreateXEvmUser(authorityAddress);
+                authority = existingAuthority as XEvmUser ?? await Helpers.CreateXEvmUser(authorityAddress);
 
-                @delegate = delegateAddress == EvmRuntime.NullAddress ? null : await GetOrCreateXEvmAddress(delegateAddress);
+                @delegate = delegateAddress == EvmRuntime.NullAddress ? null : await Helpers.GetOrCreateXEvmAddress(delegateAddress);
 
                 delegation = new Eip7702Delegation
                 {
@@ -128,7 +128,7 @@ class Eip7702DelegationCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
                 authority.Eip7702DelegationCount--;
                 authority.LastLevel = delegation.Level;
                 authority.LastTimestamp = Context.Block.Timestamp;
-                if (authority.IsEmpty()) await RemoveXEvmUser(authority);
+                if (authority.IsEmpty()) await Helpers.RemoveXEvmUser(authority);
             }
             authority.Counter = delegation.Nonce - 1;
             authority.Eip7702DelegateId = delegation.PrevDelegateId;
@@ -139,7 +139,7 @@ class Eip7702DelegationCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
                 @delegate.Eip7702DelegationCount--;
                 @delegate.LastLevel = delegation.Level;
                 @delegate.LastTimestamp = Context.Block.Timestamp;
-                if (@delegate.IsEmpty()) await RemoveXEvmAddress(@delegate);
+                if (@delegate.IsEmpty()) await Helpers.RemoveXEvmAddress(@delegate);
             }
 
             if (op is XEvmTransactionOperation evmTx)

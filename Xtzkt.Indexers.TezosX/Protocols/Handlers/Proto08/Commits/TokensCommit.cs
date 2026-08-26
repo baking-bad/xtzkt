@@ -561,7 +561,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 if (balance != BigInteger.Zero)
                 {
                     var token = GetOrCreateToken(op, block, contract, tokenId);
-                    var address = await GetCachedOrCreateXMichelsonAddress(addressHash, block);
+                    var address = await Helpers.GetCachedOrCreateXMichelsonAddress(addressHash, block);
                     var tokenBalance = GetOrCreateTokenBalance(op, block, token, address, ep);
                     diffs.Add((address, tokenBalance, balance));
                 }
@@ -582,7 +582,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 var diff = balance - prevBalance;
                 if (diff != BigInteger.Zero)
                 {
-                    address = await GetCachedOrCreateXMichelsonAddress(addressHash, block);
+                    address = await Helpers.GetCachedOrCreateXMichelsonAddress(addressHash, block);
                     tokenBalance = GetOrCreateTokenBalance(op, block, token, (address as XMichelsonAddress)!, ep);
                     diffs.Add(((address as XMichelsonAddress)!, tokenBalance, diff));
                 }
@@ -600,9 +600,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
 
             foreach (var (from, fromEp, to, toEp, amount) in transfers)
             {
-                var fromAcc = await GetCachedOrCreateXMichelsonAddress(from, block);
+                var fromAcc = await Helpers.GetCachedOrCreateXMichelsonAddress(from, block);
                 var fromBalance = GetOrCreateTokenBalance(op, block, token, fromAcc, fromEp);
-                var toAcc = await GetCachedOrCreateXMichelsonAddress(to, block);
+                var toAcc = await Helpers.GetCachedOrCreateXMichelsonAddress(to, block);
                 var toBalance = GetOrCreateTokenBalance(op, block, token, toAcc, toEp);
                 TransferTokens(op, contract, token, fromAcc, fromBalance, toAcc, toBalance, amount);
             }
@@ -1138,9 +1138,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             foreach (var address in addressesToRemove)
             {
                 if (address is XEvmAddress evm)
-                    await RemoveXEvmAddress(evm);
+                    await Helpers.RemoveXEvmAddress(evm);
                 else if (address is XMichelsonAddress mich)
-                    await RemoveXMichelsonAddress(mich);
+                    await Helpers.RemoveXMichelsonAddress(mich);
                 else
                     throw new InvalidOperationException("Invalid address type");
             }

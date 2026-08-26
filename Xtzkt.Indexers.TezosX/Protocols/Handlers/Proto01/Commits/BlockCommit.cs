@@ -4,13 +4,13 @@ using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-class BlockCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+class BlockCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
     public virtual async Task Apply(JsonElement evmBlock)
     {
         // old kernels don't write the sequencer pool address into the block header, so we hardcode it
         var sequencerPoolAddress = "0xcf02b9ca488f8f6f4e28e37aa1bdd16b3f1b2ad8";
-        var sequencerPool = await GetOrCreateXEvmAddress(sequencerPoolAddress);
+        var sequencerPool = await Helpers.GetOrCreateXEvmAddress(sequencerPoolAddress);
 
         Db.TryAttach(sequencerPool);
         sequencerPool.BlocksCount++;
@@ -32,7 +32,7 @@ class BlockCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
             sequencerPool.BlocksCount--;
             sequencerPool.LastLevel = Context.Block.Level;
             sequencerPool.LastTimestamp = Context.Block.Timestamp;
-            if (sequencerPool.IsEmpty()) await RemoveXEvmAddress(sequencerPool);
+            if (sequencerPool.IsEmpty()) await Helpers.RemoveXEvmAddress(sequencerPool);
         }
 
         Cache.Chain.Get().BlocksCount--;

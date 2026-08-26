@@ -7,7 +7,7 @@ using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-class LogCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
     public async Task ApplyEvmLogs(ILogsOperation op, IEnumerable<JsonElement> logs)
     {
@@ -18,7 +18,7 @@ class LogCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
         {
             // the emitter is often unknown, because contracts deployed by other contracts are
             // invisible without traces, so it's resolved (and bootstrapped) via the node
-            var address = await GetOrCreateXEvmContract(log.RequiredString("address"));
+            var address = await Helpers.GetOrCreateXEvmContract(log.RequiredString("address"));
             var contract = address;
 
             var topics = log.RequiredArray("topics").EnumerateArray().Select(x => x.RequiredHexBytes()).ToArray();

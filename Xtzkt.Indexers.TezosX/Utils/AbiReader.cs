@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Text;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils
 {
@@ -58,7 +59,7 @@ namespace Xtzkt.Indexers.TezosX.Utils
 
         public static string ReadAddress(byte[] data, int offset)
         {
-            return Hex.Convert(data.AsSpan(offset, 32));
+            return Hex.GetString(data.AsSpan(offset, 32));
         }
 
         public static BigInteger ReadUint256(byte[] data, int offset)

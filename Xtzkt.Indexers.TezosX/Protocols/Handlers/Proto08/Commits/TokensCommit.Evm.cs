@@ -88,7 +88,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
         async Task<XAddress> GetCachedOrCreateXAddress(string hash)
         {
             if (!Cache.Addresses.TryGetCached(hash, out var address))
-                address = await CreateXEvmUser(hash);
+                address = await Helpers.CreateXEvmUser(hash);
             return address;
         }
 

@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-public class ProtoActivator(ProtocolHandler proto) : Proto01Commit(proto), IActivator
+public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
 {
     public async Task ActivateEvmContext(XChain state)
     {
@@ -148,7 +148,7 @@ public class ProtoActivator(ProtocolHandler proto) : Proto01Commit(proto), IActi
         state.MigrationOpsCount--;
     }
 
-    public Task ActivateMichelsonContext(XChain state, IMetaBlock block)
+    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
     {
         throw new NotImplementedException();
     }

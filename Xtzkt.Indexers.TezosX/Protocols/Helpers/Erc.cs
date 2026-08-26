@@ -2,9 +2,9 @@
 using System.Text;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 using Xtzkt.Utils.Crypto;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
@@ -116,7 +116,7 @@ public static class Erc
     }
 
     static string Address(byte[] topic) =>
-        Hex.Convert(topic.AsSpan(topic.Length - 20, 20));
+        Hex.GetString(topic.AsSpan(topic.Length - 20, 20));
 
     static BigInteger Uint256(byte[] word) =>
         new(word.AsSpan(0, 32), isUnsigned: true, isBigEndian: true);

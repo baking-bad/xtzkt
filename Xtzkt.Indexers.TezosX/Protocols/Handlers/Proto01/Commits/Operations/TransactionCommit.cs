@@ -10,7 +10,7 @@ using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-partial class TransactionCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+partial class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
     public virtual async Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, bool isDelayedOp)
     {
@@ -22,10 +22,10 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01Commit(protoc
         var block = Context.Block;
 
         var senderAddress = tx.RequiredString("from");
-        var sender = await GetOrCreateXEvmUser(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
         var targetAddress = tx.RequiredString("to");
-        var target = await GetOrCreateXEvmAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
@@ -163,7 +163,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01Commit(protoc
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
         if (target != sender)
         {
@@ -171,7 +171,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01Commit(protoc
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXEvmAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXEvmAddress(target);
         }
 
         Cache.Chain.Get().TransactionOpsCount--;

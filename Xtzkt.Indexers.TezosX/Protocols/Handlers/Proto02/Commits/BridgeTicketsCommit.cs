@@ -7,7 +7,7 @@ using Xtzkt.Indexers.Common.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
 {
-    class BridgeTicketsCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
+    class BridgeTicketsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         public virtual async Task Apply()
         {
@@ -46,7 +46,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             {
                 var op = update.Op;
                 var ticket = GetOrCreateBridgeTicket(op, update.TicketHash);
-                var address = await GetOrCreateXEvmAddress(update.To ?? update.From!);
+                var address = await Helpers.GetOrCreateXEvmAddress(update.To ?? update.From!);
                 var balance = GetOrCreateBridgeTicketBalance(op, ticket, address);
                 var diff = update.To != null ? update.Amount : -update.Amount;
 
@@ -306,7 +306,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02
             }
 
             foreach (var address in addressesToRemove)
-                await RemoveXEvmAddress(address);
+                await Helpers.RemoveXEvmAddress(address);
 
             await Db.Database.ExecuteSqlRawAsync("""
                 DELETE FROM "BridgeTicketTransfers"

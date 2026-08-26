@@ -22,13 +22,13 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             #region init
             var block = Context.Block;
             var senderAddress = content.RequiredString("source");
-            var sender = await GetOrCreateXMichelsonUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXMichelsonUser(senderAddress);
 
             var targetAddress = content.RequiredString("destination");
-            var target = await GetOrCreateXMichelsonAddress(targetAddress);
+            var target = await Helpers.GetOrCreateXMichelsonAddress(targetAddress);
 
             var ticketerAddress = content.RequiredString("ticket_ticketer");
-            var ticketer = await GetOrCreateXMichelsonAddress(ticketerAddress);
+            var ticketer = await Helpers.GetOrCreateXMichelsonAddress(ticketerAddress);
 
             var metadata = content.Required("metadata");
             var result = metadata.Required("operation_result");
@@ -195,14 +195,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             sender.TransferTicketCount--;
             sender.LastLevel = operation.Level;
             sender.LastTimestamp = operation.Timestamp;
-            if (sender.IsEmpty()) await RemoveXMichelsonUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXMichelsonUser(sender);
 
             if (target != sender)
             {
                 target.TransferTicketCount--;
                 target.LastLevel = operation.Level;
                 target.LastTimestamp = operation.Timestamp;
-                if (target.IsEmpty()) await RemoveXMichelsonAddress(target);
+                if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
             }
 
             if (ticketer != sender && ticketer != target)
@@ -210,7 +210,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
                 ticketer.TransferTicketCount--;
                 ticketer.LastLevel = operation.Level;
                 ticketer.LastTimestamp = operation.Timestamp;
-                if (ticketer.IsEmpty()) await RemoveXMichelsonAddress(ticketer);
+                if (ticketer.IsEmpty()) await Helpers.RemoveXMichelsonAddress(ticketer);
             }
 
             Cache.Chain.Get().TransferTicketOpsCount--;

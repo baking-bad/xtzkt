@@ -264,7 +264,7 @@ partial class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(proto
                 var addressHash = diff.RequiredString("address");
                 var index = diff.RequiredInt32("index");
 
-                var address = await GetOrCreateXMichelsonAddress(addressHash);
+                var address = await Helpers.GetOrCreateXMichelsonAddress(addressHash);
                 if (address.Index != null)
                 {
                     if (address.Index != index)

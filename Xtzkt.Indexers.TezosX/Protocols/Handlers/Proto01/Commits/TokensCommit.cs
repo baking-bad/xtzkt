@@ -7,7 +7,7 @@ using Xtzkt.Indexers.Common.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
-    partial class TokensCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+    partial class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         public virtual async Task ApplyEvmTransfers()
         {
@@ -93,7 +93,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 
             // a token holder is often a contract we have never seen, because internal originations
             // are invisible without traces, so it goes through the discovering resolver
-            return await GetOrCreateXEvmAddress(hash);
+            return await Helpers.GetOrCreateXEvmAddress(hash);
         }
 
         Token GetOrCreateEvmToken(ISourceOperation op, XEvmContract contract, BigInteger tokenId, TokenTags type)
@@ -595,9 +595,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             foreach (var address in addressesToRemove)
             {
                 if (address is XEvmAddress evm)
-                    await RemoveXEvmAddress(evm);
+                    await Helpers.RemoveXEvmAddress(evm);
                 else if (address is XMichelsonAddress mich)
-                    await RemoveXMichelsonAddress(mich);
+                    await Helpers.RemoveXMichelsonAddress(mich);
                 else
                     throw new InvalidOperationException("Invalid address type");
             }

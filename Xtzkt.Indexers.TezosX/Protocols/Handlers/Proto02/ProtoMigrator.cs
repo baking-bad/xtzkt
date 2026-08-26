@@ -3,15 +3,15 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-public class ProtoMigrator(ProtocolHandler proto) : Proto02Commit(proto), IMigrator
+public class ProtoMigrator(ProtocolHandler proto) : ProtocolCommit(proto), IMigrator
 {
-    public async Task MigrateContext(XChain state, IMetaBlock block)
+    public async Task MigrateContext(XChain state, MetaBlock block)
     {
         #region protocol
         var prev = await Cache.Protocols.GetAsync(state.Kernel);
@@ -85,7 +85,7 @@ public class ProtoMigrator(ProtocolHandler proto) : Proto02Commit(proto), IMigra
                     ? (cachedAddress as XEvmAddress)!
                     : addresses.TryGetValue(chunk[j], out var existingAddress)
                         ? existingAddress
-                        : await CreateXEvmUser(chunk[j]);
+                        : await Helpers.CreateXEvmUser(chunk[j]);
                 
                 var balance = balances[j];
                 var nonce = nonces[j];
@@ -120,7 +120,7 @@ public class ProtoMigrator(ProtocolHandler proto) : Proto02Commit(proto), IMigra
 
                     if (address is XEvmUser user && code.Length != 0)
                     {
-                        var contract = UpgradeToXEvmContract(user, nullAddress);
+                        var contract = Helpers.UpgradeToXEvmContract(user, nullAddress);
                         contract.CodeHash = EvmScript.GetHash(code);
                         contract.TypeHash = EvmScript.GetHash(code);
                         contract.Counter = nonce - 1;

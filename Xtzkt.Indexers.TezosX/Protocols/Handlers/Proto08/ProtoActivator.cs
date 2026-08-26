@@ -4,7 +4,7 @@ using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 using Xtzkt.Utils;
 
@@ -91,7 +91,7 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #endregion
     }
 
-    public async Task ActivateMichelsonContext(XChain state, IMetaBlock block)
+    public async Task ActivateMichelsonContext(XChain state, MetaBlock block)
     {
         #region state
         var rawBlock = block.MichelsonBlock

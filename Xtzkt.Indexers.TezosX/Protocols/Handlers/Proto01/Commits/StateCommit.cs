@@ -1,12 +1,10 @@
-﻿using System.Text.Json;
-using Xtzkt.Indexers.Common.Extensions;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+﻿using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
-    class StateCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+    class StateCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual Task Apply(IMetaBlock block)
+        public virtual Task Apply(MetaBlock block)
         {
             var state = Cache.Chain.Get();
 

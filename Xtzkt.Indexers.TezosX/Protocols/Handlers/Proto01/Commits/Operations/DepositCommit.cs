@@ -3,25 +3,24 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
-using Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers.MetaBlock;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
-    class DepositCommit(ProtocolHandler protocol) : Proto01Commit(protocol)
+    class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public async Task<XEvmDepositOperation> ApplyEvm(string hash, IDelayedTransaction deposit, JsonElement feederReceipt)
+        public async Task<XEvmDepositOperation> ApplyEvm(string hash, DelayedOperation deposit, JsonElement feederReceipt)
         {
             #region init
             var block = Context.Block;
 
-            if (deposit is not DelayedDeposit xtzDeposit)
+            if (deposit is not DelayedXtzDeposit xtzDeposit)
                 throw new InvalidOperationException("Invalid deposit type");
 
             var (type, amount, receiverAddress, inboxLevel, inboxMessageId) =
                 (DepositType.Xtz, xtzDeposit.Amount, xtzDeposit.Receiver, xtzDeposit.InboxLevel, xtzDeposit.InboxMessageId);
 
-            var receiver = await GetOrCreateXEvmAddress(receiverAddress);
+            var receiver = await Helpers.GetOrCreateXEvmAddress(receiverAddress);
 
             var status = feederReceipt.RequiredEvmOpStatus("status");
 
@@ -90,7 +89,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
             receiver.DepositOpsCount--;
             receiver.LastLevel = op.Level;
             receiver.LastTimestamp = op.Timestamp;
-            if (receiver.IsEmpty()) await RemoveXEvmAddress(receiver);
+            if (receiver.IsEmpty()) await Helpers.RemoveXEvmAddress(receiver);
 
             Cache.Chain.Get().DepositOpsCount--;
             #endregion

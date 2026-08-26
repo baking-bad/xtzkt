@@ -3,28 +3,29 @@ using System.Text.Json;
 using Secp256k1Net;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Utils.Crypto;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils;
 
 public static class Eip7702
 {
     const byte Magic = 0x05;
-    static readonly BigInteger LowS = new(Hex.Parse("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"), true, true);
+    static readonly BigInteger LowS = new(Hex.GetBytes("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"), true, true);
 
     public static (BigInteger chainId, string contract, ulong nonce, string authority) ParseAuthorization(JsonElement authorization)
     {
         var chainIdStr = authorization.RequiredString("chainId");
-        var chainIdBytes = TrimZeros(Hex.Parse(NormalizeHex(chainIdStr)));
+        var chainIdBytes = TrimZeros(Hex.GetBytes(NormalizeHex(chainIdStr)));
         if (chainIdBytes.Length > 32)
             throw new Exception("Invalid 'chainId'");
 
         var addressStr = authorization.RequiredString("address");
-        var address = Hex.Parse(addressStr);
+        var address = Hex.GetBytes(addressStr);
         if (address.Length != 20)
             throw new Exception("Invalid 'address'");
 
         var nonceStr = authorization.RequiredString("nonce");
-        var nonceBytes = TrimZeros(Hex.Parse(NormalizeHex(nonceStr)));
+        var nonceBytes = TrimZeros(Hex.GetBytes(NormalizeHex(nonceStr)));
         if (nonceBytes.Length > 8)
             throw new Exception("Invalid 'nonce'");
 
@@ -38,12 +39,12 @@ public static class Eip7702
             throw new Exception("Invalid 'yParity'");
 
         var rStr = authorization.RequiredString("r");
-        var r = TrimZeros(Hex.Parse(NormalizeHex(rStr)));
+        var r = TrimZeros(Hex.GetBytes(NormalizeHex(rStr)));
         if (r.Length > 32)
             throw new Exception("Invalid 'r'");
 
         var sStr = authorization.RequiredString("s");
-        var s = TrimZeros(Hex.Parse(NormalizeHex(sStr)));
+        var s = TrimZeros(Hex.GetBytes(NormalizeHex(sStr)));
         if (s.Length > 32 || new BigInteger(s, true, true) > LowS)
             throw new Exception("Invalid 's'");
 

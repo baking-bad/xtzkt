@@ -5,9 +5,9 @@ using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Services;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Proto08;
 using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers;
-using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
@@ -29,10 +29,11 @@ class Proto08Handler(
     public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
 
     protected override IActivator Activator => new ProtoActivator(this);
-    protected override IHelpers Helpers => new ProtoHelpers(this);
+    IHelpers? _helpers;
+    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
 
-    protected override async Task Commit(IMetaBlock block)
+    protected override async Task Commit(MetaBlock block)
     {
         await new BlockCommit(this).Apply(block.EvmBlock);
 
@@ -43,12 +44,12 @@ class Proto08Handler(
         {
             var isFirstOp = true;
             IParentOperation? parentOp = null;
-            Dictionary<IMetaContent, IParentOperation> cracOps = [];
+            Dictionary<MetaContent, IParentOperation> cracOps = [];
             List<IXManagerOperation> managerOps = new(batch.Operations.Count);
 
             foreach (var operation in batch.Operations)
             {
-                switch (operation.Content)
+                switch (operation)
                 {
                     case MichelsonOperation mop:
                         switch (mop.Content.RequiredString("kind"))
@@ -152,7 +153,7 @@ class Proto08Handler(
                                 ticketsCommit.Append(op, op, ticketUpdates);
 
                             parentOp = op;
-                            cracOps.Add(operation.Content, parentOp);
+                            cracOps.Add(operation, parentOp);
                             break;
                         }
                     case CracOperation cop when cop.GatewayCall is MichelsonOperation mop && cop.TargetCall is EvmInternalOperation eiop:
@@ -161,16 +162,16 @@ class Proto08Handler(
                             await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
                             managerOps.Add(op);
                             parentOp = op;
-                            cracOps.Add(operation.Content, parentOp);
+                            cracOps.Add(operation, parentOp);
                             break;
                         }
-                    case DelayedMichelsonDepositOperation dop:
+                    case MichelsonDeposit dop:
                         {
                             await new DepositCommit(this).ApplyMichelson(batch.Hash, dop.Deposit, dop.FeederCall.Content);
                             // shoudln't have internal ops
                             break;
                         }
-                    case DelayedEvmDepositOperation dop:
+                    case EvmDeposit dop:
                         {
                             var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
                             var logCommit = new LogCommit(this);
@@ -187,8 +188,8 @@ class Proto08Handler(
 
                 foreach (var iop in operation.Internals)
                 {
-                    var cracParent = iop.CracParent is IMetaContent cp ? cracOps[cp] : null;
-                    switch (iop.Content)
+                    var cracParent = iop.CracParent is MetaContent cp ? cracOps[cp] : null;
+                    switch (iop)
                     {
                         case MichelsonInternalOperation miop:
                             switch (miop.Content.RequiredString("kind"))
@@ -254,7 +255,7 @@ class Proto08Handler(
                             {
                                 var op = await new TransactionCommit(this).ApplyInternalMichelsonEvm(parentOp!, cracParent, miop.Content, eiop.Trace);
                                 await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
-                                cracOps.Add(iop.Content, op);
+                                cracOps.Add(iop, op);
                                 break;
                             }
                         case InternalCracOperation ciop when ciop.GatewayCall is EvmInternalOperation eiop && ciop.TargetCall is MichelsonInternalOperation miop:
@@ -268,7 +269,7 @@ class Proto08Handler(
                                 if (ticketUpdates != null)
                                     ticketsCommit.Append(parentOp!, op, ticketUpdates);
 
-                                cracOps.Add(iop.Content, op);
+                                cracOps.Add(iop, op);
                                 break;
                             }
                         default:

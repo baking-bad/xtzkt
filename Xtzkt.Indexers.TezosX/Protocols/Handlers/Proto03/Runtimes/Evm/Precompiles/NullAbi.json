@@ -1,0 +1,66 @@
+[
+  {
+    "type": "event",
+    "name": "Deposit",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxLevel"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxMsgId"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Deposit",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "type": "uint256",
+        "name": "ticketHash"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxLevel"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxMsgId"
+      }
+    ]
+  }
+]

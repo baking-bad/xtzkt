@@ -7,7 +7,7 @@ using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-class LogCommit(ProtocolHandler protocol) : Proto02Commit(protocol)
+class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
     public async Task ApplyEvmLogs(ILogsOperation op, IEnumerable<JsonElement> logs)
     {

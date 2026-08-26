@@ -20,10 +20,10 @@ partial class TransactionCommit
         var block = Context.Block;
 
         var senderAddress = tx.RequiredString("from");
-        var sender = await GetOrCreateXEvmUser(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
         var targetAddress = trace.RequiredString("to");
-        var target = await GetOrCreateXEvmAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
@@ -152,11 +152,11 @@ partial class TransactionCommit
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
         var senderAddress = trace.RequiredString("from");
-        var sender = await GetOrCreateXEvmAddress(senderAddress);
+        var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
         var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
         var targetAddress = trace.RequiredString("to");
-        var target = await GetOrCreateXEvmAddress(targetAddress);
+        var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
         var targetEip7702Delegate = await GetEip7702Delegate(target);
 
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
@@ -286,7 +286,7 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmUser(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
         if (target != sender)
         {
@@ -294,7 +294,7 @@ partial class TransactionCommit
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXEvmAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXEvmAddress(target);
         }
 
         Cache.Chain.Get().TransactionOpsCount--;
@@ -332,7 +332,7 @@ partial class TransactionCommit
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await RemoveXEvmAddress(sender);
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
 
         if (target != sender)
         {
@@ -340,7 +340,7 @@ partial class TransactionCommit
             target.TransactionsCount--;
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
-            if (target.IsEmpty()) await RemoveXEvmAddress(target);
+            if (target.IsEmpty()) await Helpers.RemoveXEvmAddress(target);
         }
 
         if (initiator != sender && initiator != target)

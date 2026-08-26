@@ -4,8 +4,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
-using Xtzkt.Indexers.TezosX.Protocols.Abstract;
-using Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers.MetaBlock;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
 {
@@ -14,19 +13,19 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
         const string XtzQueuedDepositTopic = "0x1db8461f75e6c8b8303be39f8f9e8641e37968c840ff0f8e465cf3c9b18d9d7d";
         const string FaQueuedDepositTopic = "0xb02d79c5657e344e23d91529b954c3087c60a974d598939583904a4f0b959614";
 
-        public async Task<XEvmDepositOperation> ApplyEvm(string hash, IDelayedTransaction deposit, JsonElement feederReceipt)
+        public async Task<XEvmDepositOperation> ApplyEvm(string hash, DelayedOperation deposit, JsonElement feederReceipt)
         {
             #region init
             var block = Context.Block;
 
-            var (type, amount, receiverAddress, inboxLevel, inboxMessageId, proxyAddress, ticketHash) = deposit is DelayedDeposit xtzDeposit
+            var (type, amount, receiverAddress, inboxLevel, inboxMessageId, proxyAddress, ticketHash) = deposit is DelayedXtzDeposit xtzDeposit
                 ? (DepositType.Xtz, xtzDeposit.Amount, xtzDeposit.Receiver, xtzDeposit.InboxLevel, xtzDeposit.InboxMessageId, null, null)
                 : deposit is DelayedFaDeposit faDeposit
                     ? (DepositType.Fa, faDeposit.Amount, faDeposit.Receiver, faDeposit.InboxLevel, faDeposit.InboxMessageId, faDeposit.Proxy, faDeposit.TicketHash)
                     : throw new InvalidOperationException("Invalid deposit type");
 
-            var receiver = await GetOrCreateXEvmAddress(receiverAddress);
-            var proxy = proxyAddress == null ? null : await GetOrCreateXEvmAddress(proxyAddress);
+            var receiver = await Helpers.GetOrCreateXEvmAddress(receiverAddress);
+            var proxy = proxyAddress == null ? null : await Helpers.GetOrCreateXEvmAddress(proxyAddress);
 
             var status = feederReceipt.RequiredEvmOpStatus("status");
 
@@ -116,18 +115,18 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             return op;
         }
 
-        public async Task ApplyMichelson(string hash, IDelayedTransaction deposit, JsonElement feederContent)
+        public async Task ApplyMichelson(string hash, DelayedOperation deposit, JsonElement feederContent)
         {
             #region init
             var block = Context.Block;
 
-            var (amount, receiverAddress, inboxLevel, inboxMessageId) = deposit is DelayedDeposit xtzDeposit
+            var (amount, receiverAddress, inboxLevel, inboxMessageId) = deposit is DelayedXtzDeposit xtzDeposit
                 ? (xtzDeposit.Amount, xtzDeposit.Receiver, xtzDeposit.InboxLevel, xtzDeposit.InboxMessageId)
                 : deposit is DelayedFaDeposit
                     ? throw new NotImplementedException("FA deposits are not supported by the Michelson runtime")
                     : throw new InvalidOperationException("Invalid deposit type");
 
-            var receiver = await GetOrCreateXMichelsonAddress(receiverAddress);
+            var receiver = await Helpers.GetOrCreateXMichelsonAddress(receiverAddress);
 
             var metadata = feederContent.Required("metadata");
             var result = metadata.Required("operation_result");
@@ -211,14 +210,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             receiver.DepositOpsCount--;
             receiver.LastLevel = op.Level;
             receiver.LastTimestamp = op.Timestamp;
-            if (receiver.IsEmpty()) await RemoveXEvmAddress(receiver);
+            if (receiver.IsEmpty()) await Helpers.RemoveXEvmAddress(receiver);
 
             if (proxy != null && proxy != receiver)
             {
                 proxy.DepositOpsCount--;
                 proxy.LastLevel = op.Level;
                 proxy.LastTimestamp = op.Timestamp;
-                if (proxy.IsEmpty()) await RemoveXEvmAddress(proxy);
+                if (proxy.IsEmpty()) await Helpers.RemoveXEvmAddress(proxy);
             }
 
             Cache.Chain.Get().DepositOpsCount--;
@@ -247,7 +246,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             receiver.DepositOpsCount--;
             receiver.LastLevel = op.Level;
             receiver.LastTimestamp = op.Timestamp;
-            if (receiver.IsEmpty()) await RemoveXMichelsonAddress(receiver);
+            if (receiver.IsEmpty()) await Helpers.RemoveXMichelsonAddress(receiver);
 
             Cache.Chain.Get().DepositOpsCount--;
             #endregion

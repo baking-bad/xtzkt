@@ -7,6 +7,7 @@ using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.TezosX.Protocols;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX
@@ -35,12 +36,12 @@ namespace Xtzkt.Indexers.TezosX
         public abstract IEvmRuntime EvmRuntime { get; }
         public abstract IMichelsonRpc MichelsonRpc { get; }
         public abstract IMichelsonRuntime MichelsonRuntime { get; }
+        public abstract IHelpers Helpers { get; }
 
         protected abstract IActivator Activator { get; }
         protected abstract IMigrator Migrator { get; }
-        protected abstract IHelpers Helpers { get; }
 
-        protected abstract Task Commit(IMetaBlock block);
+        protected abstract Task Commit(MetaBlock block);
         protected abstract Task Revert();
         #endregion
 
@@ -79,11 +80,11 @@ namespace Xtzkt.Indexers.TezosX
                         }
                     }
 
-                    IMetaBlock block;
+                    MetaBlock block;
                     Logger.LogDebug("Load block {level}", state.Level + 1);
                     using (Metrics.Measure.Timer.Time(MetricsRegistry.RpcResponseTime))
                     {
-                        block = await Helpers.GetMetaBlock(state);
+                        block = await Helpers.GetMetaBlock(state.Level + 1);
                         ValidateBlock(block, state);
                     }
 
@@ -217,7 +218,7 @@ namespace Xtzkt.Indexers.TezosX
             return Task.CompletedTask;
         }
 
-        protected void ValidateBlock(IMetaBlock block, XChain state)
+        protected void ValidateBlock(MetaBlock block, XChain state)
         {
             if (block.Level == 0) return;
 
@@ -239,7 +240,7 @@ namespace Xtzkt.Indexers.TezosX
                 throw new ValidationException("Invalid Michelson predecessor", true);
         }
 
-        async Task<BlockContext> ActivateContext(XChain state, IMetaBlock block)
+        async Task<BlockContext> ActivateContext(XChain state, MetaBlock block)
         {
             return new BlockContext
             {
@@ -263,7 +264,7 @@ namespace Xtzkt.Indexers.TezosX
             };
         }
 
-        async Task<BlockContext> InitContext(XChain state, IMetaBlock block)
+        async Task<BlockContext> InitContext(XChain state, MetaBlock block)
         {
             var protocol = await Cache.Protocols.GetAsync(state.Kernel);
             var timestamp = state.Timestamp == block.Timestamp

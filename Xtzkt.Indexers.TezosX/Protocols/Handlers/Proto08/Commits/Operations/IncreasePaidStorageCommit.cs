@@ -16,10 +16,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             var block = Context.Block;
 
             var senderAddress = content.RequiredString("source");
-            var sender = await GetOrCreateXMichelsonUser(senderAddress);
+            var sender = await Helpers.GetOrCreateXMichelsonUser(senderAddress);
 
             var contractAddress = content.RequiredString("destination");
-            var contract = await GetOrCreateXMichelsonAddress(contractAddress);
+            var contract = await Helpers.GetOrCreateXMichelsonAddress(contractAddress);
 
             var metadata = content.Required("metadata");
             var result = metadata.Required("operation_result");
@@ -153,14 +153,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             sender.IncreasePaidStorageCount--;
             sender.LastLevel = operation.Level;
             sender.LastTimestamp = operation.Timestamp;
-            if (sender.IsEmpty()) await RemoveXMichelsonUser(sender);
+            if (sender.IsEmpty()) await Helpers.RemoveXMichelsonUser(sender);
 
             if (contract != sender)
             {
                 contract.IncreasePaidStorageCount--;
                 contract.LastLevel = operation.Level;
                 contract.LastTimestamp = operation.Timestamp;
-                if (contract.IsEmpty()) await RemoveXMichelsonAddress(contract);
+                if (contract.IsEmpty()) await Helpers.RemoveXMichelsonAddress(contract);
             }
 
             Cache.Chain.Get().IncreasePaidStorageOpsCount--;
