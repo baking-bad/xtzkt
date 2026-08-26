@@ -5,7 +5,6 @@ using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
-using Xtzkt.Indexers.TezosX.Utils.Abi;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08;
@@ -41,27 +40,46 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #endregion
 
         #region precompiles
-        var nullAddress = BootstrapEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/InternalForwarderAbi.json", null, state);
-        BootstrapEvmPrecompile(EvmRuntime.XtzBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.Outbox, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/OutboxAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.TicketTable, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/TicketTableAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.GlobalCounter, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/GlobalCounterAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/SequencerUpdaterAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/MichelsonGatewayAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/AliasForwarderAbi.json", nullAddress, state);
-        BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/VerifyTezosSignatureAbi.json", nullAddress, state);
+        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/InternalForwarderAbi.json", null, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.Outbox, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/OutboxAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.TicketTable, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/TicketTableAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.GlobalCounter, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/GlobalCounterAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/SequencerUpdaterAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/MichelsonGatewayAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/AliasForwarderAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/VerifyTezosSignatureAbi.json", nullAddress, state);
         #endregion
 
         #region bootstrap
-        await BootstrapEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
-        await BootstrapEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
-        await BootstrapEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
+        await Helpers.BootstrapEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
+        await Helpers.BootstrapEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
+        await Helpers.BootstrapEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
         #endregion
     }
 
     public async Task DeactivateEvmContext(XChain state)
     {
+        #region bootstrap
+        await Helpers.RemoveEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
+        await Helpers.RemoveEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
+        await Helpers.RemoveEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
+        #endregion
+
+        #region precompiles
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.VerifyTezosSignature, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.AliasForwarder, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.MichelsonGateway, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.SequencerUpdater, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.GlobalCounter, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.TicketTable, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.Outbox, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.FaBridge, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.XtzBridge, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.NullAddress, state);
+        #endregion
+
         #region protocol
         await Db.Protocols
             .Where(x => x.ChainId == state.Id && x.Hash == state.Kernel)
@@ -69,25 +87,6 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
 
         Cache.Chain.ReleaseProtocolId();
         await Cache.Protocols.ResetAsync();
-        #endregion
-
-        #region precompiles
-        await RemoveEvmPrecompile(EvmRuntime.NullAddress, state);
-        await RemoveEvmPrecompile(EvmRuntime.XtzBridge, state);
-        await RemoveEvmPrecompile(EvmRuntime.FaBridge, state);
-        await RemoveEvmPrecompile(EvmRuntime.Outbox, state);
-        await RemoveEvmPrecompile(EvmRuntime.TicketTable, state);
-        await RemoveEvmPrecompile(EvmRuntime.GlobalCounter, state);
-        await RemoveEvmPrecompile(EvmRuntime.SequencerUpdater, state);
-        await RemoveEvmPrecompile(EvmRuntime.MichelsonGateway, state);
-        await RemoveEvmPrecompile(EvmRuntime.AliasForwarder, state);
-        await RemoveEvmPrecompile(EvmRuntime.VerifyTezosSignature, state);
-        #endregion
-
-        #region bootstrap
-        await RemoveEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
-        await RemoveEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
-        await RemoveEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
         #endregion
     }
 
@@ -330,164 +329,5 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         Cache.Schemas.Reset();
         Cache.Storages.Reset();
         #endregion
-    }
-
-    async Task BootstrapEvmUser(string address, XChain state)
-    {
-        var balance = await Proto.EvmRpc.GetBalanceEarliest(address);
-        if (balance.GetString() == "0x0") return;
-
-        var user = new XEvmUser
-        {
-            Id = Cache.Chain.NextAddressId(),
-            ChainId = state.Id,
-            Hash = address,
-            FirstLevel = Context.Block.Level,
-            FirstTimestamp = Context.Block.Timestamp,
-            LastLevel = Context.Block.Level,
-            LastTimestamp = Context.Block.Timestamp,
-            Balance = balance.RequiredHexBigInteger(),
-            Counter = -1, // counter keeps the last used nonce, for new address it's -1
-        };
-
-        Context.Block.Events |= XBlockEvents.NewAddresses;
-
-        Cache.Addresses.Add(user);
-        Db.Addresses.Add(user);
-
-        var migration = new EvmMigrationOperation
-        {
-            Id = Cache.Chain.NextOperationId(),
-            ChainId = state.Id,
-            Level = Context.Block.Level,
-            Timestamp = Context.Block.Timestamp,
-            AddressId = user.Id,
-            Kind = MigrationKind.Bootstrap,
-            BalanceChange = user.Balance,
-        };
-
-        user.MigrationsCount++;
-
-        state.MigrationOpsCount++;
-
-        Context.Block.Operations |= XOperations.Migration;
-        Context.Statistics.TotalBootstrapped += migration.BalanceChange;
-
-        Context.MigrationOps.Add(migration);
-        Db.MigrationOps.Add(migration);
-    }
-
-    XEvmContract BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
-    {
-        var id = Cache.Chain.NextAddressId();
-        var contract = new XEvmContract
-        {
-            Id = id,
-            ChainId = state.Id,
-            Hash = address,
-            FirstLevel = Context.Block.Level,
-            FirstTimestamp = Context.Block.Timestamp,
-            LastLevel = Context.Block.Level,
-            LastTimestamp = Context.Block.Timestamp,
-            Kind = XContractKind.SmartContract,
-            Tags = XEvmContractTags.None,
-            CreatorId = creator?.Id ?? id,
-            Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
-        };
-
-        (creator ?? contract).ContractsCount++;
-
-        Context.Block.Events |= XBlockEvents.NewAddresses;
-
-        Cache.Addresses.Add(contract);
-        Db.Addresses.Add(contract);
-
-        var script = new EvmScript
-        {
-            Id = Cache.Chain.NextScriptId(),
-            ChainId = state.Id,
-            ContractId = contract.Id,
-            Level = Context.Block.Level,
-            Code = [],
-            Current = true,
-            AbiJson = File.ReadAllText(abiPath),
-        };
-
-        Cache.Abi.Add(contract, Abi.FromJson(script.AbiJson));
-        Db.Scripts.Add(script);
-
-        var migration = new EvmMigrationOperation
-        {
-            Id = Cache.Chain.NextOperationId(),
-            ChainId = state.Id,
-            Level = Context.Block.Level,
-            Timestamp = Context.Block.Timestamp,
-            AddressId = contract.Id,
-            Kind = MigrationKind.Bootstrap,
-            ScriptId = script.Id,
-        };
-
-        script.MigrationId = migration.Id;
-
-        contract.MigrationsCount++;
-
-        state.MigrationOpsCount++;
-
-        Context.Block.Operations |= XOperations.Migration;
-
-        Context.MigrationOps.Add(migration);
-        Db.MigrationOps.Add(migration);
-
-        return contract;
-    }
-
-    async Task RemoveEvmUser(string address, XChain state)
-    {
-        var user = await Db.Addresses
-            .FirstOrDefaultAsync(x => x.ChainId == state.Id && x.Hash == address);
-
-        if (user == null)
-            return;
-
-        await Db.Addresses
-            .Where(x => x.Id == user.Id)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseAddressId();
-        Cache.Addresses.Reset();
-
-        await Db.MigrationOps
-            .Where(x => x.AddressId == user.Id)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseOperationId();
-        state.MigrationOpsCount--;
-    }
-
-    async Task RemoveEvmPrecompile(string address, XChain state)
-    {
-        var contract = await Db.Addresses
-            .FirstAsync(x => x.ChainId == state.Id && x.Hash == address);
-
-        await Db.Addresses
-            .Where(x => x.Id == contract.Id)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseAddressId();
-        Cache.Addresses.Reset();
-
-        await Db.Scripts
-            .Where(x => x.ContractId == contract.Id)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseScriptId();
-        Cache.Abi.Reset();
-
-        await Db.MigrationOps
-            .Where(x => x.AddressId == contract.Id)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseOperationId();
-        state.MigrationOpsCount--;
     }
 }

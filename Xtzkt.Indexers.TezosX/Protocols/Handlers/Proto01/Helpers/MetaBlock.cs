@@ -4,9 +4,9 @@ using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-public partial class ProtoHelpers
+partial class ProtoHelpers
 {
-    public override async Task<MetaBlock> GetMetaBlock(int level)
+    public async Task<MetaBlock> GetMetaBlock(int level)
     {
         var t1 = GetBlueprint(level);
         var t2 = EvmRpc.GetBlockData(level);
@@ -14,8 +14,9 @@ public partial class ProtoHelpers
         await Task.WhenAll(t1, t2);
 
         var blueprint = t1.Result;
-        var (evmBlock, evmReceipts, _) = t2.Result;
+        var (evmBlock, evmReceipts, evmTraces) = t2.Result;
         var evmReceiptsDict = evmReceipts.EnumerateArray().ToDictionary(x => x.RequiredString("transactionHash"));
+        var evmTracesDict = evmTraces.EnumerateArray().ToDictionary(x => x.RequiredString("txHash"), x => x.Required("result"));
 
         if (evmBlock.RequiredString("parentHash") != blueprint.Predecessor)
             throw new Exception("Inconsistent evm inputs");
@@ -29,12 +30,13 @@ public partial class ProtoHelpers
         {
             var hash = tx.RequiredString("hash");
             var receipt = evmReceiptsDict[hash];
+            var trace = evmTracesDict[hash];
             var batch = new EvmBatch
             {
                 Hash = hash,
                 Index = receipt.RequiredHexInt32("transactionIndex"),
             };
-            var op = GetEvmOperation(batch, tx, receipt, default);
+            var op = GetEvmOperation(batch, tx, receipt, trace);
 
             var queue = new Queue<MetaContent>();
             queue.Enqueue(op);
@@ -92,7 +94,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override EvmOperation GetEvmOperation(EvmBatch batch, JsonElement tx, JsonElement receipt, JsonElement trace)
+    protected virtual EvmOperation GetEvmOperation(EvmBatch batch, JsonElement tx, JsonElement receipt, JsonElement trace)
     {
         return new EvmOperation
         {
@@ -106,7 +108,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
+    protected virtual List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
     {
         return [];
     }

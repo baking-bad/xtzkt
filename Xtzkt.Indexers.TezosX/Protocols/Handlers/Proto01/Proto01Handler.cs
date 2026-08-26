@@ -1,6 +1,7 @@
 ﻿using App.Metrics;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
@@ -24,52 +25,101 @@ class Proto01Handler(
     public override IEvmRuntime EvmRuntime { get; } = new EvmRuntime();
     public override IMichelsonRpc MichelsonRpc { get; } = new MichelsonRpc();
     public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
+    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
 
     protected override IActivator Activator => new ProtoActivator(this);
-    IHelpers? _helpers;
-    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
+    protected IHelpers? _helpers;
+
+    #region commits
+    protected virtual DepositCommit DepositCommit => new(this);
+    protected virtual OriginationCommit OriginationCommit => new(this);
+    protected virtual TransactionCommit TransactionCommit => new(this);
+    protected virtual BlockCommit BlockCommit => new(this);
+    protected virtual BridgeTicketsCommit BridgeTicketsCommit => new(this);
+    protected virtual LogCommit LogCommit => new(this);
+    protected virtual StateCommit StateCommit => new(this);
+    protected virtual StatisticsCommit StatisticsCommit => new(this);
+    protected virtual TokensCommit TokensCommit => new(this);
+    #endregion
 
     protected override async Task Commit(MetaBlock block)
     {
-        await new BlockCommit(this).Apply(block.EvmBlock);
+        await BlockCommit.Apply(block.EvmBlock);
 
         foreach (var batch in block.Batches)
         {
+            IParentOperation? parentOp = null;
             foreach (var operation in batch.Operations)
             {
                 switch (operation)
                 {
+                    case EvmOperation eop when IsOrigination(eop):
+                        {
+                            var op = await OriginationCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                            await LogCommit.ApplyEvmLogs(op, eop.Logs);
+                            parentOp = op;
+                            break;
+                        }
                     case EvmOperation eop:
-                        if (eop.To == null)
                         {
-                            var op = await new OriginationCommit(this).ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, batch.Delayed);
-                            await new LogCommit(this).ApplyEvmLogs(op, eop.Logs);
+                            var op = await TransactionCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                            await LogCommit.ApplyEvmLogs(op, eop.Logs);
+                            parentOp = op;
+                            break;
                         }
-                        else
-                        {
-                            var op = await new TransactionCommit(this).ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, batch.Delayed);
-                            await new LogCommit(this).ApplyEvmLogs(op, eop.Logs);
-                        }
-                        break;
                     case EvmDeposit dop:
                         {
-                            var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
-                            var logCommit = new LogCommit(this);
-                            await logCommit.ApplyEvmLogs(op, dop.FeederCall.Logs);
-                            // shoudln't have internal ops
+                            var op = await DepositCommit.ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
+                            await LogCommit.ApplyEvmLogs(op, dop.FeederCall.Logs);
+                            parentOp = op;
                             break;
                         }
                     default:
                         throw new InvalidOperationException();
                 }
+
+                foreach (var iop in operation.Internals)
+                {
+                    switch (iop)
+                    {
+                        case EvmInternalOperation eiop:
+                            switch (eiop.Trace.RequiredString("type"))
+                            {
+                                case "CREATE":
+                                case "CREATE2":
+                                    {
+                                        var op = await OriginationCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status, eiop.ParentStatus);
+                                        await LogCommit.ApplyEvmLogs(op, eiop.Logs);
+                                        break;
+                                    }
+                                case "CALL":
+                                case "CALLCODE":
+                                case "DELEGATECALL":
+                                case "STATICCALL":
+                                case "SELFDESTRUCT":
+                                case "SUICIDE":
+                                    {
+                                        var op = await TransactionCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status);
+                                        await LogCommit.ApplyEvmLogs(op, eiop.Logs);
+                                        break;
+                                    }
+                                default:
+                                    throw new NotImplementedException($"EVM trace type {eiop.Trace.RequiredString("type")} is not supported");
+                            }
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+                }
             }
         }
 
-        await new TokensCommit(this).ApplyEvmTransfers();
+        await TokensCommit.ApplyEvmTransfers();
+        await BridgeTicketsCommit.Apply();
 
-        await new StatisticsCommit(this).Apply();
-        await new StateCommit(this).Apply(block);
+        await StatisticsCommit.Apply();
+        await StateCommit.Apply(block);
     }
 
     protected override async Task Revert()
@@ -77,30 +127,42 @@ class Proto01Handler(
         var currBlock = await Cache.Blocks.CurrentAsync();
         Db.TryAttach(currBlock);
 
-        await new StatisticsCommit(this).Revert();
+        await StatisticsCommit.Revert();
 
-        await new TokensCommit(this).Revert(currBlock);
-        await new LogCommit(this).RevertLogs(currBlock);
+        await BridgeTicketsCommit.Revert(currBlock);
+        await TokensCommit.Revert(currBlock);
+        await LogCommit.RevertLogs(currBlock);
 
         foreach (var operation in Context.EnumerateOps().OrderByDescending(x => x.Id).ToList())
         {
             switch (operation)
             {
                 case XEvmDepositOperation op:
-                    await new DepositCommit(this).Revert(op);
+                    await DepositCommit.Revert(op);
                     break;
                 case XEvmOriginationOperation op:
-                    await new OriginationCommit(this).Revert(op);
+                    if (op.InitiatorId == null)
+                        await OriginationCommit.Revert(op);
+                    else
+                        await OriginationCommit.RevertInternal(op);
                     break;
                 case XEvmTransactionOperation op:
-                    await new TransactionCommit(this).Revert(op);
+                    if (op.InitiatorId == null)
+                        await TransactionCommit.Revert(op);
+                    else
+                        await TransactionCommit.RevertInternal(op);
                     break;
                 default:
                     throw new NotImplementedException($"'{operation.GetType()}' is not implemented");
             }
         }
 
-        await new BlockCommit(this).Revert();
-        await new StateCommit(this).Revert();
+        await BlockCommit.Revert();
+        await StateCommit.Revert();
+    }
+
+    protected virtual bool IsOrigination(EvmOperation op)
+    {
+        return op.To == null;
     }
 }

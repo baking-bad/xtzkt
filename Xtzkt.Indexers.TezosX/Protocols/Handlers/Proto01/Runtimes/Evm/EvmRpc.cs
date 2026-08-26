@@ -6,12 +6,11 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class EvmRpc(EvmNode node) : IEvmRpc
 {
-    static readonly object Tracer = new { tracer = "callTracer", onlyTopCall = false, withLog = true };
-    static readonly JsonElement EmptyArray = JsonSerializer.Deserialize<JsonElement>("[]");
+    protected static readonly object Tracer = new { tracer = "callTracer", onlyTopCall = false, withLog = true };
 
     protected readonly EvmNode Node = node;
 
-    public async Task<(JsonElement block, JsonElement receipts, JsonElement traces)> GetBlockData(int level)
+    public virtual async Task<(JsonElement block, JsonElement receipts, JsonElement traces)> GetBlockData(int level)
     {
         var res = await Node.PostBatchRawAsync(
             ("eth_getBlockByNumber", [level.ToString(), true]),
@@ -26,10 +25,15 @@ class EvmRpc(EvmNode node) : IEvmRpc
 
         if (res[2].Error is JsonElement error2)
         {
-            if (error2.RequiredInt32("code") == -32603) // tracer is not activated
-                res[2] = (EmptyArray, null);
-            else
+            if (error2.RequiredInt32("code") != -32603) // tracer is not activated
                 throw new Exception($"debug_traceBlockByNumber failed with error {error2.RequiredInt32("code")}: {error2.RequiredString("message")}");
+
+            var emptyTraces = res[1].Result!.Value
+                .EnumerateArray()
+                .Select(x => x.RequiredString("transactionHash"))
+                .Select(x => new { txHash = x, result = (object?)null });
+
+            res[2] = (JsonSerializer.SerializeToElement(emptyTraces), null);
         }
 
         return (res[0].Result!.Value, res[1].Result!.Value, res[2].Result!.Value);

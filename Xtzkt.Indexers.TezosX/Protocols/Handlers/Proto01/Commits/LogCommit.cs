@@ -16,13 +16,13 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         foreach (var log in logs)
         {
-            // the emitter is often unknown, because contracts deployed by other contracts are
-            // invisible without traces, so it's resolved (and bootstrapped) via the node
-            var address = await Helpers.GetOrCreateXEvmContract(log.RequiredString("address"));
-            var contract = address;
+            var address = await GetAddress(log);
 
             var topics = log.RequiredArray("topics").EnumerateArray().Select(x => x.RequiredHexBytes()).ToArray();
             var data = log.RequiredHexBytes("data");
+
+            if (address is not XEvmContract contract)
+                throw new Exception("Non-contract addresses shouldn't emit logs");
 
             string? name = null;
             string? payload = null;
@@ -97,6 +97,14 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 foreach (var (tokenId, from, to, amount) in tokenTransfers)
                     Context.EvmTokenTransfers.Add(new(contract, tokenId, tokenType, from, to, amount, (op as ISourceOperation)!));
             }
+
+            // FA Deposit events are still emitted by the system address, while FA Withdrawal events are
+            // emitted by the FA bridge precompile since Calypso
+            if (address.Hash == EvmRuntime.NullAddress || address.Hash == EvmRuntime.FaBridge)
+            {
+                if (FaBridgeEvents.TryParseUpdate(topics, data, (op as ISourceOperation)!, out var bridgeTicketUpdate))
+                    Context.BridgeTicketUpdates.Add(bridgeTicketUpdate);
+            }
         }
     }
 
@@ -131,5 +139,12 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             AND "Level" = {1}
             """, block.ChainId, block.Level);
 
+    }
+
+    protected virtual async Task<XEvmAddress> GetAddress(JsonElement log)
+    {
+        // the emitter is often unknown, because contracts deployed by other contracts are
+        // invisible without traces, so it's resolved (and bootstrapped) via the node
+        return await Helpers.GetOrCreateXEvmContract(log.RequiredString("address"));
     }
 }

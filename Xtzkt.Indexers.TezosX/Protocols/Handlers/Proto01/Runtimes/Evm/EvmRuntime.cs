@@ -3,7 +3,7 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-public class EvmRuntime : IEvmRuntime
+class EvmRuntime : IEvmRuntime
 {
     public string RuntimeId => "1";
 
@@ -12,7 +12,7 @@ public class EvmRuntime : IEvmRuntime
 
     public string XtzBridge => "0xff00000000000000000000000000000000000001";
 
-    public string FaBridge => throw new NotImplementedException();
+    public string FaBridge => "0xff00000000000000000000000000000000000002";
 
     public string Outbox => throw new NotImplementedException();
 

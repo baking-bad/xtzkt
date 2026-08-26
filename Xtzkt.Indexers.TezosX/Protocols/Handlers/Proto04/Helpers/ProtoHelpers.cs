@@ -1,12 +1,11 @@
-﻿using Xtzkt.Data.Models;
+﻿using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto04.Helpers;
 
-public partial class ProtoHelpers(ProtocolHandler protocol) : Proto08.Helpers.ProtoHelpers(protocol)
+class ProtoHelpers(ProtocolHandler protocol) : Proto03.Helpers.ProtoHelpers(protocol)
 {
-    // The michelson runtime doesn't exist in this era, so there's nothing to bind aliases to.
-    protected override Task BindAliases(XEvmAddress address) => Task.CompletedTask;
-    protected override Task UnbindAliases(XEvmAddress address) => Task.CompletedTask;
-    protected override Task BindAliases(XMichelsonAddress address) => Task.CompletedTask;
-    protected override Task UnbindAliases(XMichelsonAddress address) => Task.CompletedTask;
+    protected override EvmDeposit CreateFaDeposit(EvmOperation feederCall, DelayedFaDeposit faDeposit)
+    {
+        return new EvmDeposit { Deposit = faDeposit, FeederCall = feederCall };
+    }
 }

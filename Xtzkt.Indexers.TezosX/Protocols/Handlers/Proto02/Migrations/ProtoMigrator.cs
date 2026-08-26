@@ -5,54 +5,17 @@ using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
-using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-public class ProtoMigrator(ProtocolHandler proto) : ProtocolCommit(proto), IMigrator
+class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
 {
-    public async Task MigrateContext(XChain state, MetaBlock block)
+    protected override async Task ApplyMigrations(XChain state, MetaBlock block)
     {
-        #region protocol
-        var prev = await Cache.Protocols.GetAsync(state.Kernel);
-        Db.TryAttach(prev);
-        prev.LastLevel = state.Level;
-
-        var protocol = new XProtocol
-        {
-            Id = Cache.Chain.NextProtocolId(),
-            ChainId = state.Id,
-            Hash = state.KernelUpgrade!,
-            Version = Proto.Version,
-            FirstLevel = Context.Block.Level,
-            LastLevel = -1,
-            MichelsonHash = prev.MichelsonHash,
-            MinBlockTimeMs = prev.MinBlockTimeMs,
-            MaxBlockTimeMs = prev.MaxBlockTimeMs,
-            ByteCost = prev.ByteCost,
-            OriginationSize = prev.OriginationSize,
-            DaFeePerByte = prev.DaFeePerByte,
-            DaFeePerByte18 = prev.DaFeePerByte18,
-            HardEvmBlockGasLimit = prev.HardEvmBlockGasLimit,
-            HardEvmOperationGasLimit = prev.HardEvmOperationGasLimit,
-            HardMichelsonBlockGasLimit = prev.HardMichelsonBlockGasLimit,
-            HardMichelsonOperationGasLimit = prev.HardMichelsonOperationGasLimit,
-            HardMichelsonOperationStorageLimit = prev.HardMichelsonOperationStorageLimit,
-        };
-
-        state.Kernel = protocol.Hash;
-        state.MichelsonProtocol = protocol.MichelsonHash;
-        Context.Block.ProtocolId = protocol.Id;
-        Context.Protocol = protocol;
-
-        Cache.Protocols.Add(protocol);
-        Db.Protocols.Add(protocol);
-        #endregion
-
         #region precompiles
         var nullAddress = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress) as XEvmAddress)!;
-        await UpgradeEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAbi.json", state);
-        BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAbi.json", state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
         #endregion
 
         #region amend empty traces
@@ -86,7 +49,7 @@ public class ProtoMigrator(ProtocolHandler proto) : ProtocolCommit(proto), IMigr
                     : addresses.TryGetValue(chunk[j], out var existingAddress)
                         ? existingAddress
                         : await Helpers.CreateXEvmUser(chunk[j]);
-                
+
                 var balance = balances[j];
                 var nonce = nonces[j];
                 var code = codes[j];
@@ -198,128 +161,8 @@ public class ProtoMigrator(ProtocolHandler proto) : ProtocolCommit(proto), IMigr
         #endregion
     }
 
-    public async Task RevertContext(XChain state)
+    protected override Task RevertMigrations(XChain state)
     {
         throw new NotImplementedException();
-    }
-
-    XEvmContract BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
-    {
-        var id = Cache.Chain.NextAddressId();
-        var contract = new XEvmContract
-        {
-            Id = id,
-            ChainId = state.Id,
-            Hash = address,
-            FirstLevel = Context.Block.Level,
-            FirstTimestamp = Context.Block.Timestamp,
-            LastLevel = Context.Block.Level,
-            LastTimestamp = Context.Block.Timestamp,
-            Kind = XContractKind.SmartContract,
-            Tags = XEvmContractTags.None,
-            CreatorId = creator?.Id ?? id,
-            Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
-        };
-
-        Db.TryAttach(creator ?? contract);
-        (creator ?? contract).ContractsCount++;
-
-        Context.Block.Events |= XBlockEvents.NewAddresses;
-
-        Cache.Addresses.Add(contract);
-        Db.Addresses.Add(contract);
-
-        var script = new EvmScript
-        {
-            Id = Cache.Chain.NextScriptId(),
-            ChainId = state.Id,
-            ContractId = contract.Id,
-            Level = Context.Block.Level,
-            Code = [],
-            Current = true,
-            AbiJson = File.ReadAllText(abiPath),
-        };
-
-        Cache.Abi.Add(contract, Abi.FromJson(script.AbiJson));
-        Db.Scripts.Add(script);
-
-        var migration = new EvmMigrationOperation
-        {
-            Id = Cache.Chain.NextOperationId(),
-            ChainId = state.Id,
-            Level = Context.Block.Level,
-            Timestamp = Context.Block.Timestamp,
-            AddressId = contract.Id,
-            Kind = MigrationKind.Bootstrap,
-            ScriptId = script.Id,
-        };
-
-        script.MigrationId = migration.Id;
-
-        Db.TryAttach(contract);
-        contract.MigrationsCount++;
-
-        state.MigrationOpsCount++;
-
-        Context.Block.Operations |= XOperations.Migration;
-
-        Context.MigrationOps.Add(migration);
-        Db.MigrationOps.Add(migration);
-
-        return contract;
-    }
-
-    async Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state)
-    {
-        var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
-        
-        var oldScript = (await Db.Scripts.FirstAsync(x => x.ContractId == contract.Id && x.Current) as EvmScript)!;
-        oldScript.Current = false;
-
-        var newScript = new EvmScript
-        {
-            Id = Cache.Chain.NextScriptId(),
-            ChainId = contract.ChainId,
-            ContractId = contract.Id,
-            Level = Context.Block.Level,
-            Code = oldScript.Code,
-            CodeHash = oldScript.CodeHash,
-            TypeHash = oldScript.TypeHash,
-            SolidityMetadataBzzr0 = oldScript.SolidityMetadataBzzr0,
-            SolidityMetadataBzzr1 = oldScript.SolidityMetadataBzzr1,
-            SolidityMetadataExperimental = oldScript.SolidityMetadataExperimental,
-            SolidityMetadataIpfs = oldScript.SolidityMetadataIpfs,
-            SolidityMetadataSolc = oldScript.SolidityMetadataSolc,
-            AbiJson = File.ReadAllText(abiPath),
-            Current = true,
-        };
-
-        Cache.Abi.Add(contract, Abi.FromJson(newScript.AbiJson));
-        Db.Scripts.Add(newScript);
-
-        var migration = new EvmMigrationOperation
-        {
-            Id = Cache.Chain.NextOperationId(),
-            ChainId = contract.ChainId,
-            Level = Context.Block.Level,
-            Timestamp = Context.Block.Timestamp,
-            AddressId = contract.Id,
-            Kind = MigrationKind.CodeChange,
-            ScriptId = newScript.Id,
-        };
-
-        newScript.MigrationId = migration.Id;
-
-        Db.TryAttach(contract);
-        contract.MigrationsCount++;
-
-        state.MigrationOpsCount++;
-
-        Context.Block.Operations |= XOperations.Migration;
-
-        Context.MigrationOps.Add(migration);
-        Db.MigrationOps.Add(migration);
-
-        return contract;
     }
 }

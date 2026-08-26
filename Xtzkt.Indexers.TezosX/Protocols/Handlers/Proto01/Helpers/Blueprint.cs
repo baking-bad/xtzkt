@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using System.Text.Json;
-using Netezos;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
@@ -10,9 +9,9 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-public partial class ProtoHelpers
+partial class ProtoHelpers
 {
-    protected override async Task<Blueprint> GetBlueprint(int level)
+    protected async Task<Blueprint> GetBlueprint(int level)
     {
         var json = await EvmRpc.GetBlueprint(level);
 
@@ -96,7 +95,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override BlueprintChunk ParseChunk(byte[] payload)
+    protected virtual BlueprintChunk ParseChunk(byte[] payload)
     {
         var stream = new RlpStream(payload);
         var rlp = stream.Read();
@@ -112,7 +111,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override void CacheDelayedTransactions(JsonElement json, int level)
+    protected void CacheDelayedTransactions(JsonElement json, int level)
     {
         foreach (var x in json.RequiredArray("delayed_transactions").EnumerateArray())
         {
@@ -125,7 +124,7 @@ public partial class ProtoHelpers
         }
     }
 
-    protected override async Task<DelayedOperation> ResolveDelayedTransaction(string hash, int level)
+    protected async Task<DelayedOperation> ResolveDelayedTransaction(string hash, int level)
     {
         const int Lookback = 64;
 
@@ -144,7 +143,7 @@ public partial class ProtoHelpers
         throw new Exception($"Delayed transaction {hash} applied in block {level} wasn't found in the {Lookback} preceding blueprints");
     }
 
-    protected override DelayedOperation ParseDelayedOperation(DelayedTransaction cached)
+    protected virtual DelayedOperation ParseDelayedOperation(DelayedTransaction cached)
     {
         return cached.Kind switch
         {
@@ -154,7 +153,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override DelayedXtzDeposit ParseDelayedXtzDeposit(byte[] hash, byte[] bytes)
+    protected virtual DelayedXtzDeposit ParseDelayedXtzDeposit(byte[] hash, byte[] bytes)
     {
         var stream = new RlpStream(bytes);
         if (stream.Read() is not RlpList rlp || stream.CanRead)
@@ -174,7 +173,7 @@ public partial class ProtoHelpers
         throw new FormatException("Invalid delayed deposit rlp");
     }
 
-    protected override DelayedEvmTransaction ParseDelayedEvmTransaction(byte[] hash)
+    protected DelayedEvmTransaction ParseDelayedEvmTransaction(byte[] hash)
     {
         return new DelayedEvmTransaction
         {
@@ -182,7 +181,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected override string GetTransactionHash(byte[] bytes)
+    protected string GetTransactionHash(byte[] bytes)
     {
         return Keccak256.GetHash(bytes);
     }

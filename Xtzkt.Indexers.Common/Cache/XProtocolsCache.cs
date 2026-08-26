@@ -30,6 +30,12 @@ public class XProtocolsCache(XtzktContext db, ChainConfig chain)
         CachedByHash[protocol.Hash] = protocol;
     }
 
+    public void Remove(XProtocol protocol)
+    {
+        CachedById.Remove(protocol.Id);
+        CachedByHash.Remove(protocol.Hash);
+    }
+
     public async Task<XProtocol> GetAsync(int id)
     {
         if (!CachedById.TryGetValue(id, out var protocol))

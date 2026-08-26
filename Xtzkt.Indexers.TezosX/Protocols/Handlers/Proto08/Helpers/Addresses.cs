@@ -1,11 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
 {
     public partial class ProtoHelpers
     {
-        public virtual async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)
+        #region evm address
+        public async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XEvmAddress address)
                 return address;
@@ -13,7 +16,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return await CreateXEvmUser(hash);
         }
 
-        public virtual async Task RemoveXEvmAddress(XEvmAddress address)
+        public async Task RemoveXEvmAddress(XEvmAddress address)
         {
             if (address is XEvmUser user)
             {
@@ -29,8 +32,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 throw new InvalidOperationException($"Cannot remove {address.Type}");
             }
         }
+        #endregion
 
-        public virtual async Task<XEvmUser> GetOrCreateXEvmUser(string hash)
+        #region evm user
+        public async Task<XEvmUser> GetOrCreateXEvmUser(string hash)
         {
             var address = await Cache.Addresses.GetOrDefaultAsync(hash);
             if (address is XEvmUser user)
@@ -42,7 +47,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return await CreateXEvmUser(hash);
         }
 
-        public virtual async Task<XEvmUser> CreateXEvmUser(string hash)
+        public async Task<XEvmUser> CreateXEvmUser(string hash)
         {
             var user = new XEvmUser
             {
@@ -66,7 +71,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return user;
         }
 
-        public virtual async Task RemoveXEvmUser(XEvmUser user)
+        public async Task RemoveXEvmUser(XEvmUser user)
         {
             if (user.AliasesCount != 0)
                 await UnbindAliases(user);
@@ -75,8 +80,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Cache.Addresses.Remove(user);
             Db.Addresses.Remove(user);
         }
+        #endregion
 
-        public virtual async Task<XEvmAlias> GetOrCreateXEvmAlias(string hash, XMichelsonAddress owner)
+        #region evm alias
+        public async Task<XEvmAlias> GetOrCreateXEvmAlias(string hash, XMichelsonAddress owner)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XEvmAddress address)
             {
@@ -117,7 +124,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return alias;
         }
 
-        protected virtual async Task<XEvmAlias> UpgradeToXEvmAlias(XEvmUser user, XMichelsonAddress owner)
+        protected async Task<XEvmAlias> UpgradeToXEvmAlias(XEvmUser user, XMichelsonAddress owner)
         {
             var aliasForwarder = await Cache.Addresses.GetExistingAsync(EvmRuntime.AliasForwarder);
             var alias = new XEvmAlias
@@ -159,7 +166,43 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return alias;
         }
 
-        protected virtual void DowngradeToXEvmUser(XEvmAlias alias, XMichelsonAddress owner)
+        public async Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
+        {
+            // TODO: check if aliases can have aliases
+            if (alias.AliasesCount != 0)
+                await UnbindAliases(alias);
+
+            owner.AliasesCount--;
+
+            Cache.Chain.ReleaseAddressId();
+            Cache.Addresses.Remove(alias);
+            Db.Addresses.Remove(alias);
+        }
+
+        protected async Task BindAliases(XEvmAddress address)
+        {
+            if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAddress alias)
+            {
+                if (alias is not XMichelsonGhost ghost)
+                    throw new InvalidOperationException($"Cannot upgrade {alias.Type} to XMichelsonAlias");
+
+                UpgradeToXMichelsonAlias(ghost, address);
+            }
+            // UPDATE: add other runtimes here, when implemented
+        }
+
+        protected async Task UnbindAliases(XEvmAddress address)
+        {
+            if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAlias alias)
+                DowngradeToXMichelsonGhost(alias, address);
+
+            // UPDATE: add other runtimes here, when implemented
+
+            if (address.AliasesCount != 0)
+                throw new InvalidOperationException("Failed to unbind aliases");
+        }
+
+        protected void DowngradeToXEvmUser(XEvmAlias alias, XMichelsonAddress owner)
         {
             var user = new XEvmUser
             {
@@ -195,50 +238,16 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
 
             owner.AliasesCount--;
         }
+        #endregion
 
-        public virtual async Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
+        #region evm contract
+        public Task<XEvmContract> GetOrCreateXEvmContract(string hash)
         {
-            // TODO: check if aliases can have aliases
-            if (alias.AliasesCount != 0)
-                await UnbindAliases(alias);
-
-            owner.AliasesCount--;
-
-            Cache.Chain.ReleaseAddressId();
-            Cache.Addresses.Remove(alias);
-            Db.Addresses.Remove(alias);
-        }
-
-        protected virtual async Task BindAliases(XEvmAddress address)
-        {
-            if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAddress alias)
-            {
-                if (alias is not XMichelsonGhost ghost)
-                    throw new InvalidOperationException($"Cannot upgrade {alias.Type} to XMichelsonAlias");
-
-                UpgradeToXMichelsonAlias(ghost, address);
-            }
-            // UPDATE: add other runtimes here, when implemented
-        }
-
-        protected virtual async Task UnbindAliases(XEvmAddress address)
-        {
-            if (await Cache.Addresses.GetOrDefaultAsync(MichelsonRuntime.GetAlias(address.Hash)) is XMichelsonAlias alias)
-                DowngradeToXMichelsonGhost(alias, address);
-
-            // UPDATE: add other runtimes here, when implemented
-
-            if (address.AliasesCount != 0)
-                throw new InvalidOperationException("Failed to unbind aliases");
-        }
-
-        public virtual Task<XEvmContract> GetOrCreateXEvmContract(string hash)
-        {
-            // only makes sense in the genesis era, where contract creators are unobservable without call traces
+            // only makes sense in the genesis era, where contracts are unobservable without call traces
             throw new NotImplementedException();
         }
 
-        public virtual async Task<XEvmContract> CreateXEvmContract(string hash, XEvmAddress creator)
+        public async Task<XEvmContract> CreateXEvmContract(string hash, XEvmAddress creator)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XEvmAddress address)
             {
@@ -278,7 +287,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return contract;
         }
 
-        public virtual XEvmContract UpgradeToXEvmContract(XEvmUser ghost, XEvmAddress creator)
+        public XEvmContract UpgradeToXEvmContract(XEvmUser ghost, XEvmAddress creator)
         {
             var contract = new XEvmContract
             {
@@ -323,7 +332,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return contract;
         }
 
-        protected virtual void DowngradeToXEvmUser(XEvmContract contract, XEvmAddress creator)
+        protected void DowngradeToXEvmUser(XEvmContract contract, XEvmAddress creator)
         {
             var user = new XEvmUser
             {
@@ -360,7 +369,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             creator.ContractsCount--;
         }
 
-        public virtual async Task RemoveXEvmContract(XEvmContract contract, XEvmAddress creator)
+        public async Task RemoveXEvmContract(XEvmContract contract, XEvmAddress creator)
         {
             if (!contract.IsEmpty())
             {
@@ -377,9 +386,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Cache.Addresses.Remove(contract);
             Db.Addresses.Remove(contract);
         }
+        #endregion
 
-
-        public virtual async Task<XMichelsonAddress> GetOrCreateXMichelsonAddress(string hash)
+        #region michelson address
+        public async Task<XMichelsonAddress> GetOrCreateXMichelsonAddress(string hash)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XMichelsonAddress address)
                 return address;
@@ -389,7 +399,27 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 : await CreateXMichelsonGhost(hash, Context.Block);
         }
 
-        public virtual async Task RemoveXMichelsonAddress(XMichelsonAddress address)
+        public async Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash)
+        {
+            if (Cache.Addresses.TryGetCached(hash, out var address))
+                return (address as XMichelsonAddress)!;
+
+            return hash[0] == 't'
+                ? await CreateXMichelsonUser(hash, Context.Block)
+                : await CreateXMichelsonGhost(hash, Context.Block);
+        }
+
+        public async Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash, XBlock block)
+        {
+            if (Cache.Addresses.TryGetCached(hash, out var address))
+                return (address as XMichelsonAddress)!;
+
+            return hash[0] == 't'
+                ? await CreateXMichelsonUser(hash, block)
+                : await CreateXMichelsonGhost(hash, block);
+        }
+
+        public async Task RemoveXMichelsonAddress(XMichelsonAddress address)
         {
             if (address is XMichelsonUser user)
             {
@@ -409,28 +439,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 throw new InvalidOperationException($"Cannot remove {address.Type}");
             }
         }
+        #endregion
 
-        public virtual async Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash)
-        {
-            if (Cache.Addresses.TryGetCached(hash, out var address))
-                return (address as XMichelsonAddress)!;
-
-            return hash[0] == 't'
-                ? await CreateXMichelsonUser(hash, Context.Block)
-                : await CreateXMichelsonGhost(hash, Context.Block);
-        }
-
-        public virtual async Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash, XBlock block)
-        {
-            if (Cache.Addresses.TryGetCached(hash, out var address))
-                return (address as XMichelsonAddress)!;
-
-            return hash[0] == 't'
-                ? await CreateXMichelsonUser(hash, block)
-                : await CreateXMichelsonGhost(hash, block);
-        }
-
-        public virtual async Task<XMichelsonUser> GetOrCreateXMichelsonUser(string hash)
+        #region michelson user
+        public async Task<XMichelsonUser> GetOrCreateXMichelsonUser(string hash)
         {
             var address = await Cache.Addresses.GetOrDefaultAsync(hash);
             if (address is XMichelsonUser user)
@@ -442,7 +454,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return await CreateXMichelsonUser(hash, Context.Block);
         }
 
-        protected virtual async Task<XMichelsonUser> CreateXMichelsonUser(string hash, XBlock block)
+        protected async Task<XMichelsonUser> CreateXMichelsonUser(string hash, XBlock block)
         {
             var user = new XMichelsonUser
             {
@@ -465,7 +477,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return user;
         }
 
-        public virtual async Task RemoveXMichelsonUser(XMichelsonUser user)
+        public async Task RemoveXMichelsonUser(XMichelsonUser user)
         {
             if (user.AliasesCount != 0)
                 await UnbindAliases(user);
@@ -474,8 +486,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Cache.Addresses.Remove(user);
             Db.Addresses.Remove(user);
         }
+        #endregion
 
-        protected virtual async Task<XMichelsonGhost> CreateXMichelsonGhost(string hash, XBlock block)
+        #region michelson ghost
+        protected async Task<XMichelsonGhost> CreateXMichelsonGhost(string hash, XBlock block)
         {
             var ghost = new XMichelsonGhost
             {
@@ -498,7 +512,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return ghost;
         }
 
-        protected virtual async Task RemoveXMichelsonGhost(XMichelsonGhost ghost)
+        protected async Task RemoveXMichelsonGhost(XMichelsonGhost ghost)
         {
             if (ghost.AliasesCount != 0)
                 await UnbindAliases(ghost);
@@ -507,8 +521,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Cache.Addresses.Remove(ghost);
             Db.Addresses.Remove(ghost);
         }
+        #endregion
 
-        public virtual async Task<XMichelsonAlias> GetOrCreateXMichelsonAlias(string hash, XEvmAddress owner)
+        #region michelson alias
+        public async Task<XMichelsonAlias> GetOrCreateXMichelsonAlias(string hash, XEvmAddress owner)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XMichelsonAddress address)
             {
@@ -546,7 +562,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return alias;
         }
 
-        protected virtual XMichelsonAlias UpgradeToXMichelsonAlias(XMichelsonGhost ghost, XEvmAddress owner)
+        protected XMichelsonAlias UpgradeToXMichelsonAlias(XMichelsonGhost ghost, XEvmAddress owner)
         {
             var alias = new XMichelsonAlias
             {
@@ -585,7 +601,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return alias;
         }
 
-        protected virtual void DowngradeToXMichelsonGhost(XMichelsonAlias alias, XEvmAddress owner)
+        protected void DowngradeToXMichelsonGhost(XMichelsonAlias alias, XEvmAddress owner)
         {
             var ghost = new XMichelsonGhost
             {
@@ -620,7 +636,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             owner.AliasesCount--;
         }
 
-        public virtual async Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
+        public async Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
         {
             // TODO: check if aliases can have aliases
             if (alias.AliasesCount != 0)
@@ -633,7 +649,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Db.Addresses.Remove(alias);
         }
 
-        protected virtual async Task BindAliases(XMichelsonAddress address)
+        protected async Task BindAliases(XMichelsonAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(EvmRuntime.GetAlias(address.Hash)) is XEvmAddress alias)
             {
@@ -645,7 +661,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             // UPDATE: add other runtimes here, when implemented
         }
 
-        protected virtual async Task UnbindAliases(XMichelsonAddress address)
+        protected async Task UnbindAliases(XMichelsonAddress address)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(EvmRuntime.GetAlias(address.Hash)) is XEvmAlias alias)
                 DowngradeToXEvmUser(alias, address);
@@ -655,8 +671,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             if (address.AliasesCount != 0)
                 throw new InvalidOperationException("Failed to unbind aliases");
         }
+        #endregion
 
-        public virtual async Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator)
+        #region michelson contracts
+        public async Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator)
         {
             if (await Cache.Addresses.GetOrDefaultAsync(hash) is XMichelsonAddress address)
             {
@@ -694,7 +712,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return contract;
         }
 
-        protected virtual XMichelsonContract UpgradeToXMichelsonContract(XMichelsonGhost ghost, XMichelsonAddress creator)
+        protected XMichelsonContract UpgradeToXMichelsonContract(XMichelsonGhost ghost, XMichelsonAddress creator)
         {
             var contract = new XMichelsonContract
             {
@@ -740,7 +758,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             return contract;
         }
 
-        protected virtual void DowngradeToXMichelsonGhost(XMichelsonContract contract, XMichelsonAddress creator)
+        protected void DowngradeToXMichelsonGhost(XMichelsonContract contract, XMichelsonAddress creator)
         {
             var ghost = new XMichelsonGhost
             {
@@ -775,7 +793,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             creator.ContractsCount--;
         }
 
-        public virtual async Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator)
+        public async Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator)
         {
             if (!contract.IsEmpty())
             {
@@ -792,5 +810,223 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             Cache.Addresses.Remove(contract);
             Db.Addresses.Remove(contract);
         }
+        #endregion
+
+        #region migrations
+        public XEvmContract BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
+        {
+            var id = Cache.Chain.NextAddressId();
+            var contract = new XEvmContract
+            {
+                Id = id,
+                ChainId = state.Id,
+                Hash = address,
+                FirstLevel = Context.Block.Level,
+                FirstTimestamp = Context.Block.Timestamp,
+                LastLevel = Context.Block.Level,
+                LastTimestamp = Context.Block.Timestamp,
+                Kind = XContractKind.SmartContract,
+                Tags = XEvmContractTags.None,
+                CreatorId = creator?.Id ?? id,
+                Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
+            };
+
+            Db.TryAttach(creator ?? contract);
+            (creator ?? contract).ContractsCount++;
+
+            Context.Block.Events |= XBlockEvents.NewAddresses;
+
+            Cache.Addresses.Add(contract);
+            Db.Addresses.Add(contract);
+
+            var script = new EvmScript
+            {
+                Id = Cache.Chain.NextScriptId(),
+                ChainId = state.Id,
+                ContractId = contract.Id,
+                Level = Context.Block.Level,
+                Code = [],
+                Current = true,
+                AbiJson = File.ReadAllText(abiPath),
+            };
+
+            Cache.Abi.Add(contract, Abi.FromJson(script.AbiJson));
+            Db.Scripts.Add(script);
+
+            var migration = new EvmMigrationOperation
+            {
+                Id = Cache.Chain.NextOperationId(),
+                ChainId = state.Id,
+                Level = Context.Block.Level,
+                Timestamp = Context.Block.Timestamp,
+                AddressId = contract.Id,
+                Kind = MigrationKind.Bootstrap,
+                ScriptId = script.Id,
+            };
+
+            script.MigrationId = migration.Id;
+
+            Db.TryAttach(contract);
+            contract.MigrationsCount++;
+
+            state.MigrationOpsCount++;
+
+            Context.Block.Operations |= XOperations.Migration;
+
+            Context.MigrationOps.Add(migration);
+            Db.MigrationOps.Add(migration);
+
+            return contract;
+        }
+
+        public async Task RemoveEvmPrecompile(string address, XChain state)
+        {
+            var contract = await Db.Addresses
+                .OfType<XEvmContract>()
+                .FirstAsync(x => x.ChainId == state.Id && x.Hash == address);
+
+            var creator = await Db.Addresses
+                .OfType<XAddress>()
+                .FirstAsync(x => x.Id == contract.CreatorId);
+
+            creator.ContractsCount--;
+
+            Cache.Chain.ReleaseAddressId();
+            Cache.Addresses.Remove(contract);
+            Db.Addresses.Remove(contract);
+
+            Cache.Abi.Remove(contract);
+            Cache.Chain.ReleaseScriptId();
+            await Db.Scripts
+                .Where(x => x.ContractId == contract.Id)
+                .ExecuteDeleteAsync();
+
+            state.MigrationOpsCount--;
+            Cache.Chain.ReleaseOperationId();
+            await Db.MigrationOps
+                .Where(x => x.AddressId == contract.Id)
+                .ExecuteDeleteAsync();
+        }
+
+        public async Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state)
+        {
+            var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
+
+            var oldScript = (await Db.Scripts.FirstAsync(x => x.ContractId == contract.Id && x.Current) as EvmScript)!;
+            oldScript.Current = false;
+
+            var newScript = new EvmScript
+            {
+                Id = Cache.Chain.NextScriptId(),
+                ChainId = contract.ChainId,
+                ContractId = contract.Id,
+                Level = Context.Block.Level,
+                Code = oldScript.Code,
+                CodeHash = oldScript.CodeHash,
+                TypeHash = oldScript.TypeHash,
+                SolidityMetadataBzzr0 = oldScript.SolidityMetadataBzzr0,
+                SolidityMetadataBzzr1 = oldScript.SolidityMetadataBzzr1,
+                SolidityMetadataExperimental = oldScript.SolidityMetadataExperimental,
+                SolidityMetadataIpfs = oldScript.SolidityMetadataIpfs,
+                SolidityMetadataSolc = oldScript.SolidityMetadataSolc,
+                AbiJson = File.ReadAllText(abiPath),
+                Current = true,
+            };
+
+            Cache.Abi.Add(contract, Abi.FromJson(newScript.AbiJson));
+            Db.Scripts.Add(newScript);
+
+            var migration = new EvmMigrationOperation
+            {
+                Id = Cache.Chain.NextOperationId(),
+                ChainId = contract.ChainId,
+                Level = Context.Block.Level,
+                Timestamp = Context.Block.Timestamp,
+                AddressId = contract.Id,
+                Kind = MigrationKind.CodeChange,
+                ScriptId = newScript.Id,
+            };
+
+            newScript.MigrationId = migration.Id;
+
+            Db.TryAttach(contract);
+            contract.MigrationsCount++;
+
+            state.MigrationOpsCount++;
+
+            Context.Block.Operations |= XOperations.Migration;
+
+            Context.MigrationOps.Add(migration);
+            Db.MigrationOps.Add(migration);
+
+            return contract;
+        }
+
+        public async Task BootstrapEvmUser(string address, XChain state)
+        {
+            var balance = await EvmRpc.GetBalanceEarliest(address);
+            if (balance.GetString() == "0x0") return;
+
+            var user = new XEvmUser
+            {
+                Id = Cache.Chain.NextAddressId(),
+                ChainId = state.Id,
+                Hash = address,
+                FirstLevel = Context.Block.Level,
+                FirstTimestamp = Context.Block.Timestamp,
+                LastLevel = Context.Block.Level,
+                LastTimestamp = Context.Block.Timestamp,
+                Balance = balance.RequiredHexBigInteger(),
+                Counter = -1, // counter keeps the last used nonce, for new address it's -1
+            };
+
+            Context.Block.Events |= XBlockEvents.NewAddresses;
+
+            Cache.Addresses.Add(user);
+            Db.Addresses.Add(user);
+
+            var migration = new EvmMigrationOperation
+            {
+                Id = Cache.Chain.NextOperationId(),
+                ChainId = state.Id,
+                Level = Context.Block.Level,
+                Timestamp = Context.Block.Timestamp,
+                AddressId = user.Id,
+                Kind = MigrationKind.Bootstrap,
+                BalanceChange = user.Balance,
+            };
+
+            user.MigrationsCount++;
+
+            state.MigrationOpsCount++;
+
+            Context.Block.Operations |= XOperations.Migration;
+            Context.Statistics.TotalBootstrapped += migration.BalanceChange;
+
+            Context.MigrationOps.Add(migration);
+            Db.MigrationOps.Add(migration);
+        }
+
+        public async Task RemoveEvmUser(string address, XChain state)
+        {
+            var user = await Db.Addresses
+                .OfType<XAddress>()
+                .FirstOrDefaultAsync(x => x.ChainId == state.Id && x.Hash == address);
+
+            if (user == null)
+                return;
+
+            Cache.Chain.ReleaseAddressId();
+            Cache.Addresses.Remove(user);
+            Db.Addresses.Remove(user);
+
+            state.MigrationOpsCount--;
+            Cache.Chain.ReleaseOperationId();
+            await Db.MigrationOps
+                .Where(x => x.AddressId == user.Id)
+                .ExecuteDeleteAsync();
+
+        }
+        #endregion
     }
 }

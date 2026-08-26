@@ -1,11 +1,11 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
 
-namespace Xtzkt.Indexers.TezosX.Protocols.Proto04
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 {
     class BridgeTicketsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {

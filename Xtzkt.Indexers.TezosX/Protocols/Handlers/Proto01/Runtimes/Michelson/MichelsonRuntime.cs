@@ -3,7 +3,7 @@ using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
-public class MichelsonRuntime : IMichelsonRuntime
+class MichelsonRuntime : IMichelsonRuntime
 {
     public string RuntimeId => "0";
 

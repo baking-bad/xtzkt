@@ -36,5 +36,11 @@ public interface IHelpers
 
     Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator);
     Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator);
+
+    XEvmContract BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state);
+    Task RemoveEvmPrecompile(string address, XChain state);
+    Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state);
+    Task BootstrapEvmUser(string address, XChain state);
+    Task RemoveEvmUser(string address, XChain state);
     #endregion
 }
