@@ -1,4 +1,6 @@
-﻿namespace Xtzkt.Indexers.Common.Utils
+﻿using System.Numerics;
+
+namespace Xtzkt.Indexers.Common.Utils
 {
     static class HexNumber
     {
@@ -89,10 +91,8 @@
             if (hex.Length < 3 || hex[1] != 'x' || hex.Length > 10)
                 throw new Exception("Invalid int32 hex");
 
-            hex = hex[2..];
-
-            int res = HexAscii[hex[0]];
-            for (var i = 1; i < hex.Length; i++)
+            int res = HexAscii[hex[2]];
+            for (var i = 3; i < hex.Length; i++)
                 res = (res << 4) + HexAscii[hex[i]];
 
             return res;
@@ -103,13 +103,60 @@
             if (hex.Length < 3 || hex[1] != 'x' || hex.Length > 18)
                 throw new Exception("Invalid int64 hex");
 
-            hex = hex[2..];
-
-            long res = HexAscii[hex[0]];
-            for (var i = 1; i < hex.Length; i++)
+            long res = HexAscii[hex[2]];
+            for (var i = 3; i < hex.Length; i++)
                 res = (res << 4) + HexAscii[hex[i]];
 
             return res;
+        }
+
+        public static ulong GetUInt64(string hex)
+        {
+            if (hex.Length < 3 || hex[1] != 'x' || hex.Length > 18)
+                throw new Exception("Invalid uint64 hex");
+
+            ulong res = (uint)HexAscii[hex[2]];
+            for (var i = 3; i < hex.Length; i++)
+                res = (res << 4) + (uint)HexAscii[hex[i]];
+
+            return res;
+        }
+
+        public static BigInteger GetBigInteger(string hex)
+        {
+            var pos = hex.Length >= 2 && hex[1] == 'x' ? 2 : 0;
+            var digits = hex.Length - pos;
+
+            if (digits == 0)
+                return BigInteger.Zero;
+
+            var size = (digits + 1) >> 1;
+            Span<byte> bytes = size <= 32 ? stackalloc byte[32] : new byte[size];
+            bytes = bytes[..size];
+
+            var i = 0;
+            if ((digits & 1) != 0)
+            {
+                if (hex[pos] > 102) throw new FormatException("Invalid bigint hex");
+                int p = HexAscii[hex[pos++]];
+
+                if (p == 255) throw new FormatException("Invalid bigint hex");
+                bytes[i++] = (byte)p;
+            }
+
+            for (; i < size; i++)
+            {
+                if (hex[pos] > 102) throw new FormatException("Invalid bigint hex");
+                int h = HexAscii[hex[pos++]];
+
+                if (hex[pos] > 102) throw new FormatException("Invalid bigint hex");
+                int l = HexAscii[hex[pos++]];
+
+                if ((h | l) == 255) throw new FormatException("Invalid bigint hex");
+                bytes[i] = (byte)((h << 4) + l);
+            }
+
+            return new BigInteger(bytes, isUnsigned: true, isBigEndian: true);
         }
 
         public static DateTime GetTimestamp(string hex)

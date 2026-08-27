@@ -98,7 +98,7 @@ partial class TransactionCommit
             RoundingLoss = roundingloss,
             AmountReceived = amountReceived,
             Counter = tx.RequiredHexInt32("nonce"),
-            GasLimit = tx.RequiredHexInt32("gas"),
+            GasLimit = GetGasLimit(tx),
             GasUsed = gasUsed,
             Status = status,
             Errors = status != OperationStatus.Applied

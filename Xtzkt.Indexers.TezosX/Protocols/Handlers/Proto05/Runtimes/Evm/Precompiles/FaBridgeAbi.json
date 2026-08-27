@@ -1,0 +1,199 @@
+[
+  {
+    "type": "function",
+    "name": "claim",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "depositId"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "fa_fast_withdraw",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "type": "bytes",
+        "name": "routingInfo"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "bytes22",
+        "name": "ticketer"
+      },
+      {
+        "type": "bytes",
+        "name": "content"
+      },
+      {
+        "type": "string",
+        "name": "fastWithdrawalContract"
+      },
+      {
+        "type": "bytes",
+        "name": "payload"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdraw",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "type": "bytes",
+        "name": "routingInfo"
+      },
+      {
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "type": "bytes22",
+        "name": "ticketer"
+      },
+      {
+        "type": "bytes",
+        "name": "content"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "FastFaWithdrawal",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "sender"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "indexed": false,
+        "type": "bytes22",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "bytes22",
+        "name": "proxy"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "withdrawalId"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "timestamp"
+      },
+      {
+        "indexed": false,
+        "type": "bytes",
+        "name": "payload"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "QueuedDeposit",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "nonce"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxLevel"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "inboxMsgId"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Withdrawal",
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "type": "uint256",
+        "name": "ticketHash"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "sender"
+      },
+      {
+        "indexed": false,
+        "type": "address",
+        "name": "ticketOwner"
+      },
+      {
+        "indexed": false,
+        "type": "bytes22",
+        "name": "receiver"
+      },
+      {
+        "indexed": false,
+        "type": "bytes22",
+        "name": "proxy"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "amount"
+      },
+      {
+        "indexed": false,
+        "type": "uint256",
+        "name": "withdrawalId"
+      }
+    ]
+  }
+]

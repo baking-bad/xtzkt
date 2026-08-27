@@ -206,6 +206,12 @@ public static class JsonElementExtension
             : throw new SerializationException($"Missed required hex Int64");
     }
 
+    public static ulong RequiredHexUInt64(this JsonElement el, string name)
+    {
+        return el.TryGetProperty(name, out var prop) ? HexNumber.GetUInt64(prop.RequiredString())
+            : throw new SerializationException($"Missed required hex UInt64");
+    }
+
     public static byte[]? OptionalHexBytes(this JsonElement el, string name)
     {
         if (!el.TryGetProperty(name, out var prop) || prop.ValueKind == JsonValueKind.Null)
@@ -235,10 +241,7 @@ public static class JsonElementExtension
         if (prop.GetString() is not string str)
             throw new SerializationException($"Invalid HexBigInteger");
 
-        if (str.StartsWith("0x")) str = str[2..];
-        if (str.Length % 2 != 0) str = "0" + str;
-        return Hex.TryParse(str, out var bytes) ? new BigInteger(bytes, true, true)
-            : throw new SerializationException($"Invalid HexBigInteger");
+        return HexNumber.GetBigInteger(str);
     }
 
     public static BigInteger RequiredHexBigInteger(this JsonElement el, string name)
@@ -246,19 +249,15 @@ public static class JsonElementExtension
         if (!el.TryGetProperty(name, out var prop) || prop.GetString() is not string str)
             throw new SerializationException($"Missed required hex BigInteger");
 
-        if (str.StartsWith("0x")) str = str[2..];
-        if (str.Length % 2 != 0) str = "0" + str;
-        return Hex.TryParse(str, out var bytes) ? new BigInteger(bytes, true, true)
-            : throw new SerializationException($"Missed required BigInteger hex");
+        return HexNumber.GetBigInteger(str);
     }
 
     public static BigInteger RequiredHexBigInteger(this JsonElement el)
     {
-        var str = el.GetString() ?? throw new SerializationException($"Missed required BigInteger hex");
-        if (str.StartsWith("0x")) str = str[2..];
-        if (str.Length % 2 != 0) str = "0" + str;
-        return Hex.TryParse(str, out var bytes) ? new BigInteger(bytes, true, true)
-            : throw new SerializationException($"Missed required BigInteger hex");
+        var str = el.GetString()
+            ?? throw new SerializationException($"Missed required BigInteger hex");
+
+        return HexNumber.GetBigInteger(str);
     }
 
     public static BigInteger RequiredBigInteger(this JsonElement el, string name)

@@ -71,7 +71,7 @@ partial class TransactionCommit
             GasFee = gasFee,
             Amount = tx.RequiredHexBigInteger("value"),
             Counter = tx.RequiredHexInt32("nonce"),
-            GasLimit = tx.RequiredHexInt32("gas"),
+            GasLimit = GetGasLimit(tx),
             GasUsed = ownGasUsed,
             Status = status,
             Errors = status != OperationStatus.Applied

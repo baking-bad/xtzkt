@@ -49,7 +49,7 @@ partial class ProtoHelpers
                     if (delayedDeposit is DelayedFaDeposit faDeposit)
                     {
                         if (op.Tx.RequiredHexBigInteger("value") != 0 ||
-                            op.Tx.RequiredString("to") != (faDeposit.Proxy ?? faDeposit.Receiver))
+                            op.Tx.RequiredString("to") != ExpectedFaDepositTarget(faDeposit))
                             throw new Exception($"Delayed fa deposit {op.Batch.Hash} doesn't match its pseudo transaction");
 
                         dest.Operations.Add(CreateFaDeposit(op, faDeposit));
@@ -68,6 +68,11 @@ partial class ProtoHelpers
                     throw new InvalidOperationException();
             }
         }
+    }
+
+    protected virtual string ExpectedFaDepositTarget(DelayedFaDeposit faDeposit)
+    {
+        return faDeposit.Proxy ?? faDeposit.Receiver;
     }
 
     protected virtual EvmDeposit CreateFaDeposit(EvmOperation feederCall, DelayedFaDeposit faDeposit)

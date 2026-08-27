@@ -21,6 +21,10 @@ public static class FaBridgeEvents
         Keccak256.GetHashBytes(Encoding.UTF8.GetBytes(
             "FastFaWithdrawal(uint256,address,address,bytes22,bytes22,uint256,uint256,uint256,bytes)"));
 
+    public static readonly byte[] LegacyFastWithdrawalTopic =
+        Keccak256.GetHashBytes(Encoding.UTF8.GetBytes(
+            "FastFaWithdrawal(address,address,bytes22,bytes22,uint256,uint256,uint256,bytes)"));
+
     public static bool TryParseUpdate(byte[][] topics, byte[] data, ISourceOperation op, out BridgeTicketUpdateData update)
     {
         update = null!;
@@ -60,7 +64,7 @@ public static class FaBridgeEvents
             return true;
         }
 
-        if (topics[0].IsEqual(FastWithdrawalTopic))
+        if (topics[0].IsEqual(FastWithdrawalTopic) || topics[0].IsEqual(LegacyFastWithdrawalTopic))
         {
             // (address sender, address ticketOwner, bytes22 receiver, bytes22 proxy,
             //  uint256 amount, uint256 withdrawalId, uint256 timestamp, bytes payload)

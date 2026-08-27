@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Numerics;
+using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
@@ -40,6 +41,7 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Type = type,
             TicketHash = ticketHash,
             ProxyId = proxy?.Id,
+            DepositId = GetDepositId(feederReceipt),
 
             #region crutch for nested proxy calls in old etherlink
             SenderId = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress)).Id,
@@ -84,6 +86,12 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         Context.DepositOps.Add(op);
 
         return op;
+    }
+
+    protected virtual BigInteger? GetDepositId(JsonElement feederReceipt)
+    {
+        // deposit queue starts from Dionysus
+        return null;
     }
 
     public async Task Revert(XEvmDepositOperation op)

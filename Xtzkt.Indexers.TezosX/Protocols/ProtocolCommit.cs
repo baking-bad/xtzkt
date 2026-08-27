@@ -185,6 +185,12 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         {
             return trace.OptionalArray("calls")?.EnumerateArray().Sum(x => x.RequiredHexInt32("gasUsed")) ?? 0;
         }
+
+        protected int GetGasLimit(JsonElement tx)
+        {
+            var gasLimit = tx.RequiredHexUInt64("gas");
+            return gasLimit <= int.MaxValue ? (int)gasLimit : int.MaxValue;
+        }
         #endregion
     }
 }

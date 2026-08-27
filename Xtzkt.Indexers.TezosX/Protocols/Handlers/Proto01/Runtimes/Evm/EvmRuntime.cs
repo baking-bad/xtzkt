@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Utils.Crypto;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
@@ -53,9 +55,9 @@ class EvmRuntime : IEvmRuntime
 
     public string CallSelector => throw new NotImplementedException();
 
-    public byte[] FaClaimSelector => throw new NotImplementedException();
+    public byte[] FaClaimSelector { get; } = Selector("claim(uint256)");
 
-    public byte[] XtzClaimSelector => throw new NotImplementedException();
+    public byte[] XtzClaimSelector { get; } = Selector("claim_xtz(uint256)");
     #endregion
 
     #region helpers
@@ -64,5 +66,9 @@ class EvmRuntime : IEvmRuntime
     public int ConvertGas(long michelsonMilligas) => throw new NotImplementedException();
 
     public bool IsCracCall(string? to, JsonElement trace) => throw new NotImplementedException();
+    #endregion
+
+    #region utils
+    static byte[] Selector(string signature) => Keccak256.GetHashBytes(Utf8.GetBytes(signature))[..4];
     #endregion
 }

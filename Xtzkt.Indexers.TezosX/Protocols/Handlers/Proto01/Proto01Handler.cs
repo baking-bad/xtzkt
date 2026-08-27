@@ -37,6 +37,7 @@ class Proto01Handler(
     protected virtual TransactionCommit TransactionCommit => new(this);
     protected virtual BlockCommit BlockCommit => new(this);
     protected virtual BridgeTicketsCommit BridgeTicketsCommit => new(this);
+    protected virtual DepositClaimCommit DepositClaimCommit => new(this);
     protected virtual LogCommit LogCommit => new(this);
     protected virtual StateCommit StateCommit => new(this);
     protected virtual StatisticsCommit StatisticsCommit => new(this);
@@ -117,6 +118,7 @@ class Proto01Handler(
 
         await TokensCommit.ApplyEvmTransfers();
         await BridgeTicketsCommit.Apply();
+        await DepositClaimCommit.Apply();
 
         await StatisticsCommit.Apply();
         await StateCommit.Apply(block);
@@ -129,6 +131,7 @@ class Proto01Handler(
 
         await StatisticsCommit.Revert();
 
+        await DepositClaimCommit.Revert();
         await BridgeTicketsCommit.Revert(currBlock);
         await TokensCommit.Revert(currBlock);
         await LogCommit.RevertLogs(currBlock);

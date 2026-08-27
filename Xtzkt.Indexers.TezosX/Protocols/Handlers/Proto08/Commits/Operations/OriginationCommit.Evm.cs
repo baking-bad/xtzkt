@@ -54,7 +54,7 @@ partial class OriginationCommit
             GasFee = gasFee,
             Balance = tx.RequiredHexBigInteger("value"),
             Counter = tx.RequiredHexInt32("nonce"),
-            GasLimit = tx.RequiredHexInt32("gas"),
+            GasLimit = GetGasLimit(tx),
             GasUsed = ownGasUsed,
             Status = status
         };
