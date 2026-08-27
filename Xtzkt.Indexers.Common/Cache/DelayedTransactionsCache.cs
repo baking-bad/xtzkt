@@ -1,3 +1,5 @@
+﻿using System.Collections.Concurrent;
+
 namespace Xtzkt.Indexers.Common.Cache;
 
 public readonly record struct DelayedTransaction(int Level, string Kind, byte[] Hash, byte[] Payload);
@@ -7,13 +9,13 @@ public class DelayedTransactionsCache
     #region static
     static int SoftCap = 0;
     static int TargetCap = 0;
-    static Dictionary<string, DelayedTransaction> Cached = [];
+    static ConcurrentDictionary<string, DelayedTransaction> Cached = [];
 
     public static void Configure(CacheSize? size)
     {
-        SoftCap = size?.SoftCap ?? 8_192;
-        TargetCap = size?.TargetCap ?? 4_096;
-        Cached = new(SoftCap + 1024);
+        SoftCap = size?.SoftCap ?? 4_096;
+        TargetCap = size?.TargetCap ?? 2_048;
+        Cached = new(Environment.ProcessorCount, SoftCap + 1024);
     }
     #endregion
 
@@ -33,7 +35,7 @@ public class DelayedTransactionsCache
                 .ToList();
 
             foreach (var key in toRemove)
-                Cached.Remove(key);
+                Cached.TryRemove(key, out _);
         }
     }
 

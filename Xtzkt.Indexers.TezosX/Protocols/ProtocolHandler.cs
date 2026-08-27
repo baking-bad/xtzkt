@@ -52,12 +52,16 @@ namespace Xtzkt.Indexers.TezosX
 
             await CheckMichelsonActivationLevel(state);
 
+            var batchSize = Config.BatchSize;
+            var targetLevel = Math.Min(state.Level + batchSize, head);
+            var prefetcher = new MetaBlockPrefetcher(Helpers, Config.PrefetchDepth, targetLevel);
+
             Logger.LogDebug("Begin DB transaction");
             using var tx = await Db.Database.BeginTransactionAsync();
             var txClosed = false;
             try
             {
-                for (int i = 0; i < 256 && state.Level < head; i++)
+                while (state.Level < targetLevel)
                 {
                     if (state.KernelUpgrade != null && !migrating)
                     {
@@ -74,6 +78,7 @@ namespace Xtzkt.Indexers.TezosX
 
                             Logger.LogDebug("Commit DB transaction");
                             await tx.CommitAsync();
+                            await prefetcher.DrainAsync();
                             txClosed = true;
 
                             return await nextProtocol.ApplyNextBlock(head, true);
@@ -84,7 +89,7 @@ namespace Xtzkt.Indexers.TezosX
                     Logger.LogDebug("Load block {level}", state.Level + 1);
                     using (Metrics.Measure.Timer.Time(MetricsRegistry.RpcResponseTime))
                     {
-                        block = await Helpers.GetMetaBlock(state.Level + 1);
+                        block = await prefetcher.GetMetaBlock(state.Level + 1);
                         ValidateBlock(block, state);
                     }
 
@@ -138,10 +143,12 @@ namespace Xtzkt.Indexers.TezosX
 
                 Logger.LogDebug("Commit DB transaction");
                 await tx.CommitAsync();
+                await prefetcher.DrainAsync();
             }
             catch (Exception)
             {
                 if (!txClosed) await tx.RollbackAsync();
+                await prefetcher.DrainAsync();
                 throw;
             }
 

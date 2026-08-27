@@ -2,6 +2,8 @@
 {
     public class TezosProtocolsConfig
     {
+        public int BatchSize { get; set; } = 256;
+        public int PrefetchDepth { get; set; } = 8;
         public bool FallbackToLatestKernel { get; set; } = false;
     }
 
@@ -9,7 +11,15 @@
     {
         public static TezosProtocolsConfig GetTezosProtocolsConfig(this IConfiguration config)
         {
-            return config.GetSection("Protocols")?.Get<TezosProtocolsConfig>() ?? new();
+            var res = config.GetSection("Protocols")?.Get<TezosProtocolsConfig>() ?? new();
+
+            if (res.BatchSize < 1)
+                throw new Exception("Protocols.BatchSize must be at least 1");
+
+            if (res.PrefetchDepth < 0)
+                throw new Exception("Protocols.PrefetchDepth must not be negative");
+
+            return res;
         }
     }
 }
