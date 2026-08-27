@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace Xtzkt.Data.Models
 {
@@ -11,6 +13,27 @@ namespace Xtzkt.Data.Models
         public required int Level { get; set; }
         public required DateTime Timestamp { get; set; }
         public DateTime? Date { get; set; }
+
+        #region binary writer
+        private protected const string BinaryColumns = $"""
+            "{nameof(ChainId)}",
+            "{nameof(Level)}",
+            "{nameof(Layer)}",
+            "{nameof(Timestamp)}",
+            "{nameof(Date)}"
+            """;
+
+        private protected void WriteBinaryBase(NpgsqlBinaryImporter writer)
+        {
+            writer.StartRow();
+
+            writer.Write(ChainId, NpgsqlDbType.Integer);
+            writer.Write(Level, NpgsqlDbType.Integer);
+            writer.Write((int)Layer, NpgsqlDbType.Integer);
+            writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
+            writer.WriteNullable(Date, NpgsqlDbType.TimestampTz);
+        }
+        #endregion
     }
 
     public static class StatisticsModel

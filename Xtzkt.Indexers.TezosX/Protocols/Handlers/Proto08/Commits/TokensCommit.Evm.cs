@@ -232,7 +232,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             var state = Cache.Chain.Get();
             state.TokenTransfersCount++;
 
-            Db.TokenTransfers.Add(new TokenTransfer
+            Batch.TokenTransfers.Add(new TokenTransfer
             {
                 Id = Cache.Chain.NextSubId(op),
                 ChainId = op.ChainId,
@@ -297,7 +297,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08
             var state = Cache.Chain.Get();
             state.TokenTransfersCount++;
 
-            Db.TokenTransfers.Add(new TokenTransfer
+            Batch.TokenTransfers.Add(new TokenTransfer
             {
                 Id = Cache.Chain.NextSubId(op),
                 ChainId = op.ChainId,

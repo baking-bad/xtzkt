@@ -236,7 +236,7 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var state = Cache.Chain.Get();
         state.TokenTransfersCount++;
 
-        Db.TokenTransfers.Add(new TokenTransfer
+        Batch.TokenTransfers.Add(new TokenTransfer
         {
             Id = Cache.Chain.NextSubId(op),
             ChainId = op.ChainId,
@@ -301,7 +301,7 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var state = Cache.Chain.Get();
         state.TokenTransfersCount++;
 
-        Db.TokenTransfers.Add(new TokenTransfer
+        Batch.TokenTransfers.Add(new TokenTransfer
         {
             Id = Cache.Chain.NextSubId(op),
             ChainId = op.ChainId,

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
@@ -10,10 +10,17 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         public HashSet<XBlock> Blocks { get; } = [];
         public List<TransactionOperation> TransactionOps { get; } = [];
         public List<Log> Logs { get; } = [];
+        public List<TokenTransfer> TokenTransfers { get; } = [];
+        public List<XStatistics> Statistics { get; } = [];
 
         public bool Contains(XBlock block)
         {
             return Blocks.Contains(block);
+        }
+
+        public bool Contains(XStatistics statistics)
+        {
+            return Statistics.Contains(statistics);
         }
 
         public void Apply(XtzktContext db)
@@ -72,6 +79,18 @@ namespace Xtzkt.Indexers.TezosX.Protocols
                 if (michelsonLogs != null) MichelsonLog.Write(conn, michelsonLogs);
 
                 Logs.Clear();
+            }
+
+            if (TokenTransfers.Count != 0)
+            {
+                TokenTransfer.Write(conn, TokenTransfers);
+                TokenTransfers.Clear();
+            }
+
+            if (Statistics.Count != 0)
+            {
+                XStatistics.Write(conn, Statistics);
+                Statistics.Clear();
             }
         }
     }

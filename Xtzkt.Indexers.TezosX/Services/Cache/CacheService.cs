@@ -101,10 +101,10 @@ namespace Xtzkt.Indexers.TezosX.Services
         {
             var cacheConfig = config.GetCacheConfig();
             AbiCache.Configure(cacheConfig.Abi);
-            AddressesCache.Configure(cacheConfig.Addresses);
+            XAddressesCache.Configure(cacheConfig.Addresses);
             BigMapKeysCache.Configure(cacheConfig.BigMapKeys);
             BigMapsCache.Configure(cacheConfig.BigMaps);
-            BlocksCache.Configure(cacheConfig.Blocks);
+            XBlocksCache.Configure(cacheConfig.Blocks);
             BridgeTicketBalancesCache.Configure(cacheConfig.BridgeTicketBalances);
             BridgeTicketsCache.Configure(cacheConfig.BridgeTickets);
             DelayedTransactionsCache.Configure(cacheConfig.DelayedTransactions);

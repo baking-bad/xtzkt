@@ -14,13 +14,15 @@ class StatisticsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             var prevTimestamp = (await Cache.Blocks.GetAsync(prev.Level)).Timestamp;
             if (timestamp.Ticks / (10_000_000L * 3600 * 24) != prevTimestamp.Ticks / (10_000_000L * 3600 * 24))
             {
-                Db.TryAttach(prev);
+                if (!Batch.Contains(prev))
+                    Db.TryAttach(prev);
+
                 prev.Date = prevTimestamp.Date;
             }
         }
 
         Cache.Statistics.SetCurrent(Context.Statistics);
-        Db.Statistics.Add(Context.Statistics);
+        Batch.Statistics.Add(Context.Statistics);
     }
 
     public virtual async Task Revert()
