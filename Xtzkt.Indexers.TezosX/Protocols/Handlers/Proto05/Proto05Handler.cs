@@ -18,6 +18,7 @@ class Proto05Handler(
 {
     public override int Version => 5;
     public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
+    protected override IActivator Activator => new ProtoActivator(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
 
     protected override Proto01.DepositCommit DepositCommit => new DepositCommit(this);

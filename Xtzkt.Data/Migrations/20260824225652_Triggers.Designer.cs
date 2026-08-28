@@ -5715,19 +5715,19 @@ namespace Xtzkt.Data.Migrations
                     b.ToTable("Statistics", t =>
                         {
                             t.Property("TotalBanished")
-                                .HasColumnName("XStatistics_TotalBanished");
+                                .HasColumnName("TotalBanished18");
 
                             t.Property("TotalBootstrapped")
-                                .HasColumnName("XStatistics_TotalBootstrapped");
+                                .HasColumnName("TotalBootstrapped18");
 
                             t.Property("TotalBurned")
-                                .HasColumnName("XStatistics_TotalBurned");
+                                .HasColumnName("TotalBurned18");
 
                             t.Property("TotalCreated")
-                                .HasColumnName("XStatistics_TotalCreated");
+                                .HasColumnName("TotalCreated18");
 
                             t.Property("TotalLost")
-                                .HasColumnName("XStatistics_TotalLost");
+                                .HasColumnName("TotalLost18");
                         });
 
                     b.HasDiscriminator().HasValue(1);

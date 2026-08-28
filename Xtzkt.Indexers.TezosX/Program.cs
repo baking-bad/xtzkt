@@ -131,7 +131,7 @@ while (true)
             var kernelVersion = chainId switch
             {
                 "0xa729" => "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166",
-                "0x1f34f" => "0x00985fe6f477169765206cfa26dbe7d58b333989d733363c9c648cc2707697df21",
+                "0x1f34f" => "0x0001010d789e7cccc25c785cf73a658574ed0995ef36b8416a46ab0ddc6b058b39",
                 "0x1f440" => "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3",
                 "0x1f094" => "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25",
                 _ => "0x000000000000000000000000000000000000000000000000000000000000000000",

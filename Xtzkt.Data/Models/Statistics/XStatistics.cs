@@ -8,26 +8,20 @@ namespace Xtzkt.Data.Models
 {
     public class XStatistics() : Statistics(Layer.TezosX)
     {
-        const string TotalBootstrappedColumn = $"{nameof(XStatistics)}_{nameof(TotalBootstrapped)}";
-        const string TotalCreatedColumn = $"{nameof(XStatistics)}_{nameof(TotalCreated)}";
-        const string TotalBurnedColumn = $"{nameof(XStatistics)}_{nameof(TotalBurned)}";
-        const string TotalBanishedColumn = $"{nameof(XStatistics)}_{nameof(TotalBanished)}";
-        const string TotalLostColumn = $"{nameof(XStatistics)}_{nameof(TotalLost)}";
-
         #region supply
-        [Column(TotalBootstrappedColumn)]
+        [Column($"{nameof(TotalBootstrapped)}18")]
         public BigInteger TotalBootstrapped { get; set; }
 
-        [Column(TotalCreatedColumn)]
+        [Column($"{nameof(TotalCreated)}18")]
         public BigInteger TotalCreated { get; set; }
 
-        [Column(TotalBurnedColumn)]
+        [Column($"{nameof(TotalBurned)}18")]
         public BigInteger TotalBurned { get; set; }
 
-        [Column(TotalBanishedColumn)]
+        [Column($"{nameof(TotalBanished)}18")]
         public BigInteger TotalBanished { get; set; }
 
-        [Column(TotalLostColumn)]
+        [Column($"{nameof(TotalLost)}18")]
         public BigInteger TotalLost { get; set; }
         #endregion
 
@@ -37,11 +31,11 @@ namespace Xtzkt.Data.Models
             using var writer = conn.BeginBinaryImport($"""
                 COPY "{nameof(XtzktContext.Statistics)}" (
                     {BinaryColumns},
-                    "{TotalBootstrappedColumn}",
-                    "{TotalCreatedColumn}",
-                    "{TotalBurnedColumn}",
-                    "{TotalBanishedColumn}",
-                    "{TotalLostColumn}"
+                    "{nameof(TotalBootstrapped)}18",
+                    "{nameof(TotalCreated)}18",
+                    "{nameof(TotalBurned)}18",
+                    "{nameof(TotalBanished)}18",
+                    "{nameof(TotalLost)}18"
                 )
                 FROM STDIN (FORMAT BINARY)
                 """);

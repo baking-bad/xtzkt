@@ -1930,11 +1930,11 @@ namespace Xtzkt.Data.Migrations
                     TotalBakers = table.Column<int>(type: "integer", nullable: true),
                     TotalStakers = table.Column<int>(type: "integer", nullable: true),
                     TotalDelegators = table.Column<int>(type: "integer", nullable: true),
-                    XStatistics_TotalBootstrapped = table.Column<BigInteger>(type: "numeric", nullable: true),
-                    XStatistics_TotalCreated = table.Column<BigInteger>(type: "numeric", nullable: true),
-                    XStatistics_TotalBurned = table.Column<BigInteger>(type: "numeric", nullable: true),
-                    XStatistics_TotalBanished = table.Column<BigInteger>(type: "numeric", nullable: true),
-                    XStatistics_TotalLost = table.Column<BigInteger>(type: "numeric", nullable: true)
+                    TotalBootstrapped18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    TotalCreated18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    TotalBurned18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    TotalBanished18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    TotalLost18 = table.Column<BigInteger>(type: "numeric", nullable: true)
                 },
                 constraints: table =>
                 {
