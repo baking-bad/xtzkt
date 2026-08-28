@@ -18,6 +18,9 @@ public sealed class EvmOperation : MetaOperation
     public required List<JsonElement> Logs { get; init; }
     public required string From { get; init; }
     public string? To { get; init; }
+
+    // needed for bug-ish kernels, adding intrinsic gas to every frame
+    public int FrameGasOffset { get; init; }
 }
 
 public sealed class EvmInternalOperation : MetaInternalOperation
@@ -30,6 +33,9 @@ public sealed class EvmInternalOperation : MetaInternalOperation
     public required OperationStatus ParentStatus { get; init; }
     public required string From { get; init; }
     public string? To { get; init; }
+
+    // needed for bug-ish kernels, adding intrinsic gas to every frame
+    public int FrameGasOffset { get; init; }
 }
 
 public sealed class EvmDeposit : MetaOperation

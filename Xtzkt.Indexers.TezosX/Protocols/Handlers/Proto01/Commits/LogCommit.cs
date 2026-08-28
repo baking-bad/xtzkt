@@ -17,11 +17,12 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         foreach (var log in logs)
         {
             var address = await GetAddress(log);
+            var addressEip7702Delegate = await GetEip7702Delegate(address);
 
             var topics = log.RequiredArray("topics").EnumerateArray().Select(x => x.RequiredHexBytes()).ToArray();
             var data = log.RequiredHexBytes("data");
 
-            if (address is not XEvmContract contract)
+            if ((addressEip7702Delegate ?? address) is not XEvmContract contract)
                 throw new Exception("Non-contract addresses shouldn't emit logs");
 
             string? name = null;
@@ -86,16 +87,21 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
             Db.TryAttach(address);
             address.LogsCount++;
+            address.LastLevel = Context.Block.Level;
+            address.LastTimestamp = Context.Block.Timestamp;
 
             Cache.Chain.Get().LogsCount++;
             Context.Block.Events |= XBlockEvents.Events;
 
             Batch.Logs.Add(evmLog);
 
-            if (Erc.TryParseTransfers(topics, data, out var tokenType, out var tokenTransfers))
+            if (addressEip7702Delegate == null) // we don't index EIP7702-delegated token contracts
             {
-                foreach (var (tokenId, from, to, amount) in tokenTransfers)
-                    Context.EvmTokenTransfers.Add(new(contract, tokenId, tokenType, from, to, amount, (op as ISourceOperation)!));
+                if (Erc.TryParseTransfers(topics, data, out var tokenType, out var tokenTransfers))
+                {
+                    foreach (var (tokenId, from, to, amount) in tokenTransfers)
+                        Context.EvmTokenTransfers.Add(new(contract, tokenId, tokenType, from, to, amount, (op as ISourceOperation)!));
+                }
             }
 
             // FA Deposit events are still emitted by the system address, while FA Withdrawal events are

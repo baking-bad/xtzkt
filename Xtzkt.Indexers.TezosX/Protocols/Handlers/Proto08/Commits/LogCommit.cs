@@ -109,6 +109,8 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
             Db.TryAttach(address);
             address.LogsCount++;
+            address.LastLevel = Context.Block.Level;
+            address.LastTimestamp = Context.Block.Timestamp;
 
             Cache.Chain.Get().LogsCount++;
             Context.Block.Events |= XBlockEvents.Events;
@@ -187,6 +189,8 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         }
         parentTx.LogsCount = (parentTx.LogsCount ?? 0) + 1;
         contract.LogsCount++;
+        contract.LastLevel = block.Level;
+        contract.LastTimestamp = block.Timestamp;
         Cache.Chain.Get().LogsCount++;
         block.Events |= XBlockEvents.Events;
         #endregion

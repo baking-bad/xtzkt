@@ -11,7 +11,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
+    public async Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
     {
         #region init
         var block = Context.Block;
@@ -19,7 +19,7 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var sender = await Helpers.GetOrCreateXEvmUser(senderAddress);
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
-        var (gasUsed, ownGasUsed) = GetGasUsed(receipt, trace);
+        var (gasUsed, ownGasUsed) = GetRootGasUsed(receipt, trace, frameGasOffset);
         var fee = effectiveGasPrice * gasUsed;
         var status = receipt.RequiredEvmOpStatus("status");
 
@@ -139,7 +139,7 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         return op;
     }
 
-    public async Task<XEvmOriginationOperation> ApplyInternalEvm(IParentOperation parent, JsonElement trace, OperationStatus traceStatus, OperationStatus parentTraceStatus)
+    public async Task<XEvmOriginationOperation> ApplyInternalEvm(IParentOperation parent, JsonElement trace, OperationStatus traceStatus, OperationStatus parentTraceStatus, int frameGasOffset)
     {
         #region init
         var block = Context.Block;
@@ -147,6 +147,7 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         var senderAddress = trace.RequiredString("from");
         var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
+        var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
 
@@ -161,10 +162,10 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             OpCode = trace.RequiredEvmOpCode("type"),
             InitiatorId = initiator.Id,
             SenderId = sender.Id,
-            SenderCodeHash = (sender as XEvmContract)?.CodeHash,
+            SenderCodeHash = ((senderEip7702Delegate ?? sender) as XEvmContract)?.CodeHash,
             Balance = trace.RequiredHexBigInteger("value"),
             Counter = parent.Counter,
-            GasUsed = trace.RequiredHexInt32("gasUsed") - SubcallsGasUsed(trace),
+            GasUsed = trace.RequiredHexInt32("gasUsed") - frameGasOffset - SubcallsGasUsed(trace, frameGasOffset),
             Status = status,
             Errors = status != OperationStatus.Applied
                 ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
@@ -398,7 +399,7 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         Cache.Chain.ReleaseOperationId();
     }
 
-    protected virtual (int GasUsed, int OwnGasUsed) GetGasUsed(JsonElement receipt, JsonElement trace)
+    protected virtual (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
     {
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
         return (gasUsed, gasUsed);

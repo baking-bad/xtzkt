@@ -14,8 +14,8 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
     {
         #region precompiles
         var nullAddress = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress) as XEvmAddress)!;
-        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAbi.json", state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, [], "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAbi.json", state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, [], "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
         #endregion
 
         #region amend empty traces

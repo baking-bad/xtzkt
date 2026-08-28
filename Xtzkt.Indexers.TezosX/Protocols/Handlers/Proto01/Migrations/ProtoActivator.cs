@@ -34,8 +34,8 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
         #endregion
 
         #region precompiles
-        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/NullAbi.json", null, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
+        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, [], "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/NullAbi.json", null, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, [], "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
         #endregion
     }
 

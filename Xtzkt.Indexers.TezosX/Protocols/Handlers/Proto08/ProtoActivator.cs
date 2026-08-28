@@ -40,16 +40,16 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #endregion
 
         #region precompiles
-        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/InternalForwarderAbi.json", null, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.Outbox, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/OutboxAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.TicketTable, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/TicketTableAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.GlobalCounter, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/GlobalCounterAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/SequencerUpdaterAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/MichelsonGatewayAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/AliasForwarderAbi.json", nullAddress, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/VerifyTezosSignatureAbi.json", nullAddress, state);
+        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/InternalForwarderAbi.json", null, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.Outbox, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/OutboxAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.TicketTable, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/TicketTableAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.GlobalCounter, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/GlobalCounterAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/SequencerUpdaterAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/MichelsonGatewayAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/AliasForwarderAbi.json", nullAddress, state);
+        Helpers.BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, [], "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/VerifyTezosSignatureAbi.json", nullAddress, state);
         #endregion
 
         #region bootstrap

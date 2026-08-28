@@ -7,10 +7,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
 partial class OriginationCommit(ProtocolHandler protocol) : Proto01.OriginationCommit(protocol)
 {
-    protected override (int GasUsed, int OwnGasUsed) GetGasUsed(JsonElement receipt, JsonElement trace)
+    protected override (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
     {
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
-        var ownGasUsed = gasUsed - SubcallsGasUsed(trace);
+        var ownGasUsed = gasUsed - SubcallsGasUsed(trace, frameGasOffset);
         return (gasUsed, ownGasUsed);
     }
 

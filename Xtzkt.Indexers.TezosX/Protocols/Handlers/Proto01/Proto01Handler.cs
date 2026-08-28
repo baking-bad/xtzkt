@@ -57,14 +57,14 @@ class Proto01Handler(
                 {
                     case EvmOperation eop when IsOrigination(eop):
                         {
-                            var op = await OriginationCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                            var op = await OriginationCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed, eop.FrameGasOffset);
                             await LogCommit.ApplyEvmLogs(op, eop.Logs);
                             parentOp = op;
                             break;
                         }
                     case EvmOperation eop:
                         {
-                            var op = await TransactionCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                            var op = await TransactionCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed, eop.FrameGasOffset);
                             await LogCommit.ApplyEvmLogs(op, eop.Logs);
                             parentOp = op;
                             break;
@@ -90,7 +90,7 @@ class Proto01Handler(
                                 case "CREATE":
                                 case "CREATE2":
                                     {
-                                        var op = await OriginationCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status, eiop.ParentStatus);
+                                        var op = await OriginationCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status, eiop.ParentStatus, eiop.FrameGasOffset);
                                         await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                                         break;
                                     }
@@ -101,7 +101,7 @@ class Proto01Handler(
                                 case "SELFDESTRUCT":
                                 case "SUICIDE":
                                     {
-                                        var op = await TransactionCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status);
+                                        var op = await TransactionCommit.ApplyInternalEvm(parentOp, eiop.Trace, eiop.Status, eiop.FrameGasOffset);
                                         await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                                         break;
                                     }

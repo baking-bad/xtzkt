@@ -16,13 +16,13 @@ class EvmRuntime : IEvmRuntime
 
     public string FaBridge => "0xff00000000000000000000000000000000000002";
 
-    public string Outbox => throw new NotImplementedException();
+    public string Outbox => "0xff00000000000000000000000000000000000003";
 
-    public string TicketTable => throw new NotImplementedException();
+    public string TicketTable => "0xff00000000000000000000000000000000000004";
 
-    public string GlobalCounter => throw new NotImplementedException();
+    public string GlobalCounter => "0xff00000000000000000000000000000000000005";
 
-    public string SequencerUpdater => throw new NotImplementedException();
+    public string SequencerUpdater => "0xff00000000000000000000000000000000000006";
 
     public string MichelsonGateway => throw new NotImplementedException();
 

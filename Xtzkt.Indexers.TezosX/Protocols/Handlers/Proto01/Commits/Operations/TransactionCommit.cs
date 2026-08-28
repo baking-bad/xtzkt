@@ -12,7 +12,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
+    public async Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
     {
         // legacy transactions carry no chain id at all, only the typed ones do
         if (tx.OptionalString("chainId") is string chainId && chainId != Cache.Chain.Get().ChainId)
@@ -28,7 +28,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
-        var (gasUsed, ownGasUsed) = GetGasUsed(receipt, trace);
+        var (gasUsed, ownGasUsed) = GetRootGasUsed(receipt, trace, frameGasOffset);
         var fee = effectiveGasPrice * gasUsed;
         var status = receipt.RequiredEvmOpStatus("status");
         var input = GetInput(tx, trace);
@@ -37,7 +37,6 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var daFee = BigInteger.Zero;
         if (!isDelayedOp)
         {
-            // the authorization list term is not charged in this era, EIP7702 arrives with Ebisu
             var size = 150
                 + tx.RequiredHexBytes("input").Length
                 + (tx.OptionalArray("accessList")?.EnumerateArray().Sum(x => 20 + 32 * x.RequiredArray("storageKeys").Count()) ?? 0);
@@ -78,17 +77,23 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Errors = status != OperationStatus.Applied ? GetError(trace) : null,
         };
 
+        // the authorization list is processed after the sender's nonce is incremented, but before the execution,
+        // delegations are also not rolled back if the transaction fails (EIP7702)
         Db.TryAttach(sender);
         sender.Counter = op.Counter;
 
-        op.TargetCodeHash = (target as XEvmContract)?.CodeHash;
+        if (op.OpType == EvmOpType.SetCode)
+            await new Eip7702DelegationCommit(Proto).Apply(op, sender, tx.RequiredArray("authorizationList"));
+
+        var targetEip7702Delegate = await GetEip7702Delegate(target);
+        op.TargetCodeHash = ((targetEip7702Delegate ?? target) as XEvmContract)?.CodeHash;
 
         var (entrypoint, paramsJson, paramsGuessed) = input != null
-            ? await ParseParameters(target, input)
+            ? await ParseParameters(targetEip7702Delegate ?? target, input)
             : (null, null, null);
 
         var (resultJson, resultGuessed) = status == OperationStatus.Applied && input != null && output != null
-            ? await ParseResult(target, input, output)
+            ? await ParseResult(targetEip7702Delegate ?? target, input, output)
             : (null, null);
 
         op.Entrypoint = entrypoint;
@@ -123,7 +128,18 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             if (op.OpCode != EvmOpCode.CallCode &&
                 op.OpCode != EvmOpCode.DelegateCall)
             {
-                TransferAmount(sender, target, op.Amount);
+                Spend(sender, op.Amount);
+                if (!IsBurnTarget(target))
+                {
+                    Receive(target, op.Amount);
+
+                    if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
+                        Context.Statistics.TotalBanished += op.Amount;
+                }
+                else
+                {
+                    Context.Statistics.TotalBurned += op.Amount;
+                }
             }
         }
         #endregion
@@ -134,7 +150,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         return op;
     }
 
-    public async Task<XEvmTransactionOperation> ApplyInternalEvm(IParentOperation parent, JsonElement trace, OperationStatus traceStatus)
+    public async Task<XEvmTransactionOperation> ApplyInternalEvm(IParentOperation parent, JsonElement trace, OperationStatus traceStatus, int frameGasOffset)
     {
         #region init
         var block = Context.Block;
@@ -142,20 +158,22 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         var senderAddress = trace.RequiredString("from");
         var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
+        var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
         var targetAddress = trace.RequiredString("to");
         var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
+        var targetEip7702Delegate = await GetEip7702Delegate(target);
 
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
         var input = trace.OptionalHexBytes("input") is byte[] _input && _input.Length > 0 ? _input : null;
         var output = trace.OptionalHexBytes("output") is byte[] _output && _output.Length > 0 ? _output : null;
 
         var (entrypoint, paramsJson, paramsGuessed) = input != null
-            ? await ParseParameters(target, input)
+            ? await ParseParameters(targetEip7702Delegate ?? target, input)
             : (null, null, null);
 
         var (resultJson, resultGuessed) = status == OperationStatus.Applied && input != null && output != null
-            ? await ParseResult(target, input, output)
+            ? await ParseResult(targetEip7702Delegate ?? target, input, output)
             : (null, null);
 
         var op = new XEvmTransactionOperation
@@ -169,9 +187,9 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             OpCode = trace.RequiredEvmOpCode("type"),
             InitiatorId = initiator.Id,
             SenderId = sender.Id,
-            SenderCodeHash = (sender as XEvmContract)?.CodeHash,
+            SenderCodeHash = ((senderEip7702Delegate ?? sender) as XEvmContract)?.CodeHash,
             TargetId = target.Id,
-            TargetCodeHash = (target as XEvmContract)?.CodeHash,
+            TargetCodeHash = ((targetEip7702Delegate ?? target) as XEvmContract)?.CodeHash,
             Input = input,
             Output = output,
             Entrypoint = entrypoint,
@@ -180,7 +198,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Guessed = Guessed(paramsGuessed, resultGuessed),
             Amount = trace.RequiredHexBigInteger("value"),
             Counter = parent.Counter,
-            GasUsed = trace.RequiredHexInt32("gasUsed") - SubcallsGasUsed(trace),
+            GasUsed = trace.RequiredHexInt32("gasUsed") - frameGasOffset - SubcallsGasUsed(trace, frameGasOffset),
             Status = status,
             Errors = status != OperationStatus.Applied
                 ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
@@ -221,13 +239,17 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 Spend(sender, op.Amount);
                 if (!(op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide && op.SenderId == op.TargetId))
                 {
-                    if (target.Hash != EvmRuntime.XtzBridge)
+                    if (!IsBurnTarget(target))
+                    {
                         Receive(target, op.Amount);
 
-                    if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
-                        Context.Statistics.TotalBanished += op.Amount;
-                    else if (target.Hash == EvmRuntime.XtzBridge)
+                        if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
+                            Context.Statistics.TotalBanished += op.Amount;
+                    }
+                    else
+                    {
                         Context.Statistics.TotalBurned += op.Amount;
+                    }
                 }
                 else
                 {
@@ -259,12 +281,17 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             if (op.OpCode != EvmOpCode.CallCode &&
                 op.OpCode != EvmOpCode.DelegateCall)
             {
-                RevertTransferAmount(sender, target, op.Amount);
+                RevertSpend(sender, op.Amount);
+                if (!IsBurnTarget(target))
+                    RevertReceive(target, op.Amount);
             }
         }
         #endregion
 
         #region revert operation
+        if (op.Eip7702DelegationCount > 0)
+            await new Eip7702DelegationCommit(Proto).Revert(op);
+
         RevertPayFee(sender, op.DaFee);
         RevertBurnFee(sender, op.GasFee);
         sender.Counter = op.Counter - 1;
@@ -308,7 +335,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             {
                 RevertSpend(sender, op.Amount);
                 if (!(op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide && op.SenderId == op.TargetId))
-                    if (target.Hash != EvmRuntime.XtzBridge)
+                    if (!IsBurnTarget(target))
                         RevertReceive(target, op.Amount);
             }
         }
@@ -419,7 +446,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         return paramsGuessed.Value && resultGuessed.Value;
     }
 
-    protected virtual (int GasUsed, int OwnGasUsed) GetGasUsed(JsonElement receipt, JsonElement trace)
+    protected virtual (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
     {
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
         return (gasUsed, gasUsed);
@@ -445,18 +472,8 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         return null;
     }
 
-    protected virtual void TransferAmount(XEvmUser sender, XEvmAddress target, BigInteger amount)
+    protected virtual bool IsBurnTarget(XEvmAddress target)
     {
-        Spend(sender, amount);
-        Receive(target, amount);
-
-        if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
-            Context.Statistics.TotalBanished += amount;
-    }
-
-    protected virtual void RevertTransferAmount(XEvmUser sender, XEvmAddress target, BigInteger amount)
-    {
-        RevertSpend(sender, amount);
-        RevertReceive(target, amount);
+        return false;
     }
 }

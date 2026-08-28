@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
@@ -8,10 +7,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
 partial class TransactionCommit(ProtocolHandler protocol) : Proto01.TransactionCommit(protocol)
 {
-    protected override (int GasUsed, int OwnGasUsed) GetGasUsed(JsonElement receipt, JsonElement trace)
+    protected override (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
     {
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
-        var ownGasUsed = gasUsed - SubcallsGasUsed(trace);
+        var ownGasUsed = gasUsed - SubcallsGasUsed(trace, frameGasOffset);
         return (gasUsed, ownGasUsed);
     }
 
@@ -35,22 +34,8 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01.TransactionC
         return trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error");
     }
 
-    protected override void TransferAmount(XEvmUser sender, XEvmAddress target, BigInteger amount)
+    protected override bool IsBurnTarget(XEvmAddress target)
     {
-        Spend(sender, amount);
-        if (target.Hash != EvmRuntime.XtzBridge)
-            Receive(target, amount);
-
-        if (target.Hash == EvmRuntime.NullAddress || target.Hash == EvmRuntime.DeadAddress)
-            Context.Statistics.TotalBanished += amount;
-        else if (target.Hash == EvmRuntime.XtzBridge)
-            Context.Statistics.TotalBurned += amount;
-    }
-
-    protected override void RevertTransferAmount(XEvmUser sender, XEvmAddress target, BigInteger amount)
-    {
-        RevertSpend(sender, amount);
-        if (target.Hash != EvmRuntime.XtzBridge)
-            RevertReceive(target, amount);
+        return target.Hash == EvmRuntime.XtzBridge;
     }
 }

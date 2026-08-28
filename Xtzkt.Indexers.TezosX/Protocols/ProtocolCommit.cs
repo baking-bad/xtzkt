@@ -181,9 +181,10 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             return null;
         }
 
-        protected static int SubcallsGasUsed(JsonElement trace)
+        protected static int SubcallsGasUsed(JsonElement trace, int frameGasOffset = 0)
         {
-            return trace.OptionalArray("calls")?.EnumerateArray().Sum(x => x.RequiredHexInt32("gasUsed")) ?? 0;
+            return trace.OptionalArray("calls")?.EnumerateArray()
+                .Sum(x => x.RequiredHexInt32("gasUsed") - frameGasOffset) ?? 0;
         }
 
         protected int GetGasLimit(JsonElement tx)

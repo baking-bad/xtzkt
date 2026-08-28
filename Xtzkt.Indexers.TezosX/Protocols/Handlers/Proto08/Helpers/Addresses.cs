@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
@@ -173,6 +174,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 await UnbindAliases(alias);
 
             owner.AliasesCount--;
+            owner.LastLevel = Context.Block.Level;
+            owner.LastTimestamp = Context.Block.Timestamp;
 
             Cache.Chain.ReleaseAddressId();
             Cache.Addresses.Remove(alias);
@@ -643,6 +646,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 await UnbindAliases(alias);
 
             owner.AliasesCount--;
+            owner.LastLevel = Context.Block.Level;
+            owner.LastTimestamp = Context.Block.Timestamp;
 
             Cache.Chain.ReleaseAddressId();
             Cache.Addresses.Remove(alias);
@@ -813,8 +818,11 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
         #endregion
 
         #region migrations
-        public XEvmContract BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
+        public XEvmContract BootstrapEvmPrecompile(string address, byte[] code, string abiPath, XAddress? creator, XChain state)
         {
+            var codeHash = EvmScript.GetHash(code);
+            SolidityMetadata.TryRead(code, out var metadata);
+
             var id = Cache.Chain.NextAddressId();
             var contract = new XEvmContract
             {
@@ -829,10 +837,21 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 Tags = XEvmContractTags.None,
                 CreatorId = creator?.Id ?? id,
                 Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
+                CodeHash = codeHash,
+                TypeHash = codeHash,
             };
 
-            Db.TryAttach(creator ?? contract);
-            (creator ?? contract).ContractsCount++;
+            if (creator != null)
+            {
+                Db.TryAttach(creator);
+                creator.ContractsCount++;
+                creator.LastLevel = Context.Block.Level;
+                creator.LastTimestamp = Context.Block.Timestamp;
+            }
+            else
+            {
+                contract.ContractsCount++;
+            }
 
             Context.Block.Events |= XBlockEvents.NewAddresses;
 
@@ -845,7 +864,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 ChainId = state.Id,
                 ContractId = contract.Id,
                 Level = Context.Block.Level,
-                Code = [],
+                Code = code,
+                CodeHash = codeHash,
+                TypeHash = codeHash,
+                SolidityMetadataBzzr0 = metadata?.Bzzr0,
+                SolidityMetadataBzzr1 = metadata?.Bzzr1,
+                SolidityMetadataExperimental = metadata?.Experimental,
+                SolidityMetadataIpfs = metadata?.IpfsCid,
+                SolidityMetadataSolc = metadata?.SolcVersion,
                 Current = true,
                 AbiJson = File.ReadAllText(abiPath),
             };
@@ -890,6 +916,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 .FirstAsync(x => x.Id == contract.CreatorId);
 
             creator.ContractsCount--;
+            creator.LastLevel = Context.Block.Level;
+            creator.LastTimestamp = Context.Block.Timestamp;
 
             Cache.Chain.ReleaseAddressId();
             Cache.Addresses.Remove(contract);
@@ -908,12 +936,15 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 .ExecuteDeleteAsync();
         }
 
-        public async Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state)
+        public async Task<XEvmContract> UpgradeEvmPrecompile(string address, byte[] code, string abiPath, XChain state)
         {
             var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
 
             var oldScript = (await Db.Scripts.FirstAsync(x => x.ContractId == contract.Id && x.Current) as EvmScript)!;
             oldScript.Current = false;
+
+            var codeHash = EvmScript.GetHash(code);
+            SolidityMetadata.TryRead(code, out var metadata);
 
             var newScript = new EvmScript
             {
@@ -921,14 +952,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
                 ChainId = contract.ChainId,
                 ContractId = contract.Id,
                 Level = Context.Block.Level,
-                Code = oldScript.Code,
-                CodeHash = oldScript.CodeHash,
-                TypeHash = oldScript.TypeHash,
-                SolidityMetadataBzzr0 = oldScript.SolidityMetadataBzzr0,
-                SolidityMetadataBzzr1 = oldScript.SolidityMetadataBzzr1,
-                SolidityMetadataExperimental = oldScript.SolidityMetadataExperimental,
-                SolidityMetadataIpfs = oldScript.SolidityMetadataIpfs,
-                SolidityMetadataSolc = oldScript.SolidityMetadataSolc,
+                Code = code,
+                CodeHash = codeHash,
+                TypeHash = codeHash,
+                SolidityMetadataBzzr0 = metadata?.Bzzr0,
+                SolidityMetadataBzzr1 = metadata?.Bzzr1,
+                SolidityMetadataExperimental = metadata?.Experimental,
+                SolidityMetadataIpfs = metadata?.IpfsCid,
+                SolidityMetadataSolc = metadata?.SolcVersion,
                 AbiJson = File.ReadAllText(abiPath),
                 Current = true,
             };
@@ -950,7 +981,11 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto08.Helpers
             newScript.MigrationId = migration.Id;
 
             Db.TryAttach(contract);
+            contract.CodeHash = codeHash;
+            contract.TypeHash = codeHash;
             contract.MigrationsCount++;
+            contract.LastLevel = Context.Block.Level;
+            contract.LastTimestamp = Context.Block.Timestamp;
 
             state.MigrationOpsCount++;
 
