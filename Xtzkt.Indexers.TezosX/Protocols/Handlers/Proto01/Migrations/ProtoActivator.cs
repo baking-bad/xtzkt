@@ -9,7 +9,32 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
 {
     public async Task ActivateEvmContext(XChain state)
     {
-        #region protocol
+        await ActivateEvmProtocol(state);
+        await ActivateEvmPrecompiles(state);
+        await ActivateEvmTestAccounts(state);
+    }
+
+    public async Task DeactivateEvmContext(XChain state)
+    {
+        await DeactivateEvmTestAccounts(state);
+        await DeactivateEvmPrecompiles(state);
+        await DeactivateEvmProtocol(state);
+    }
+
+    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
+    {
+        // there was no Michelson runtime in old protocols
+        throw new NotImplementedException();
+    }
+
+    public Task DeactivateMichelsonContext(XChain state)
+    {
+        // there was no Michelson runtime in old protocols
+        throw new NotImplementedException();
+    }
+
+    async Task ActivateEvmProtocol(XChain state)
+    {
         var protocol = new XProtocol
         {
             Id = Cache.Chain.NextProtocolId(),
@@ -31,40 +56,58 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
 
         Cache.Protocols.Add(protocol);
         Db.Protocols.Add(protocol);
-        #endregion
-
-        #region precompiles
-        var nullAddress = Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, [], "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/NullAbi.json", null, state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, [], "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/XtzBridgeAbi.json", nullAddress, state);
-        #endregion
     }
 
-    public async Task DeactivateEvmContext(XChain state)
+    async Task DeactivateEvmProtocol(XChain state)
     {
-        #region precompiles
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.XtzBridge, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.NullAddress, state);
-        #endregion
-
-        #region protocol
         await Db.Protocols
             .Where(x => x.ChainId == state.Id && x.Hash == state.Kernel)
             .ExecuteDeleteAsync();
 
         Cache.Chain.ReleaseProtocolId();
         await Cache.Protocols.ResetAsync();
-        #endregion
     }
 
-    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
+    public const string NullAddressAbi = "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/NullAddressAbi.json";
+    public const string XtzBridgeAbi = "Protocols/Handlers/Proto01/Runtimes/Evm/Precompiles/XtzBridgeAbi.json";
+
+    protected virtual List<(string Address, string AbiPath)> EvmPrecompiles => [
+        (EvmRuntime.NullAddress, NullAddressAbi),
+        (EvmRuntime.XtzBridge,   XtzBridgeAbi),
+    ];
+
+    async Task ActivateEvmPrecompiles(XChain state)
     {
-        // there was no Michelson runtime in old protocols
-        throw new NotImplementedException();
+        var precompiles = EvmPrecompiles;
+        var nullAddress = await Helpers.BootstrapEvmPrecompile(precompiles[0].Address, precompiles[0].AbiPath, null, state);
+        for (int i = 1; i < precompiles.Count; i++)
+            await Helpers.BootstrapEvmPrecompile(precompiles[i].Address, precompiles[i].AbiPath, nullAddress, state);
     }
 
-    public Task DeactivateMichelsonContext(XChain state)
+    async Task DeactivateEvmPrecompiles(XChain state)
     {
-        // there was no Michelson runtime in old protocols
-        throw new NotImplementedException();
+        var precompiles = EvmPrecompiles;
+        for (int i = precompiles.Count - 1; i >= 0; i--)
+            await Helpers.RemoveEvmPrecompile(precompiles[i].Address, state);
+    }
+
+    static List<string> EvmTestAccounts => [
+        "0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c",
+        "0xb53dc01974176e5dff2298c5a94343c2585e3c54",
+        "0x9b49c988b5817be31dfb00f7a5a4671772dcce2b",
+    ];
+
+    async Task ActivateEvmTestAccounts(XChain state)
+    {
+        var accounts = EvmTestAccounts;
+        for (int i = 0; i < accounts.Count; i++)
+            await Helpers.BootstrapEvmUser(accounts[i], state);
+    }
+
+    async Task DeactivateEvmTestAccounts(XChain state)
+    {
+        var accounts = EvmTestAccounts;
+        for (int i = accounts.Count - 1; i >= 0; i--)
+            await Helpers.RemoveEvmUser(accounts[i], state);
     }
 }

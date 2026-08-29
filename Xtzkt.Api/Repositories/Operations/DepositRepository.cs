@@ -68,6 +68,7 @@ public class DepositRepository(
                     case "proxy":          columns.Add(@"""ProxyId"""); break;
                     case "depositId":      columns.Add(@"""DepositId"""); break;
                     case "claimTransactionId": columns.Add(@"""ClaimTransactionId"""); break;
+                    case "gasUsed":        columns.Add(@"""GasUsed"""); break;
                     case "logsCount":      columns.Add(@"""LogsCount"""); break;
                     case "bridgeTicketTransfers": columns.Add(@"""BridgeTicketTransfers"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
@@ -172,6 +173,7 @@ public class DepositRepository(
                     Proxy = _addressCache.GetInfo((int?)row.ProxyId),
                     DepositId = row.DepositId,
                     ClaimTransactionId = row.ClaimTransactionId,
+                    GasUsed = row.GasUsed,
                     LogsCount = row.LogsCount,
                     BridgeTicketTransfers = row.BridgeTicketTransfers,
                 },
@@ -278,6 +280,9 @@ public class DepositRepository(
                     break;
                 case "claimTransactionId":
                     foreach (var row in rows) result[j++][i] = row.ClaimTransactionId?.ToString();
+                    break;
+                case "gasUsed":
+                    foreach (var row in rows) result[j++][i] = row.GasUsed;
                     break;
                 case "logsCount":
                     foreach (var row in rows) result[j++][i] = row.LogsCount;

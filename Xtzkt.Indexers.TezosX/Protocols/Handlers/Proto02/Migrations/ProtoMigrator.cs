@@ -13,9 +13,10 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
     protected override async Task ApplyMigrations(XChain state, MetaBlock block)
     {
         #region precompiles
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, ProtoActivator.NullAddressAbi, state);
+
         var nullAddress = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress) as XEvmAddress)!;
-        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, [], "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAbi.json", state);
-        Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, [], "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json", nullAddress, state);
+        await Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, ProtoActivator.FaBridgeAbi, nullAddress, state);
         #endregion
 
         #region amend empty traces
@@ -163,6 +164,7 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
 
     protected override Task RevertMigrations(XChain state)
     {
+        // not worth implementing it
         throw new NotImplementedException();
     }
 }

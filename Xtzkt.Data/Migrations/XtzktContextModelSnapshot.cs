@@ -5091,6 +5091,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<BigInteger?>("DepositId")
                         .HasColumnType("numeric");
 
+                    b.Property<int>("GasUsed")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("LogsCount")
                         .HasColumnType("integer");
 
@@ -5695,37 +5698,24 @@ namespace Xtzkt.Data.Migrations
                     b.HasBaseType("Xtzkt.Data.Models.Statistics");
 
                     b.Property<BigInteger>("TotalBanished")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("TotalBanished18");
 
                     b.Property<BigInteger>("TotalBootstrapped")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("TotalBootstrapped18");
 
                     b.Property<BigInteger>("TotalBurned")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("TotalBurned18");
 
                     b.Property<BigInteger>("TotalCreated")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("TotalCreated18");
 
                     b.Property<BigInteger>("TotalLost")
-                        .HasColumnType("numeric");
-
-                    b.ToTable("Statistics", t =>
-                        {
-                            t.Property("TotalBanished")
-                                .HasColumnName("TotalBanished18");
-
-                            t.Property("TotalBootstrapped")
-                                .HasColumnName("TotalBootstrapped18");
-
-                            t.Property("TotalBurned")
-                                .HasColumnName("TotalBurned18");
-
-                            t.Property("TotalCreated")
-                                .HasColumnName("TotalCreated18");
-
-                            t.Property("TotalLost")
-                                .HasColumnName("TotalLost18");
-                        });
+                        .HasColumnType("numeric")
+                        .HasColumnName("TotalLost18");
 
                     b.HasDiscriminator().HasValue(1);
                 });

@@ -7,6 +7,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
+// Calypso, kernel 3.1
 class Proto04Handler(
     EvmNode evmRpc,
     XtzktContext db,

@@ -1,4 +1,6 @@
-﻿using Xtzkt.Data.Models;
+﻿using System.Numerics;
+using System.Text.Json;
+using Xtzkt.Data.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
@@ -6,6 +8,11 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
 public interface IHelpers
 {
     Task<MetaBlock> GetMetaBlock(int level);
+
+    #region fees
+    BigInteger GetDaFee(JsonElement tx, bool isDelayedOp);
+    BigInteger GetGasFee(BigInteger effectiveGasPrice, int gasUsed, BigInteger daFee);
+    #endregion
 
     #region addresses
     Task<XEvmAddress> GetOrCreateXEvmAddress(string hash);
@@ -37,9 +44,10 @@ public interface IHelpers
     Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator);
     Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator);
 
-    XEvmContract BootstrapEvmPrecompile(string address, byte[] code, string abiPath, XAddress? creator, XChain state);
+    Task<XEvmContract> BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state);
     Task RemoveEvmPrecompile(string address, XChain state);
-    Task<XEvmContract> UpgradeEvmPrecompile(string address, byte[] code, string abiPath, XChain state);
+    Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state);
+    Task DowngradeEvmPrecompile(string address, XChain state);
     Task BootstrapEvmUser(string address, XChain state);
     Task RemoveEvmUser(string address, XChain state);
     #endregion

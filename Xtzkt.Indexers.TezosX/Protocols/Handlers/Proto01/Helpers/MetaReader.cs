@@ -32,8 +32,8 @@ partial class ProtoHelpers
             {
                 case EvmOperation op:
                     var delayedDeposit = context.DelayedOps.FirstOrDefault(x => x.Hash == op.Batch.Hash);
-                    if ((delayedDeposit is DelayedXtzDeposit or DelayedFaDeposit) != (op.From == EvmRuntime.NullAddress))
-                        throw new Exception($"Operation {op.Batch.Hash} is a delayed deposit, but wasn't sent by the kernel, or vice versa");
+                    if (delayedDeposit is DelayedXtzDeposit or DelayedFaDeposit && op.From != ExpectedDepositSender(delayedDeposit))
+                        throw new Exception($"Delayed deposit {op.Batch.Hash} wasn't sent by the kernel");
 
                     if (delayedDeposit is DelayedXtzDeposit xtzDeposit)
                     {
@@ -52,8 +52,10 @@ partial class ProtoHelpers
                             op.Tx.RequiredString("to") != ExpectedFaDepositTarget(faDeposit))
                             throw new Exception($"Delayed fa deposit {op.Batch.Hash} doesn't match its pseudo transaction");
 
-                        dest.Operations.Add(CreateFaDeposit(op, faDeposit));
+                        var faDepositOp = CreateFaDeposit(op, faDeposit);
+                        dest.Operations.Add(faDepositOp);
                         queue.Dequeue();
+                        DrainBridgeCalls(queue, faDepositOp);
                         break;
                     }
 
@@ -70,9 +72,18 @@ partial class ProtoHelpers
         }
     }
 
+    protected virtual string ExpectedDepositSender(DelayedOperation deposit)
+    {
+        return EvmRuntime.NullAddress;
+    }
+
     protected virtual string ExpectedFaDepositTarget(DelayedFaDeposit faDeposit)
     {
         return faDeposit.Proxy ?? faDeposit.Receiver;
+    }
+
+    protected virtual void DrainBridgeCalls(Queue<MetaContent> queue, EvmDeposit deposit)
+    {
     }
 
     protected virtual EvmDeposit CreateFaDeposit(EvmOperation feederCall, DelayedFaDeposit faDeposit)

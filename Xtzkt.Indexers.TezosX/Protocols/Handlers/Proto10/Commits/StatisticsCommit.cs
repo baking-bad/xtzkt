@@ -1,0 +1,35 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Extensions;
+
+namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
+
+class StatisticsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
+{
+    public virtual async Task Apply()
+    {
+        if (Cache.Statistics.CurrentOr is XStatistics prev)
+        {
+            var timestamp = Context.Block.Timestamp;
+            var prevTimestamp = (await Cache.Blocks.GetAsync(prev.Level)).Timestamp;
+            if (timestamp.Ticks / (10_000_000L * 3600 * 24) != prevTimestamp.Ticks / (10_000_000L * 3600 * 24))
+            {
+                if (!Batch.Contains(prev))
+                    Db.TryAttach(prev);
+
+                prev.Date = prevTimestamp.Date;
+            }
+        }
+
+        Cache.Statistics.SetCurrent(Context.Statistics);
+        Batch.Statistics.Add(Context.Statistics);
+    }
+
+    public virtual async Task Revert()
+    {
+        await Cache.Statistics.ResetAsync();
+        await Db.Statistics
+            .Where(x => x.ChainId == Context.Block.ChainId && x.Level == Context.Block.Level)
+            .ExecuteDeleteAsync();
+    }
+}

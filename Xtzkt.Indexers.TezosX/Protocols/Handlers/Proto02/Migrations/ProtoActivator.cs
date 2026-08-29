@@ -1,31 +1,13 @@
-﻿using Xtzkt.Data.Models;
-using Xtzkt.Indexers.TezosX.Protocols.Models;
-
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
+class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
 {
-    public Task ActivateEvmContext(XChain state)
-    {
-        // activation logic for old protocols isn't really needed
-        throw new NotImplementedException();
-    }
+    public new const string NullAddressAbi = "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/NullAddressAbi.json";
+    public const string FaBridgeAbi = "Protocols/Handlers/Proto02/Runtimes/Evm/Precompiles/FaBridgeAbi.json";
 
-    public Task DeactivateEvmContext(XChain state)
-    {
-        // deactivation logic for old protocols isn't really needed
-        throw new NotImplementedException();
-    }
-
-    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
-    {
-        // activation logic for old protocols isn't really needed
-        throw new NotImplementedException();
-    }
-
-    public Task DeactivateMichelsonContext(XChain state)
-    {
-        // deactivation logic for old protocols isn't really needed
-        throw new NotImplementedException();
-    }
+    protected override List<(string Address, string AbiPath)> EvmPrecompiles => [
+        (EvmRuntime.NullAddress, NullAddressAbi),
+        (EvmRuntime.XtzBridge,   Proto01.ProtoActivator.XtzBridgeAbi),
+        (EvmRuntime.FaBridge,    FaBridgeAbi),
+    ];
 }

@@ -46,6 +46,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
         if (stream.Read() is not RlpList rlp || stream.CanRead)
             throw new FormatException("Invalid delayed xtz deposit rlp");
 
+        // TODO: from Farfadet 6.0 the receiver may be an RlpList `[1, 22-byte tezos contract]` (DepositReceiver::Tezos) — this will throw on it
         if (rlp is [RlpItem e0, RlpItem e1, RlpItem e2, RlpItem e3])
         {
             return new DelayedXtzDeposit

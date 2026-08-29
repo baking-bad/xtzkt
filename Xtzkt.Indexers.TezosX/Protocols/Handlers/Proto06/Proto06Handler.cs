@@ -7,6 +7,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
+// Ebisu, kernel 5.0
 class Proto06Handler(
     EvmNode evmRpc,
     XtzktContext db,
@@ -18,6 +19,7 @@ class Proto06Handler(
 {
     public override int Version => 6;
     public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
+    protected override IActivator Activator => new ProtoActivator(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
 
     protected override Proto01.TransactionCommit TransactionCommit => new TransactionCommit(this);

@@ -8,6 +8,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
+// Bifrost, kernel 2.0
 class Proto02Handler(
     EvmNode evmRpc,
     XtzktContext db,

@@ -7,6 +7,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
+// Dionysus, kernels 4.0 - 4.1
 class Proto05Handler(
     EvmNode evmRpc,
     XtzktContext db,

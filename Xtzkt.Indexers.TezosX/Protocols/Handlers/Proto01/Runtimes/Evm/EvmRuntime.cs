@@ -36,7 +36,7 @@ class EvmRuntime : IEvmRuntime
 
     public string TezosXCaller => throw new NotImplementedException();
 
-    public string DepositOrigin => throw new NotImplementedException();
+    public string DepositOrigin => "0x000000000000000000000000000000000000feed";
     #endregion
 
     #region known topics

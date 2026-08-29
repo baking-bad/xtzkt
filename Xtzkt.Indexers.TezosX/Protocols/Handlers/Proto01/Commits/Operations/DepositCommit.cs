@@ -42,10 +42,10 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             TicketHash = ticketHash,
             ProxyId = proxy?.Id,
             DepositId = GetDepositId(feederReceipt),
+            GasUsed = feederReceipt.RequiredHexInt32("gasUsed"),
 
             #region crutch for nested proxy calls in old etherlink
             SenderId = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress)).Id,
-            GasUsed = 0,
             Counter = 0,
             InternalOperations = null,
             #endregion

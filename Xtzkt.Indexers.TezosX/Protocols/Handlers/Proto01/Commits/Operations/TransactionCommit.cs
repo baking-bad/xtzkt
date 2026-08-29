@@ -29,21 +29,12 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
         var (gasUsed, ownGasUsed) = GetRootGasUsed(receipt, trace, frameGasOffset);
-        var fee = effectiveGasPrice * gasUsed;
         var status = receipt.RequiredEvmOpStatus("status");
         var input = GetInput(tx, trace);
         var output = GetOutput(trace);
 
-        var daFee = BigInteger.Zero;
-        if (!isDelayedOp)
-        {
-            var size = 150
-                + tx.RequiredHexBytes("input").Length
-                + (tx.OptionalArray("accessList")?.EnumerateArray().Sum(x => 20 + 32 * x.RequiredArray("storageKeys").Count()) ?? 0);
-
-            daFee = size * Context.Protocol.DaFeePerByte18;
-        }
-        var gasFee = fee - daFee;
+        var daFee = Helpers.GetDaFee(tx, isDelayedOp);
+        var gasFee = Helpers.GetGasFee(effectiveGasPrice, gasUsed, daFee);
 
         var op = new XEvmTransactionOperation
         {

@@ -338,8 +338,13 @@ partial class ProtoHelpers
     #endregion
 
     #region migrations
-    public XEvmContract BootstrapEvmPrecompile(string address, byte[] code, string abiPath, XAddress? creator, XChain state)
+    public async Task<XEvmContract> BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
     {
+        if (await Cache.Addresses.GetOrDefaultAsync(address) != null)
+            throw new Exception($"Precompile {address} already exists as a regular address, bootstrap logic must be adjusted.");
+
+        var code = (await EvmRpc.GetCode(address, Context.Block.Level)).RequiredHexBytes();
+
         var codeHash = EvmScript.GetHash(code);
         SolidityMetadata.TryRead(code, out var metadata);
 
@@ -456,8 +461,10 @@ partial class ProtoHelpers
             .ExecuteDeleteAsync();
     }
 
-    public async Task<XEvmContract> UpgradeEvmPrecompile(string address, byte[] code, string abiPath, XChain state)
+    public async Task<XEvmContract> UpgradeEvmPrecompile(string address, string abiPath, XChain state)
     {
+        var code = (await EvmRpc.GetCode(address, Context.Block.Level)).RequiredHexBytes();
+
         var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
 
         var oldScript = (await Db.Scripts.FirstAsync(x => x.ContractId == contract.Id && x.Current) as EvmScript)!;
@@ -515,6 +522,39 @@ partial class ProtoHelpers
         Db.MigrationOps.Add(migration);
 
         return contract;
+    }
+
+    public async Task DowngradeEvmPrecompile(string address, XChain state)
+    {
+        var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
+
+        var scripts = await Db.Scripts
+            .Where(x => x.ContractId == contract.Id)
+            .OrderByDescending(x => x.Id)
+            .Take(2)
+            .ToListAsync();
+
+        var newScript = (scripts[0] as EvmScript)!;
+        var oldScript = (scripts[1] as EvmScript)!;
+
+        oldScript.Current = true;
+        Cache.Abi.Add(contract, oldScript.AbiJson is string abiJson ? Abi.FromJson(abiJson) : null);
+
+        Db.TryAttach(contract);
+        contract.CodeHash = oldScript.CodeHash;
+        contract.TypeHash = oldScript.TypeHash;
+        contract.MigrationsCount--;
+        contract.LastLevel = Context.Block.Level;
+        contract.LastTimestamp = Context.Block.Timestamp;
+
+        Cache.Chain.ReleaseScriptId();
+        Db.Scripts.Remove(newScript);
+
+        state.MigrationOpsCount--;
+        Cache.Chain.ReleaseOperationId();
+        await Db.MigrationOps
+            .Where(x => x.Id == newScript.MigrationId)
+            .ExecuteDeleteAsync();
     }
 
     public async Task BootstrapEvmUser(string address, XChain state)

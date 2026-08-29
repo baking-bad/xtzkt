@@ -871,6 +871,7 @@ namespace Xtzkt.Data.Migrations
                     SubsCounter = table.Column<int>(type: "integer", nullable: true),
                     LogsCount = table.Column<int>(type: "integer", nullable: true),
                     BridgeTicketTransfers = table.Column<int>(type: "integer", nullable: true),
+                    GasUsed = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
