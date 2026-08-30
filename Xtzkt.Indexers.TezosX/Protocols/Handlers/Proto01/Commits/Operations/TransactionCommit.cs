@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Exceptions;
@@ -15,8 +13,8 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     public async Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
     {
         // legacy transactions carry no chain id at all, only the typed ones do
-        if (tx.OptionalString("chainId") is string chainId && chainId != Cache.Chain.Get().ChainId)
-            throw new ValidationException("Invalid chainId");
+        if ((tx.OptionalString("chain_id") ?? tx.OptionalString("chainId")) is string chainId && chainId != Cache.Chain.Get().ChainId)
+            throw new ValidationException("Invalid chain id");
 
         #region init
         var block = Context.Block;
@@ -228,7 +226,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 op.OpCode != EvmOpCode.DelegateCall)
             {
                 Spend(sender, op.Amount);
-                if (!(op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide && op.SenderId == op.TargetId))
+                if (!IsSelfDestructWithBurn(op))
                 {
                     if (!IsBurnTarget(target))
                     {
@@ -325,7 +323,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 op.OpCode != EvmOpCode.DelegateCall)
             {
                 RevertSpend(sender, op.Amount);
-                if (!(op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide && op.SenderId == op.TargetId))
+                if (!IsSelfDestructWithBurn(op))
                     if (!IsBurnTarget(target))
                         RevertReceive(target, op.Amount);
             }
@@ -461,6 +459,13 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     protected virtual string? GetError(JsonElement trace)
     {
         return null;
+    }
+
+    protected virtual bool IsSelfDestructWithBurn(XEvmTransactionOperation op)
+    {
+        return op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide
+            && op.SenderId == op.TargetId
+            && op.Amount != 0;
     }
 
     protected virtual bool IsBurnTarget(XEvmAddress target)

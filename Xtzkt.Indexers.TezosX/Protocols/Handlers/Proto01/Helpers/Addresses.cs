@@ -87,23 +87,23 @@ partial class ProtoHelpers
     #endregion
 
     #region evm alias
-    public async Task<XEvmAlias> GetOrCreateXEvmAlias(string hash, XMichelsonAddress owner)
+    public virtual async Task<XEvmAlias> GetOrCreateXEvmAlias(string hash, XMichelsonAddress owner)
     {
         throw new NotImplementedException();
     }
 
-    public async Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
+    public virtual async Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
     {
         throw new NotImplementedException();
     }
 
-    protected Task BindAliases(XEvmAddress address)
+    protected virtual Task BindAliases(XEvmAddress address)
     {
         // there are no aliases in this era
         return Task.CompletedTask;
     }
 
-    protected Task UnbindAliases(XEvmAddress address)
+    protected virtual Task UnbindAliases(XEvmAddress address)
     {
         // there are no aliases in this era
         return Task.CompletedTask;
@@ -270,25 +270,25 @@ partial class ProtoHelpers
     #endregion
 
     #region michelson address
-    public Task<XMichelsonAddress> GetOrCreateXMichelsonAddress(string hash)
+    public virtual Task<XMichelsonAddress> GetOrCreateXMichelsonAddress(string hash)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash)
+    public virtual Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash, XBlock block)
+    public virtual Task<XMichelsonAddress> GetCachedOrCreateXMichelsonAddress(string hash, XBlock block)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task RemoveXMichelsonAddress(XMichelsonAddress address)
+    public virtual Task RemoveXMichelsonAddress(XMichelsonAddress address)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
@@ -296,13 +296,13 @@ partial class ProtoHelpers
     #endregion
 
     #region michelson user
-    public Task<XMichelsonUser> GetOrCreateXMichelsonUser(string hash)
+    public virtual Task<XMichelsonUser> GetOrCreateXMichelsonUser(string hash)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task RemoveXMichelsonUser(XMichelsonUser user)
+    public virtual Task RemoveXMichelsonUser(XMichelsonUser user)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
@@ -310,13 +310,13 @@ partial class ProtoHelpers
     #endregion
 
     #region michelson alias
-    public Task<XMichelsonAlias> GetOrCreateXMichelsonAlias(string hash, XEvmAddress owner)
+    public virtual Task<XMichelsonAlias> GetOrCreateXMichelsonAlias(string hash, XEvmAddress owner)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
+    public virtual Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
@@ -324,13 +324,13 @@ partial class ProtoHelpers
     #endregion
 
     #region michelson contracts
-    public Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator)
+    public virtual Task<XMichelsonContract> CreateXMichelsonContract(string hash, XMichelsonAddress creator)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();
     }
 
-    public Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator)
+    public virtual Task RemoveXMichelsonContract(XMichelsonContract contract, XMichelsonAddress creator)
     {
         // there is no Michelson runtime in this era
         throw new NotImplementedException();

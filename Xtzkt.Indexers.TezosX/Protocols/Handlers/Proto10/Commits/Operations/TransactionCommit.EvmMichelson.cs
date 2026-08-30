@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
@@ -43,7 +42,6 @@ partial class TransactionCommit
         var roundingloss = amountSent - new BigInteger(amountReceived) * M12;
         var status = receipt.RequiredEvmOpStatus("status");
         var input = trace.OptionalHexBytes("input") is byte[] _input && _input.Length > 0 ? _input : null;
-        var output = trace.OptionalHexBytes("output") is byte[] _output && _output.Length > 0 ? _output : null;
 
         // the gateway is a precompile with a known abi, so its parameters are never guessed
         var (gatewayEp, gatewayParams, _) = input != null
@@ -212,7 +210,6 @@ partial class TransactionCommit
         var roundingloss = amountSent - new BigInteger(amountReceived) * M12;
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
         var input = trace.OptionalHexBytes("input") is byte[] _input && _input.Length > 0 ? _input : null;
-        var output = trace.OptionalHexBytes("output") is byte[] _output && _output.Length > 0 ? _output : null;
 
         // the gateway is a precompile with a known abi, so its parameters are never guessed
         var (gatewayEp, gatewayParams, _) = input != null

@@ -22,7 +22,8 @@ class ProtoMigrator(ProtocolHandler proto) : ProtocolCommit(proto), IMigrator
             Version = Proto.Version,
             FirstLevel = Context.Block.Level,
             LastLevel = -1,
-            MichelsonHash = prev.MichelsonHash,
+            // in Tezos X `next_protocol` is actually the current protocol
+            MichelsonHash = block.MichelsonBlock?.Required("metadata").RequiredString("next_protocol"),
             MinBlockTimeMs = prev.MinBlockTimeMs,
             MaxBlockTimeMs = prev.MaxBlockTimeMs,
             ByteCost = prev.ByteCost,

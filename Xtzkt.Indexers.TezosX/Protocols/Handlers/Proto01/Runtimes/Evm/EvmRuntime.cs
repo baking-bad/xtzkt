@@ -24,36 +24,35 @@ class EvmRuntime : IEvmRuntime
 
     public string SequencerUpdater => "0xff00000000000000000000000000000000000006";
 
-    public string MichelsonGateway => throw new NotImplementedException();
+    public virtual string MichelsonGateway => throw new NotImplementedException();
 
-    public string AliasForwarder => throw new NotImplementedException();
+    public virtual string AliasForwarder => throw new NotImplementedException();
 
-    public string VerifyTezosSignature => throw new NotImplementedException();
+    public virtual string VerifyTezosSignature => throw new NotImplementedException();
     #endregion
 
     #region special addresses
     public string DeadAddress => "0x000000000000000000000000000000000000dead";
 
-    public string TezosXCaller => throw new NotImplementedException();
+    public virtual string TezosXCaller => throw new NotImplementedException();
 
     public string DepositOrigin => "0x000000000000000000000000000000000000feed";
     #endregion
 
     #region known topics
-    public string CracReceivedTopic => throw new NotImplementedException();
+    public virtual string CracReceivedTopic => throw new NotImplementedException();
 
-    public string CracSentTopic => throw new NotImplementedException();
+    public virtual string CracSentTopic => throw new NotImplementedException();
 
-    public string AliasInitializedTopic => throw new NotImplementedException();
+    public virtual string AliasInitializedTopic => throw new NotImplementedException();
 
-    public string AliasForwardedTopic => throw new NotImplementedException();
+    public virtual string AliasForwardedTopic => throw new NotImplementedException();
     #endregion
 
     #region known selectors
+    public virtual string CallMichelsonSelector => throw new NotImplementedException();
 
-    public string CallMichelsonSelector => throw new NotImplementedException();
-
-    public string CallSelector => throw new NotImplementedException();
+    public virtual string CallSelector => throw new NotImplementedException();
 
     public byte[] FaClaimSelector { get; } = Selector("claim(uint256)");
 
@@ -61,11 +60,11 @@ class EvmRuntime : IEvmRuntime
     #endregion
 
     #region helpers
-    public string GetAlias(string address) => throw new NotImplementedException();
+    public virtual string GetAlias(string address) => throw new NotImplementedException();
 
-    public int ConvertGas(long michelsonMilligas) => throw new NotImplementedException();
+    public virtual int ConvertGas(long michelsonMilligas) => throw new NotImplementedException();
 
-    public bool IsCracCall(string? to, JsonElement trace) => throw new NotImplementedException();
+    public virtual bool IsCracCall(string? to, JsonElement trace) => throw new NotImplementedException();
     #endregion
 
     #region utils

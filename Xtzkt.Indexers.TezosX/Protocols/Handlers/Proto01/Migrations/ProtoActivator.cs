@@ -21,13 +21,13 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
         await DeactivateEvmProtocol(state);
     }
 
-    public Task ActivateMichelsonContext(XChain state, MetaBlock block)
+    public virtual Task ActivateMichelsonContext(XChain state, MetaBlock block)
     {
         // there was no Michelson runtime in old protocols
         throw new NotImplementedException();
     }
 
-    public Task DeactivateMichelsonContext(XChain state)
+    public virtual Task DeactivateMichelsonContext(XChain state)
     {
         // there was no Michelson runtime in old protocols
         throw new NotImplementedException();
@@ -35,7 +35,18 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
 
     async Task ActivateEvmProtocol(XChain state)
     {
-        var protocol = new XProtocol
+        var protocol = CreateProtocol(state);
+
+        Context.Block.ProtocolId = protocol.Id;
+        Context.Protocol = protocol;
+
+        Cache.Protocols.Add(protocol);
+        Db.Protocols.Add(protocol);
+    }
+
+    protected virtual XProtocol CreateProtocol(XChain state)
+    {
+        return new XProtocol
         {
             Id = Cache.Chain.NextProtocolId(),
             ChainId = state.Id,
@@ -50,12 +61,6 @@ class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
             DaFeePerByte = 4,
             DaFeePerByte18 = new BigInteger(4_000_000_000_000),
         };
-
-        Context.Block.ProtocolId = protocol.Id;
-        Context.Protocol = protocol;
-
-        Cache.Protocols.Add(protocol);
-        Db.Protocols.Add(protocol);
     }
 
     async Task DeactivateEvmProtocol(XChain state)

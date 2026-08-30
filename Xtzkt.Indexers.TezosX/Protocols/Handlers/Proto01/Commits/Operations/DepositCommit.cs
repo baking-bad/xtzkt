@@ -76,8 +76,20 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             if (op.TicketHash == null)
             {
-                Receive(receiver, op.Amount);
-                Context.Statistics.TotalCreated += op.Amount;
+                if (op.DepositId == null)
+                {
+                    Receive(receiver, op.Amount);
+                    Context.Statistics.TotalCreated += op.Amount;
+                }
+                else
+                {
+                    var bridge = (await Cache.Addresses.GetExistingAsync(EvmRuntime.XtzBridge) as XEvmAddress)!;
+                    Db.TryAttach(bridge);
+                    Receive(bridge, op.Amount);
+                    bridge.LastLevel = op.Level;
+                    bridge.LastTimestamp = op.Timestamp;
+                    Context.Statistics.TotalCreated += op.Amount;
+                }
             }
         }
         #endregion
@@ -109,7 +121,18 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             if (op.TicketHash == null)
             {
-                RevertReceive(receiver, op.Amount);
+                if (op.DepositId == null)
+                {
+                    RevertReceive(receiver, op.Amount);
+                }
+                else
+                {
+                    var bridge = (await Cache.Addresses.GetExistingAsync(EvmRuntime.XtzBridge) as XEvmAddress)!;
+                    Db.TryAttach(bridge);
+                    RevertReceive(bridge, op.Amount);
+                    bridge.LastLevel = op.Level;
+                    bridge.LastTimestamp = op.Timestamp;
+                }
             }
         }
         #endregion

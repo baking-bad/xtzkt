@@ -1,4 +1,6 @@
-﻿using Xtzkt.Indexers.TezosX.Protocols.Models;
+﻿using System.Text.Json;
+using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
@@ -11,6 +13,9 @@ class StateCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         state.Level = block.Level;
         state.Timestamp = block.Timestamp;
         state.Hash = block.Hash;
+
+        if (block.MichelsonBlock is JsonElement mb)
+            state.MichelsonBlock = mb.RequiredString("hash");
 
         return Task.CompletedTask;
     }

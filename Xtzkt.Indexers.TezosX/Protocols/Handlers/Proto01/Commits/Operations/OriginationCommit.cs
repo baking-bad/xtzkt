@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;

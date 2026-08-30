@@ -2,7 +2,7 @@
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;
 
-partial class TokensCommit(ProtocolHandler protocol) : Proto01.TokensCommit(protocol)
+class TokensCommit(ProtocolHandler protocol) : Proto01.TokensCommit(protocol)
 {
     protected override async Task<XAddress> GetCachedOrCreateXAddress(string hash)
     {

@@ -153,16 +153,6 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             return (storageFee != 0 ? storageFee : null, allocationFee != 0 ? allocationFee : null);
         }
 
-        // eip6780: selfdestruct deletes the account, burning its balance along with it, but only if
-        // the contract was created in the same transaction and is its own beneficiary
-        protected bool IsSelfDestructWithBurn(XEvmTransactionOperation op)
-        {
-            return op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide
-                && op.SenderId == op.TargetId
-                && op.Amount != 0
-                && Context.OriginationOps.Any(x => x.Hash == op.Hash && x.ContractId == op.SenderId);
-        }
-
         protected static OperationStatus GetEvmTraceStatus(OperationStatus rootStatus, OperationStatus traceStatus)
         {
             return rootStatus != OperationStatus.Applied && traceStatus == OperationStatus.Applied

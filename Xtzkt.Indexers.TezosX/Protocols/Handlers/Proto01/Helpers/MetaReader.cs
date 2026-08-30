@@ -8,7 +8,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
 partial class ProtoHelpers
 {
-    protected MetaBatch? TryReadOperation(MetaContext context, string hash, bool delayed)
+    protected virtual MetaBatch? TryReadOperation(MetaContext context, string hash, bool delayed)
     {
         // operation from blueprint can be dropped and not appear in the block at all
         if (!context.QueuesByHash.TryGetValue(hash, out var queue))
@@ -24,7 +24,7 @@ partial class ProtoHelpers
         return batch;
     }
 
-    protected void ProcessQueue(MetaContext context, Queue<MetaContent> queue, MetaBatch dest)
+    void ProcessQueue(MetaContext context, Queue<MetaContent> queue, MetaBatch dest)
     {
         while (queue.TryPeek(out var candidate))
         {

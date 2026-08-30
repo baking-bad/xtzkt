@@ -45,8 +45,11 @@ partial class ProtoHelpers
 
         var stream = new RlpStream([.. chunks.OrderBy(x => x.ChunkIndex).SelectMany(x => x.Chunk)]);
         var rlp = stream.Read();
-        if (stream.CanRead || rlp as RlpList is not [RlpItem r1, RlpList r2, RlpList r3, RlpItem r4])
+        if (stream.CanRead || rlp as RlpList is not [.. var v, RlpItem r1, RlpList r2, RlpList r3, RlpItem r4])
             throw new FormatException("Invalid Blueprint format");
+
+        if (v is not ([] or [RlpItem { Data: [1] }]))
+            throw new NotSupportedException("Not supported Blueprint version");
 
         if (DateTime.UnixEpoch.AddSeconds(HexNumber.GetInt64Reverse(r4.Data)) != timestamp)
             throw new Exception("Inconsistent timestamp");
@@ -181,7 +184,7 @@ partial class ProtoHelpers
         };
     }
 
-    protected string GetTransactionHash(byte[] bytes)
+    protected virtual string GetTransactionHash(byte[] bytes)
     {
         return Keccak256.GetHash(bytes);
     }

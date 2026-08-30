@@ -9,7 +9,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task ApplyEvmLogs(ILogsOperation op, IEnumerable<JsonElement> logs)
+    public virtual async Task ApplyEvmLogs(ILogsOperation op, IEnumerable<JsonElement> logs)
     {
         if (op.Status != OperationStatus.Applied)
             return;
@@ -104,9 +104,7 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 }
             }
 
-            // FA Deposit events are still emitted by the system address, while FA Withdrawal events are
-            // emitted by the FA bridge precompile since Calypso
-            if (address.Hash == EvmRuntime.NullAddress || address.Hash == EvmRuntime.FaBridge)
+            if (IsFaBridge(address))
             {
                 if (FaBridgeEvents.TryParseUpdate(topics, data, (op as ISourceOperation)!, out var bridgeTicketUpdate))
                     Context.BridgeTicketUpdates.Add(bridgeTicketUpdate);
@@ -128,9 +126,12 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             var address = await Cache.Addresses.GetAsync(log.AddressId);
             Db.TryAttach(address);
-            if (address is not XEvmAddress evmAddress)
+            if (address is XMichelsonContract michContract)
+                michContract.LogsCount--;
+            else if (address is XEvmAddress evmAddress)
+                evmAddress.LogsCount--;
+            else
                 throw new InvalidOperationException("Invalid log address type");
-            evmAddress.LogsCount--;
             address.LastLevel = block.Level;
             address.LastTimestamp = block.Timestamp;
 
@@ -152,5 +153,12 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         // the emitter is often unknown, because contracts deployed by other contracts are
         // invisible without traces, so it's resolved (and bootstrapped) via the node
         return await Helpers.GetOrCreateXEvmContract(log.RequiredString("address"));
+    }
+
+    protected virtual bool IsFaBridge(XEvmAddress address)
+    {
+        // FA Deposit events are still emitted by the system address, while FA Withdrawal events are
+        // emitted by the FA bridge precompile since Calypso
+        return address.Hash == EvmRuntime.NullAddress || address.Hash == EvmRuntime.FaBridge;
     }
 }

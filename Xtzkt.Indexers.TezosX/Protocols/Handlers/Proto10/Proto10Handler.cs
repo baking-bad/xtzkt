@@ -23,16 +23,16 @@ class Proto10Handler(
     ILogger<Proto10Handler> logger,
     IMetrics metrics) : ProtocolHandler(db, cache, services, config, logger, metrics)
 {
-    public override int Version => 1;
+    public override int Version => 10;
     public override IEvmRpc EvmRpc { get; } = new EvmRpc(evmRpc);
     public override IEvmRuntime EvmRuntime { get; } = new EvmRuntime();
     public override IMichelsonRpc MichelsonRpc { get; } = new MichelsonRpc(michelsonRpc);
     public override IMichelsonRuntime MichelsonRuntime { get; } = new MichelsonRuntime();
+    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
 
     protected override IActivator Activator => new ProtoActivator(this);
-    IHelpers? _helpers;
-    public override IHelpers Helpers => _helpers ??= new ProtoHelpers(this);
     protected override IMigrator Migrator => new ProtoMigrator(this);
+    IHelpers? _helpers;
 
     protected override async Task Commit(MetaBlock block)
     {

@@ -61,7 +61,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
         throw new FormatException("Invalid delayed xtz deposit rlp");
     }
 
-    protected DelayedFaDeposit ParseDelayedFaDeposit(byte[] hash, byte[] bytes)
+    protected static DelayedFaDeposit ParseDelayedFaDeposit(byte[] hash, byte[] bytes)
     {
         var stream = new RlpStream(bytes);
         if (stream.Read() is not RlpList rlp || stream.CanRead)

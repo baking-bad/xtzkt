@@ -6,12 +6,11 @@ using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
-using Xtzkt.Indexers.TezosX.Utils.Abi;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
-partial class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
+partial class TransactionCommit(ProtocolHandler protocol) : Proto06.TransactionCommit(protocol)
 {
     protected async Task<(string?, byte[]?, string?, bool?)> ParseParameters(XMichelsonAddress target, JsonElement parameters)
     {
@@ -48,87 +47,6 @@ partial class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(proto
             Logger.LogWarning(ex, "Failed to humanize tx parameters");
             return (rawEp, rawParam.ToBytes(), null, false);
         }
-    }
-
-    protected async Task<(string?, string?, bool?)> ParseParameters(XEvmAddress target, byte[] input)
-    {
-        if (target is XEvmContract contract && await Cache.Abi.GetOrDefaultAsync(contract) is Abi abi)
-        {
-            if (abi.TryGetFunction(input, out var fn))
-            {
-                try
-                {
-                    return (fn.Signature, AbiDecoder.DecodeToJson(input.AsSpan()[4..], fn.Inputs), false);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogWarning(ex, "Failed to parse tx inputs");
-                    return (fn.Signature, null, false);
-                }
-            }
-        }
-
-        if (KnownSelectorsAbi.TryGetFunction(input, out var known) && (known.Inputs.Count > 0 || input.Length == 4))
-        {
-            try
-            {
-                return (known.Signature, AbiDecoder.DecodeToJson(input.AsSpan()[4..], known.Inputs), true);
-            }
-            catch (Exception ex)
-            {
-                // most likely the 4-byte selector matched by chance, and the calldata is not what
-                // we guessed, so the signature is dropped as well, unlike in the abi branch above
-                Logger.LogDebug(ex, "Failed to guess tx inputs");
-                return (null, null, true);
-            }
-        }
-
-        return (null, null, null);
-    }
-
-    protected async Task<(string?, bool?)> ParseResult(XEvmAddress target, byte[] input, byte[] output)
-    {
-        if (target is XEvmContract contract && await Cache.Abi.GetOrDefaultAsync(contract) is Abi abi)
-        {
-            if (abi.TryGetFunction(input, out var fn))
-            {
-                try
-                {
-                    return (AbiDecoder.DecodeToJson(output, fn.Outputs), false);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogWarning(ex, "Failed to parse tx outputs");
-                    return (null, false);
-                }
-            }
-        }
-
-        if (KnownSelectorsAbi.TryGetFunction(input, out var known) && (known.Outputs.Count > 0 || output.Length == 0))
-        {
-            try
-            {
-                return (AbiDecoder.DecodeToJson(output, known.Outputs), true);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogDebug(ex, "Failed to guess tx outputs");
-                return (null, true);
-            }
-        }
-
-        return (null, null);
-    }
-
-    protected static bool? Guessed(bool? paramsGuessed, bool? resultGuessed)
-    {
-        if (paramsGuessed == null)
-            return resultGuessed;
-
-        if (resultGuessed == null)
-            return paramsGuessed;
-
-        return paramsGuessed.Value && resultGuessed.Value;
     }
 
     protected virtual async Task<long?> ProcessStorage(long txId, XMichelsonAddress target, JsonElement storage)

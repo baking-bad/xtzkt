@@ -11,7 +11,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
-// Genesis, kernels 0.x - 1.x
+// Genesis, kernels 0.0 - 1.1
 class Proto01Handler(
     EvmNode evmRpc,
     XtzktContext db,

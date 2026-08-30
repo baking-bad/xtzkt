@@ -7,9 +7,9 @@ using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
-public partial class ProtoHelpers
+partial class ProtoHelpers
 {
-    public virtual async Task<MetaBlock> GetMetaBlock(int level)
+    public override async Task<MetaBlock> GetMetaBlock(int level)
     {
         var t1 = GetBlueprint(level);
         var t2 = EvmRpc.GetBlockData(level);
@@ -148,7 +148,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected virtual bool IsEvmCrac(EvmOperation evmOp, [NotNullWhen(true)] out string? cracId)
+    protected bool IsEvmCrac(EvmOperation evmOp, [NotNullWhen(true)] out string? cracId)
     {
         if (evmOp.From == evmOp.To)
         {
@@ -166,7 +166,7 @@ public partial class ProtoHelpers
         return false;
     }
 
-    protected virtual EvmOperation GetEvmOperation(EvmBatch batch, JsonElement tx, JsonElement receipt, JsonElement trace)
+    protected override EvmOperation GetEvmOperation(EvmBatch batch, JsonElement tx, JsonElement receipt, JsonElement trace)
     {
         return new EvmOperation
         {
@@ -180,7 +180,7 @@ public partial class ProtoHelpers
         };
     }
 
-    protected virtual List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
+    protected override List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
     {
         return [.. EnumerateTraces(op.Trace).Skip(1).Select(x => new EvmInternalOperation
         {
@@ -195,7 +195,7 @@ public partial class ProtoHelpers
         })];
     }
 
-    protected virtual IEnumerable<(JsonElement Trace, int Depth, OperationStatus Status, OperationStatus ParentStatus)> EnumerateTraces(
+    protected static IEnumerable<(JsonElement Trace, int Depth, OperationStatus Status, OperationStatus ParentStatus)> EnumerateTraces(
         JsonElement trace, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied)
     {
         var status = trace.OptionalString("error") != null || trace.OptionalString("revertReason") != null
@@ -210,7 +210,7 @@ public partial class ProtoHelpers
                 yield return item;
     }
 
-    protected virtual bool IsMichelsonCrac(MichelsonOperation op, List<MichelsonInternalOperation> iops, [NotNullWhen(true)] out string? cracId)
+    protected bool IsMichelsonCrac(MichelsonOperation op, List<MichelsonInternalOperation> iops, [NotNullWhen(true)] out string? cracId)
     {
         if (iops.Count != 0 && op.From == MichelsonRuntime.NullAddress)
         {
@@ -227,7 +227,7 @@ public partial class ProtoHelpers
         return false;
     }
 
-    protected virtual List<MichelsonOperation> GetMichelsonOperations(MichelsonBatch batch, JsonElement opg)
+    protected static List<MichelsonOperation> GetMichelsonOperations(MichelsonBatch batch, JsonElement opg)
     {
         return [.. opg.RequiredArray("contents").EnumerateArray() .Select(x => new MichelsonOperation
         {
@@ -238,7 +238,7 @@ public partial class ProtoHelpers
         })];
     }
 
-    protected virtual List<MichelsonInternalOperation> GetMichelsonInternalOperations(MichelsonOperation op)
+    protected static List<MichelsonInternalOperation> GetMichelsonInternalOperations(MichelsonOperation op)
     {
         return [.. op.Content.Required("metadata")
             .OptionalArray("internal_operation_results")?

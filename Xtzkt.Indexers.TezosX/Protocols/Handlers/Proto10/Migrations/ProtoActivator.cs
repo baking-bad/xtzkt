@@ -9,20 +9,31 @@ using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
-public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IActivator
+class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
 {
-    protected readonly IMichelsonRpc MichelsonRpc = proto.MichelsonRpc;
-
-    public const string InternalForwarderAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/InternalForwarderAbi.json";
-    public const string XtzBridgeAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/XtzBridgeAbi.json";
+    #region evm
+    public new const string NullAddressAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/NullAddressAbi.json";
+    public new const string XtzBridgeAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/XtzBridgeAbi.json";
     public const string MichelsonGatewayAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/MichelsonGatewayAbi.json";
     public const string AliasForwarderAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/AliasForwarderAbi.json";
     public const string VerifyTezosSignatureAbi = "Protocols/Handlers/Proto10/Runtimes/Evm/Precompiles/VerifyTezosSignatureAbi.json";
 
-    public async Task ActivateEvmContext(XChain state)
+    protected override List<(string Address, string AbiPath)> EvmPrecompiles => [
+        (EvmRuntime.NullAddress,            NullAddressAbi),
+        (EvmRuntime.XtzBridge,              XtzBridgeAbi),
+        (EvmRuntime.FaBridge,               Proto08.ProtoActivator.FaBridgeAbi),
+        (EvmRuntime.Outbox,                 Proto06.ProtoActivator.OutboxAbi),
+        (EvmRuntime.TicketTable,            Proto07.ProtoActivator.TicketTableAbi),
+        (EvmRuntime.GlobalCounter,          Proto06.ProtoActivator.GlobalCounterAbi),
+        (EvmRuntime.SequencerUpdater,       Proto06.ProtoActivator.SequencerUpdaterAbi),
+        (EvmRuntime.MichelsonGateway,       MichelsonGatewayAbi),
+        (EvmRuntime.AliasForwarder,         AliasForwarderAbi),
+        (EvmRuntime.VerifyTezosSignature,   VerifyTezosSignatureAbi),
+    ];
+
+    protected override XProtocol CreateProtocol(XChain state)
     {
-        #region protocol
-        var protocol = new XProtocol
+        return new XProtocol
         {
             Id = Cache.Chain.NextProtocolId(),
             ChainId = state.Id,
@@ -37,66 +48,11 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
             DaFeePerByte = 4,
             DaFeePerByte18 = new BigInteger(4_000_000_000_000),
         };
-
-        Context.Block.ProtocolId = protocol.Id;
-        Context.Protocol = protocol;
-
-        Cache.Protocols.Add(protocol);
-        Db.Protocols.Add(protocol);
-        #endregion
-
-        #region precompiles
-        var nullAddress = await Helpers.BootstrapEvmPrecompile(EvmRuntime.NullAddress, InternalForwarderAbi, null, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.XtzBridge, XtzBridgeAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.FaBridge, Proto08.ProtoActivator.FaBridgeAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.Outbox, Proto06.ProtoActivator.OutboxAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.TicketTable, Proto07.ProtoActivator.TicketTableAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.GlobalCounter, Proto06.ProtoActivator.GlobalCounterAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.SequencerUpdater, Proto06.ProtoActivator.SequencerUpdaterAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, MichelsonGatewayAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, AliasForwarderAbi, nullAddress, state);
-        await Helpers.BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, VerifyTezosSignatureAbi, nullAddress, state);
-        #endregion
-
-        #region bootstrap
-        await Helpers.BootstrapEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
-        await Helpers.BootstrapEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
-        await Helpers.BootstrapEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
-        #endregion
     }
+    #endregion
 
-    public async Task DeactivateEvmContext(XChain state)
-    {
-        #region bootstrap
-        await Helpers.RemoveEvmUser("0x6ce4d79d4e77402e1ef3417fdda433aa744c6e1c", state);
-        await Helpers.RemoveEvmUser("0xb53dc01974176e5dff2298c5a94343c2585e3c54", state);
-        await Helpers.RemoveEvmUser("0x9b49c988b5817be31dfb00f7a5a4671772dcce2b", state);
-        #endregion
-
-        #region precompiles
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.VerifyTezosSignature, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.AliasForwarder, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.MichelsonGateway, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.SequencerUpdater, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.GlobalCounter, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.TicketTable, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.Outbox, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.FaBridge, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.XtzBridge, state);
-        await Helpers.RemoveEvmPrecompile(EvmRuntime.NullAddress, state);
-        #endregion
-
-        #region protocol
-        await Db.Protocols
-            .Where(x => x.ChainId == state.Id && x.Hash == state.Kernel)
-            .ExecuteDeleteAsync();
-
-        Cache.Chain.ReleaseProtocolId();
-        await Cache.Protocols.ResetAsync();
-        #endregion
-    }
-
-    public async Task ActivateMichelsonContext(XChain state, MetaBlock block)
+    #region michelson
+    public override async Task ActivateMichelsonContext(XChain state, MetaBlock block)
     {
         #region state
         var rawBlock = block.MichelsonBlock
@@ -108,11 +64,11 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         #endregion
 
         #region protocol
-        var constants = await MichelsonRpc.GetConstantsAsync(Context.Block.Level);
+        var constants = await Proto.MichelsonRpc.GetConstantsAsync(Context.Block.Level);
         Db.TryAttach(Context.Protocol);
         Context.Protocol.MichelsonHash = state.MichelsonProtocol;
         Context.Protocol.OriginationSize = constants.OptionalInt32("origination_size") ?? 257;
-        Context.Protocol.ByteCost = 1; // TODO: uncomment when fixed: constants.OptionalInt32("cost_per_byte") ?? 250;
+        Context.Protocol.ByteCost = constants.OptionalInt32("cost_per_byte") ?? 1;
         Context.Protocol.HardMichelsonBlockGasLimit = constants.OptionalInt32("hard_gas_limit_per_block") ?? 3_000_000;
         Context.Protocol.HardMichelsonOperationGasLimit = constants.OptionalInt32("hard_gas_limit_per_operation") ?? 3_000_000;
         Context.Protocol.HardMichelsonOperationStorageLimit = constants.OptionalInt32("hard_storage_limit_per_operation") ?? 60_000;
@@ -229,67 +185,9 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         Context.MigrationOps.Add(gatewayMigration);
         Db.MigrationOps.Add(gatewayMigration);
         #endregion
-
-        // TODO: remove bootstrap after tezos x release
-        #region bootstrap
-        var addresses = new List<XAddress>();
-        var addressHashes = await MichelsonRpc.GetContractsAsync(Context.Block.Level);
-        foreach (var address in addressHashes.EnumerateArray().Select(x => x.RequiredString()))
-        {
-            if (address.StartsWith("KT1"))
-                throw new NotImplementedException("Smart contracts bootstrap is not implemented");
-
-            var rawContract = await MichelsonRpc.GetContractAsync(Context.Block.Level, address);
-            var rawKey = await MichelsonRpc.GetContractManagerKeyAsync(Context.Block.Level, address);
-
-            #region address
-            var user = new XMichelsonUser
-            {
-                Id = Cache.Chain.NextAddressId(),
-                ChainId = state.Id,
-                Hash = address,
-                FirstLevel = Context.Block.Level,
-                FirstTimestamp = Context.Block.Timestamp,
-                LastLevel = Context.Block.Level,
-                LastTimestamp = Context.Block.Timestamp,
-                Balance = rawContract.RequiredInt64("balance"),
-                Counter = rawContract.RequiredInt32("counter"),
-                PublicKey = rawKey.OptionalString(),
-                Revealed = rawKey.OptionalString() != null
-            };
-
-            Context.Block.Events |= XBlockEvents.NewAddresses;
-
-            Cache.Addresses.Add(user);
-            Db.Addresses.Add(user);
-            #endregion
-
-            #region migration
-            var migration = new MichelsonMigrationOperation
-            {
-                Id = Cache.Chain.NextOperationId(),
-                ChainId = state.Id,
-                Level = Context.Block.Level,
-                Timestamp = Context.Block.Timestamp,
-                AddressId = user.Id,
-                Kind = MigrationKind.Bootstrap,
-                BalanceChange = user.Balance,
-            };
-
-            user.MigrationsCount++;
-            state.MigrationOpsCount++;
-
-            Context.Block.Operations |= XOperations.Migration;
-            Context.Statistics.TotalBootstrapped += new BigInteger(migration.BalanceChange) * M12;
-
-            Context.MigrationOps.Add(migration);
-            Db.MigrationOps.Add(migration);
-            #endregion
-        }
-        #endregion
     }
 
-    public async Task DeactivateMichelsonContext(XChain state)
+    public override async Task DeactivateMichelsonContext(XChain state)
     {
         #region state
         state.MichelsonChainId = null;
@@ -336,4 +234,5 @@ public class ProtoActivator(ProtocolHandler proto) : ProtocolCommit(proto), IAct
         Cache.Storages.Reset();
         #endregion
     }
+    #endregion
 }

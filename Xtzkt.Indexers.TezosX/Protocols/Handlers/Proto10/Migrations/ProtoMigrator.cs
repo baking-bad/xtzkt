@@ -1,101 +1,33 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Xtzkt.Data;
-using Xtzkt.Data.Models;
-using Xtzkt.Indexers.Common.Extensions;
+﻿using Xtzkt.Data.Models;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
-using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
-public class ProtoMigrator(ProtocolHandler proto) : IMigrator
+class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
 {
-    protected readonly ProtocolHandler Proto = proto;
-    protected readonly IMichelsonRpc MichelsonRpc = proto.MichelsonRpc;
-    protected readonly XtzktContext Db = proto.Db;
-    protected readonly CacheService Cache = proto.Cache;
-    protected readonly BlockContext Context = proto.Context;
-    protected readonly ILogger Logger = proto.Logger;
-
-    public async Task MigrateContext(XChain state, MetaBlock block)
+    protected override async Task ApplyMigrations(XChain state, MetaBlock block)
     {
-        #region protocol
-        var prev = await Cache.Protocols.GetAsync(state.Kernel);
-        Db.TryAttach(prev);
-        prev.LastLevel = state.Level;
+        Context.Protocol.HardEvmBlockGasLimit = 2L << 50;
+        Context.Protocol.HardEvmOperationGasLimit = 2L << 50;
 
-        var protocol = new XProtocol
-        {
-            Id = Cache.Chain.NextProtocolId(),
-            ChainId = state.Id,
-            Hash = state.KernelUpgrade!,
-            Version = Proto.Version,
-            FirstLevel = Context.Block.Level,
-            LastLevel = -1,
-            // in Tezos X `next_protocol` is actually the current protocol
-            MichelsonHash = block.MichelsonBlock?.Required("metadata").RequiredString("next_protocol"),
-            MinBlockTimeMs = prev.MinBlockTimeMs,
-            MaxBlockTimeMs = prev.MaxBlockTimeMs,
-            ByteCost = prev.ByteCost,
-            OriginationSize = prev.OriginationSize,
-            DaFeePerByte = prev.DaFeePerByte,
-            DaFeePerByte18 = prev.DaFeePerByte18,
-            HardEvmBlockGasLimit = prev.HardEvmBlockGasLimit,
-            HardEvmOperationGasLimit = prev.HardEvmOperationGasLimit,
-            HardMichelsonBlockGasLimit = prev.HardMichelsonBlockGasLimit,
-            HardMichelsonOperationGasLimit = prev.HardMichelsonOperationGasLimit,
-            HardMichelsonOperationStorageLimit = prev.HardMichelsonOperationStorageLimit,
-        };
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, ProtoActivator.NullAddressAbi, state);
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.XtzBridge, ProtoActivator.XtzBridgeAbi, state);
+        await Helpers.UpgradeEvmPrecompile(EvmRuntime.FaBridge, Proto08.ProtoActivator.FaBridgeAbi, state);
 
-        state.Kernel = protocol.Hash;
-        state.MichelsonProtocol = protocol.MichelsonHash;
-        Context.Block.ProtocolId = protocol.Id;
-        Context.Protocol = protocol;
-
-        Cache.Protocols.Add(protocol);
-        Db.Protocols.Add(protocol);
-        #endregion
-
-        if (protocol.Hash == "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f")
-        {
-            // amend sequencer pool balance
-            if (await Cache.Addresses.GetOrDefaultAsync("0x433df42a81f9a4a1480e92641b694399a83647ca") is XEvmUser sp)
-            {
-                Db.TryAttach(sp);
-                sp.Balance = (await Proto.EvmRpc.GetBalance(sp.Hash, Context.Block.Level)).RequiredHexBigInteger();
-            }
-
-            // amend broken alias counter
-            if (await Cache.Addresses.GetOrDefaultAsync("0xa6312daed8fdc322bd56ef236194588133bfea0d") is XEvmAlias a)
-            {
-                Db.TryAttach(a);
-                a.Counter = (await Proto.EvmRpc.GetTransactionCount(a.Hash, Context.Block.Level)).RequiredHexInt32() - 1;
-            }
-        }
+        var nullAddress = await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress) as XEvmAddress;
+        await Helpers.BootstrapEvmPrecompile(EvmRuntime.MichelsonGateway, ProtoActivator.MichelsonGatewayAbi, nullAddress, state);
+        await Helpers.BootstrapEvmPrecompile(EvmRuntime.AliasForwarder, ProtoActivator.AliasForwarderAbi, nullAddress, state);
+        await Helpers.BootstrapEvmPrecompile(EvmRuntime.VerifyTezosSignature, ProtoActivator.VerifyTezosSignatureAbi, nullAddress, state);
     }
 
-    public async Task RevertContext(XChain state)
+    protected override async Task RevertMigrations(XChain state)
     {
-        #region protocol
-        await Db.Protocols
-            .Where(x => x.ChainId == state.Id && x.Hash == state.Kernel)
-            .ExecuteDeleteAsync();
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.VerifyTezosSignature, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.AliasForwarder, state);
+        await Helpers.RemoveEvmPrecompile(EvmRuntime.MichelsonGateway, state);
 
-        Cache.Chain.ReleaseProtocolId();
-
-        var prev = await Db.Protocols
-            .OfType<XProtocol>()
-            .Where(x => x.ChainId == state.Id)
-            .OrderByDescending(x => x.Id)
-            .FirstAsync();
-
-        prev.LastLevel = -1;
-
-        state.KernelUpgrade = state.Kernel;
-        state.KernelUpgradeTime = Context.Block.Timestamp;
-        state.Kernel = prev.Hash;
-        state.MichelsonProtocol = prev.MichelsonHash;
-
-        await Cache.Protocols.ResetAsync();
-        #endregion
+        await Helpers.DowngradeEvmPrecompile(EvmRuntime.FaBridge, state);
+        await Helpers.DowngradeEvmPrecompile(EvmRuntime.XtzBridge, state);
+        await Helpers.DowngradeEvmPrecompile(EvmRuntime.NullAddress, state);
     }
 }

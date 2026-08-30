@@ -6,7 +6,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
 partial class ProtoHelpers
 {
-    public async Task<MetaBlock> GetMetaBlock(int level)
+    public virtual async Task<MetaBlock> GetMetaBlock(int level)
     {
         var t1 = GetBlueprint(level);
         var t2 = EvmRpc.GetBlockData(level);

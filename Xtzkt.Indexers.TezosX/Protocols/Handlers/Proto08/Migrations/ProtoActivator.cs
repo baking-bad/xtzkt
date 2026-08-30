@@ -1,6 +1,6 @@
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto08;
 
-class ProtoActivator(ProtocolHandler proto) : Proto07.ProtoActivator(proto)
+class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
 {
     public const string FaBridgeAbi = "Protocols/Handlers/Proto08/Runtimes/Evm/Precompiles/FaBridgeAbi.json";
 
