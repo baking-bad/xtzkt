@@ -185,8 +185,8 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_AddressId_Id"
     ON "Logs" ("AddressId", "Id");
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_Topic0_Id"
-    ON "Logs" (("Topics"[1]), "Id")
-    WHERE ("Topics"[1]) IS NOT NULL;
+    ON "Logs" ("Topic0", "Id")
+    WHERE "Topic0" IS NOT NULL;
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Logs_TransactionId"
     ON "Logs" ("TransactionId")

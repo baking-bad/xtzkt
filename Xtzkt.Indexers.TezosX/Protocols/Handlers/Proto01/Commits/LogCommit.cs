@@ -20,6 +20,9 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             var addressEip7702Delegate = await GetEip7702Delegate(address);
 
             var topics = log.RequiredArray("topics").EnumerateArray().Select(x => x.RequiredHexBytes()).ToArray();
+            if (topics.Length > 4)
+                throw new Exception("EVM log can't have more than four topics");
+
             var data = log.RequiredHexBytes("data");
 
             if ((addressEip7702Delegate ?? address) is not XEvmContract contract)
@@ -73,7 +76,10 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 AddressId = address.Id,
                 ContractCodeHash = contract.CodeHash,
                 ContractTypeHash = contract.TypeHash,
-                Topics = topics,
+                Topic0 = topics.Length > 0 ? topics[0] : null,
+                Topic1 = topics.Length > 1 ? topics[1] : null,
+                Topic2 = topics.Length > 2 ? topics[2] : null,
+                Topic3 = topics.Length > 3 ? topics[3] : null,
                 Data = data,
                 TransactionId = (op as TransactionOperation)?.Id,
                 OriginationId = (op as XEvmOriginationOperation)?.Id,

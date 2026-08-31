@@ -92,6 +92,7 @@ public class EvmLog : Log
 
     /// <summary>
     /// Indexed event topics, where the first one is usually the event signature hash.
+    /// A single topic can be requested with `?select=topics.0` (`.0` to `.3`).
     /// </summary>
     [JsonConverter(typeof(HexListConverter))]
     public required List<byte[]> Topics { get; set; }

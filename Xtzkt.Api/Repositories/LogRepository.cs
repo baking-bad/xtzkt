@@ -7,6 +7,7 @@ using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Hex = Xtzkt.Utils.Encoding.Hex;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -75,7 +76,27 @@ public class LogRepository(
                     case "transactionId": columns.Add(@"l.""TransactionId"""); break;
                     case "originationId": columns.Add(@"l.""OriginationId"""); break;
                     case "depositId":   columns.Add(@"l.""DepositId"""); break;
-                    case "topics":        columns.Add(@"l.""Topics"""); break;
+                    case "topics":
+                        if (field.Path == null)
+                        {
+                            columns.Add(@"l.""Runtime""");
+                            columns.Add(@"l.""Topic0""");
+                            columns.Add(@"l.""Topic1""");
+                            columns.Add(@"l.""Topic2""");
+                            columns.Add(@"l.""Topic3""");
+                        }
+                        else
+                        {
+                            columns.Add(field.Path switch
+                            {
+                                ["0"] => @"l.""Topic0""",
+                                ["1"] => @"l.""Topic1""",
+                                ["2"] => @"l.""Topic2""",
+                                ["3"] => @"l.""Topic3""",
+                                _ => throw new BadRequestException(nameof(selection.Select), $"Field {field.Full} doesn't exist")
+                            });
+                        }
+                        break;
                     case "data":          columns.Add(@"l.""Data"""); break;
                     // MichelsonLog
                     case "type":          columns.Add(@"l.""Type"""); break;
@@ -107,11 +128,11 @@ public class LogRepository(
             .Where(@"l.""Guessed""",          filter.Guessed)
             .Where(@"l.""TransactionId""",    filter.TransactionId)
             .Where(@"l.""OriginationId""",    filter.OriginationId)
-            .Where(@"l.""DepositId""",      filter.DepositId)
-            .Where(@"l.""Topics""[1]",        filter.Topic0)
-            .Where(@"l.""Topics""[2]",        filter.Topic1)
-            .Where(@"l.""Topics""[3]",        filter.Topic2)
-            .Where(@"l.""Topics""[4]",        filter.Topic3)
+            .Where(@"l.""DepositId""",        filter.DepositId)
+            .Where(@"l.""Topic0""",           filter.Topic0)
+            .Where(@"l.""Topic1""",           filter.Topic1)
+            .Where(@"l.""Topic2""",           filter.Topic2)
+            .Where(@"l.""Topic3""",           filter.Topic3)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -148,11 +169,11 @@ public class LogRepository(
             .Where(@"l.""Guessed""",          filter.Guessed)
             .Where(@"l.""TransactionId""",    filter.TransactionId)
             .Where(@"l.""OriginationId""",    filter.OriginationId)
-            .Where(@"l.""DepositId""",      filter.DepositId)
-            .Where(@"l.""Topics""[1]",        filter.Topic0)
-            .Where(@"l.""Topics""[2]",        filter.Topic1)
-            .Where(@"l.""Topics""[3]",        filter.Topic2)
-            .Where(@"l.""Topics""[4]",        filter.Topic3)
+            .Where(@"l.""DepositId""",        filter.DepositId)
+            .Where(@"l.""Topic0""",           filter.Topic0)
+            .Where(@"l.""Topic1""",           filter.Topic1)
+            .Where(@"l.""Topic2""",           filter.Topic2)
+            .Where(@"l.""Topic3""",           filter.Topic3)
             .Build();
 
         await using var db = await _dataSource.OpenConnectionAsync();
@@ -180,7 +201,7 @@ public class LogRepository(
                     TransactionId = row.TransactionId,
                     OriginationId = row.OriginationId,
                     DepositId = row.DepositId,
-                    Topics = [.. (byte[][])row.Topics],
+                    Topics = ReadTopics(row),
                     Data = row.Data,
                 };
 
@@ -285,7 +306,21 @@ public class LogRepository(
                     foreach (var row in rows) result[j++][i] = row.DepositId?.ToString();
                     break;
                 case "topics":
-                    foreach (var row in rows) result[j++][i] = row.Topics == null ? null : ((byte[][])row.Topics).Select(Decode.ToHex).ToList();
+                    foreach (var row in rows) result[j++][i] = (int)row.Runtime == (int)Data.Models.Runtime.Evm
+                        ? ReadTopicsHex(row)
+                        : null;
+                    break;
+                case "topics.0":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.Topic0);
+                    break;
+                case "topics.1":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.Topic1);
+                    break;
+                case "topics.2":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.Topic2);
+                    break;
+                case "topics.3":
+                    foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.Topic3);
                     break;
                 case "data":
                     foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.Data);
@@ -306,5 +341,25 @@ public class LogRepository(
         }
 
         return result;
+    }
+
+    static List<byte[]> ReadTopics(dynamic row)
+    {
+        var topics = new List<byte[]>(4);
+        if (row.Topic0 != null) topics.Add((byte[])row.Topic0); else return topics;
+        if (row.Topic1 != null) topics.Add((byte[])row.Topic1); else return topics;
+        if (row.Topic2 != null) topics.Add((byte[])row.Topic2); else return topics;
+        if (row.Topic3 != null) topics.Add((byte[])row.Topic3); else return topics;
+        return topics;
+    }
+
+    static List<string> ReadTopicsHex(dynamic row)
+    {
+        var topics = new List<string>(4);
+        if (row.Topic0 != null) topics.Add(Hex.GetString((byte[])row.Topic0)); else return topics;
+        if (row.Topic1 != null) topics.Add(Hex.GetString((byte[])row.Topic1)); else return topics;
+        if (row.Topic2 != null) topics.Add(Hex.GetString((byte[])row.Topic2)); else return topics;
+        if (row.Topic3 != null) topics.Add(Hex.GetString((byte[])row.Topic3)); else return topics;
+        return topics;
     }
 }
