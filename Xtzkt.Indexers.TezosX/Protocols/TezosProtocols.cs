@@ -37,6 +37,7 @@ namespace Xtzkt.Indexers.TezosX
         {
             return kernel switch
             {
+                #region etherlink
                 // Genesis 0.0
                 "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166" => services.GetRequiredService<Proto01Handler>(),
                 // Genesis 0.1
@@ -71,15 +72,22 @@ namespace Xtzkt.Indexers.TezosX
                 "0x007c73209bc68c2e0099e105b92ef4c674387532afbf5d51b7f1043472f9d65e9b" => services.GetRequiredService<Proto09Handler>(),
                 // Farfadet 6.6
                 "0x0083d8142e9c5f2a35ead6eb31d6344f3803f90eacb03ccfb6c482df353f85908a" => services.GetRequiredService<Proto09Handler>(),
-                // Tezos X 0.10-shadownet
-                "0x008c903318dfc0016de771f981069498f7774f3c35ffcc3f2dce63f5a3b6d03df6" => services.GetRequiredService<Proto10Handler>(),
+                #endregion
 
-                // Tezos X
+                #region tezos x
+                // Ganesha 7.0
+                "0x008c903318dfc0016de771f981069498f7774f3c35ffcc3f2dce63f5a3b6d03df6" => services.GetRequiredService<Proto10Handler>(),
+                // Ganesha 7.0.1
+                "0x00db5a8b279b9915f7ffef420347b5d9667ac4e73a9c766b7ef71513f748f52c67" => services.GetRequiredService<Proto10Handler>(),
+
+                // TODO: remove it after previewnet reset
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto10Handler>(), // v0.1
                 "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a" => services.GetRequiredService<Proto10Handler>(), // v0.7
                 "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f" => services.GetRequiredService<Proto10Handler>(), // v0.9
                 "0x005f5acc7705865ed1e40561a7c5ceba8b59364a3df39b378c8e4d96350b7135ac" => services.GetRequiredService<Proto10Handler>(), // v0.10
                 "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25" => services.GetRequiredService<Proto10Handler>(), // v0.10
+                #endregion
+
                 _ => null
             };
         }
