@@ -56,7 +56,7 @@ public abstract class Address
     public int TokenBalancesCount { get; set; }
 
     /// <summary>Number of token transfers the address took part in.</summary>
-    public int TokenTransfersCount { get; set; }
+    public long TokenTransfersCount { get; set; }
 
     /// <summary>Number of tickets the address currently holds (non-zero balances).</summary>
     public int ActiveTicketsCount { get; set; }
@@ -68,7 +68,7 @@ public abstract class Address
     public int TicketTransfersCount { get; set; }
 
     /// <summary>Number of transactions the address took part in.</summary>
-    public int TransactionsCount { get; set; }
+    public long TransactionsCount { get; set; }
 
     /// <summary>Number of originations the address took part in.</summary>
     public int OriginationsCount { get; set; }
@@ -326,7 +326,7 @@ public class L1Contract : L1AddressBase
     public int TokensCount { get; set; }
 
     /// <summary>Number of logs (events) emitted by the contract.</summary>
-    public int LogsCount { get; set; }
+    public long LogsCount { get; set; }
 
     /// <summary>Number of tickets issued by the contract.</summary>
     public int TicketsCount { get; set; }
@@ -406,7 +406,7 @@ public abstract class XEvmAddressBase : XAddressBase
     /// Number of logs (events), emitted by the address. Non-contract addresses can emit logs
     /// as well, if they have an EIP-7702 delegation.
     /// </summary>
-    public int LogsCount { get; set; }
+    public long LogsCount { get; set; }
 
     /// <summary>Number of bridge tickets the address currently holds (non-zero balances).</summary>
     public int ActiveBridgeTicketsCount { get; set; }
@@ -511,7 +511,7 @@ public class XMichelsonContract : XMichelsonAddressBase
     public int TokensCount { get; set; }
 
     /// <summary>Number of logs (events) emitted by the contract.</summary>
-    public int LogsCount { get; set; }
+    public long LogsCount { get; set; }
 
     /// <summary>Number of tickets issued by the contract.</summary>
     public int TicketsCount { get; set; }

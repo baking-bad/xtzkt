@@ -22,7 +22,7 @@ public class TokenBalanceRepository(
         { "firstTimestamp", (@"tb.""FirstTimestamp""", "timestamptz") },
         { "lastLevel",      (@"tb.""LastLevel""",      "integer") },
         { "lastTimestamp",  (@"tb.""LastTimestamp""",  "timestamptz") },
-        { "transfersCount", (@"tb.""TransfersCount""", "integer") },
+        { "transfersCount", (@"tb.""TransfersCount""", "bigint") },
     };
 
     async Task<bool> ProcessFilters(TokenBalanceFilter filter)

@@ -19,7 +19,7 @@ public abstract class XEvmAddress(AddressType type) : XAddress(Runtime.Evm, type
     public int Eip7702DelegationCount { get; set; }
 
     [Column(nameof(LogsCount))]
-    public int LogsCount { get; set; }
+    public long LogsCount { get; set; }
 
     public int ActiveBridgeTicketsCount { get; set; }
     public int BridgeTicketBalancesCount { get; set; }

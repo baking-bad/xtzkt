@@ -32,23 +32,23 @@ public abstract class Chain(Layer layer)
     #region counts
     public int ProtocolsCount { get; set; }
     public int BlocksCount { get; set; }
-    public int RevealOpsCount { get; set; }
-    public int TransactionOpsCount { get; set; }
-    public int OriginationOpsCount { get; set; }
-    public int RegisterConstantOpsCount { get; set; }
-    public int IncreasePaidStorageOpsCount { get; set; }
-    public int TransferTicketOpsCount { get; set; }
-    public int MigrationOpsCount { get; set; }
+    public long RevealOpsCount { get; set; }
+    public long TransactionOpsCount { get; set; }
+    public long OriginationOpsCount { get; set; }
+    public long RegisterConstantOpsCount { get; set; }
+    public long IncreasePaidStorageOpsCount { get; set; }
+    public long TransferTicketOpsCount { get; set; }
+    public long MigrationOpsCount { get; set; }
 
     public int TokensCount { get; set; }
     public int TokenBalancesCount { get; set; }
-    public int TokenTransfersCount { get; set; }
+    public long TokenTransfersCount { get; set; }
 
     public int TicketsCount { get; set; }
     public int TicketBalancesCount { get; set; }
     public int TicketTransfersCount { get; set; }
 
-    public int LogsCount { get; set; }
+    public long LogsCount { get; set; }
     public int ConstantsCount { get; set; }
     #endregion
 }

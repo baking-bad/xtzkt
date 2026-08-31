@@ -23,13 +23,13 @@ public abstract class Address(Layer layer, Runtime runtime, AddressType type)
 
     public int ActiveTokensCount { get; set; }
     public int TokenBalancesCount { get; set; }
-    public int TokenTransfersCount { get; set; }
+    public long TokenTransfersCount { get; set; }
 
     public int ActiveTicketsCount { get; set; }
     public int TicketBalancesCount { get; set; }
     public int TicketTransfersCount { get; set; }
 
-    public int TransactionsCount { get; set; }
+    public long TransactionsCount { get; set; }
     public int OriginationsCount { get; set; }
     public int MigrationsCount { get; set; }
     #endregion

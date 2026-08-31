@@ -37,7 +37,7 @@ public class Token
     public DateTime LastTimestamp { get; set; }
 
     /// <summary>Total number of transfers.</summary>
-    public int TransfersCount { get; set; }
+    public long TransfersCount { get; set; }
 
     /// <summary>Total number of balances ever created.</summary>
     public int BalancesCount { get; set; }

@@ -120,11 +120,11 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("TokenBalancesCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TokenTransfersCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TokenTransfersCount")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("TransactionsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TransactionsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -967,8 +967,8 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("IncreasePaidStorageOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("IncreasePaidStorageOpsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("KnownLevel")
                         .HasColumnType("integer");
@@ -979,14 +979,14 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
-                    b.Property<int>("LogsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("LogsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("LogsCounter")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("MigrationOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("MigrationOpsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Network")
                         .IsRequired()
@@ -995,17 +995,17 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("OperationCounter")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("OriginationOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("OriginationOpsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("ProtocolsCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RegisterConstantOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("RegisterConstantOpsCount")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("RevealOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("RevealOpsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("ScriptCounter")
                         .HasColumnType("integer");
@@ -1031,17 +1031,17 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("TokenBalancesCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TokenTransfersCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TokenTransfersCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("TokensCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TransactionOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TransactionOpsCount")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("TransferTicketOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TransferTicketOpsCount")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -3990,8 +3990,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<BigInteger>("TotalSupply")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("TransfersCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TransfersCount")
+                        .HasColumnType("bigint");
 
                     b.Property<decimal>("Value")
                         .HasColumnType("numeric");
@@ -4044,8 +4044,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("TokenId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("TransfersCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("TransfersCount")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -5039,8 +5039,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("BridgeTicketsCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("DepositOpsCount")
-                        .HasColumnType("integer");
+                    b.Property<long>("DepositOpsCount")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Eip7702DelegationCount")
                         .HasColumnType("integer");
@@ -6130,9 +6130,9 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Kind");
 
-                    b.Property<int>("LogsCount")
+                    b.Property<long>("LogsCount")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("LogsCount");
 
                     b.Property<int>("Tags")
@@ -6305,9 +6305,9 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Eip7702DelegationCount");
 
-                    b.Property<int>("LogsCount")
+                    b.Property<long>("LogsCount")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("LogsCount");
                 });
 
@@ -6626,9 +6626,9 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Kind");
 
-                    b.Property<int>("LogsCount")
+                    b.Property<long>("LogsCount")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("LogsCount");
 
                     b.Property<int>("Tags")

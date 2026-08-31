@@ -38,5 +38,5 @@ public class TokenBalance
     public DateTime LastTimestamp { get; set; }
 
     /// <summary>Total number of transfers.</summary>
-    public int TransfersCount { get; set; }
+    public long TransfersCount { get; set; }
 }

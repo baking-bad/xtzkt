@@ -132,7 +132,7 @@ public class L1ChainCache(XtzktContext db, IConfiguration config) : IChainCache
         return parent.Id | (long)parent.SubsCounter.Value;
     }
 
-    public void ReleaseOperationId(int count = 1)
+    public void ReleaseOperationId(long count = 1)
     {
         Chain.OperationCounter -= count;
     }

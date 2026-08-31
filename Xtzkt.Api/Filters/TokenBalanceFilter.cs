@@ -103,7 +103,7 @@ public class TokenBalanceFilter : INormalizable
     ///
     /// Example: `?transfersCount.gt=10`.
     /// </summary>
-    public Int32Parameter? TransfersCount { get; set; }
+    public Int64Parameter? TransfersCount { get; set; }
 
     public bool IsEmpty() =>
         Id == null &&

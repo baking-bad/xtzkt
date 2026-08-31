@@ -21,7 +21,7 @@ namespace Xtzkt.Data.Models
         public int TokensCount { get; set; }
 
         [Column(nameof(LogsCount))]
-        public int LogsCount { get; set; }
+        public long LogsCount { get; set; }
 
         [Column(nameof(TicketsCount))]
         public int TicketsCount { get; set; }

@@ -15,7 +15,7 @@ namespace Xtzkt.Data.Models
         public required DateTime FirstTimestamp { get; set; }
         public required int LastLevel { get; set; }
         public required DateTime LastTimestamp { get; set; }
-        public int TransfersCount { get; set; }
+        public long TransfersCount { get; set; }
         public BigInteger Balance { get; set; }
         public int? IndexedAt { get; set; }
     }

@@ -22,7 +22,7 @@ public class TokenRepository(
         { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
         { "lastLevel",      (@"""LastLevel""",      "integer") },
         { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
-        { "transfersCount", (@"""TransfersCount""", "integer") },
+        { "transfersCount", (@"""TransfersCount""", "bigint") },
         { "balancesCount",  (@"""BalancesCount""",  "integer") },
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
     };

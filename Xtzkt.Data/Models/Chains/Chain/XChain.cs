@@ -15,7 +15,7 @@ public class XChain() : Chain(Layer.TezosX)
     public string? MichelsonBlock { get; set; }
 
     #region counts
-    public int DepositOpsCount { get; set; }
+    public long DepositOpsCount { get; set; }
     public int Eip7702DelegationCount { get; set; }
 
     public int BridgeTicketsCount { get; set; }
