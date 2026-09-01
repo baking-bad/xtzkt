@@ -32,7 +32,7 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         await Cache.Tokens.Preload(tokensSet);
         await Cache.Addresses.Preload(addressesSet);
 
-        var balancesSet = new HashSet<(int, HashableBytes?, long)>();
+        var balancesSet = new HashSet<(int, HashKey?, long)>();
         foreach (var tr in Context.EvmTokenTransfers)
         {
             if (!Cache.Tokens.TryGet(tr.Contract.Id, tr.TokenId, out var token))
@@ -343,7 +343,7 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #region precache
         var addressesSet = new HashSet<int>();
         var tokensSet = new HashSet<long>();
-        var tokenBalancesSet = new HashSet<(int, HashableBytes?, long)>();
+        var tokenBalancesSet = new HashSet<(int, HashKey?, long)>();
 
         foreach (var tr in transfers)
             tokensSet.Add(tr.TokenId);
@@ -355,13 +355,13 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             if (tr.FromId is int fromId)
             {
                 addressesSet.Add(fromId);
-                tokenBalancesSet.Add((fromId, HashableBytes.From(tr.FromEntrypoint), tr.TokenId));
+                tokenBalancesSet.Add((fromId, HashKey.From(tr.FromEntrypoint), tr.TokenId));
             }
 
             if (tr.ToId is int toId)
             {
                 addressesSet.Add(toId);
-                tokenBalancesSet.Add((toId, HashableBytes.From(tr.ToEntrypoint), tr.TokenId));
+                tokenBalancesSet.Add((toId, HashKey.From(tr.ToEntrypoint), tr.TokenId));
             }
         }
 

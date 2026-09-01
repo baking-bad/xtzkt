@@ -15,7 +15,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto02
             return diffs.RequiredArray().EnumerateArray().Select(x => new UpdateDiff
             {
                 Ptr = transaction.TargetId,
-                KeyHash = x.RequiredString("key_hash"),
+                KeyHash = x.RequiredExprHashBytes("key_hash"),
                 Key = x.RequiredMicheline("key"),
                 Value = x.OptionalMicheline("value")
             });

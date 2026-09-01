@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Netezos;
 using Xtzkt.Api.Extensions;
 using Xtzkt.Api.Filters.Parameters;
 
@@ -6,8 +7,6 @@ namespace Xtzkt.Api.Filters.Binders;
 
 public class BlockHashBinder : IModelBinder
 {
-    internal const string Prefix = "B";
-    internal const int Base58Len = 51;
     internal const int HexLen = 64;
 
     public Task BindModelAsync(ModelBindingContext bindingContext)
@@ -15,19 +14,19 @@ public class BlockHashBinder : IModelBinder
         var param = bindingContext.ModelName;
         var hasValue = false;
 
-        if (!bindingContext.TryGetHexOrBase58($"{param}", ref hasValue, out var value, Prefix, Base58Len, HexLen))
+        if (!bindingContext.TryGetHexOrBase58Bytes($"{param}", ref hasValue, out var value, Prefixes.B, HexLen))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetHexOrBase58($"{param}.eq", ref hasValue, out var eq, Prefix, Base58Len, HexLen))
+        if (!bindingContext.TryGetHexOrBase58Bytes($"{param}.eq", ref hasValue, out var eq, Prefixes.B, HexLen))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetHexOrBase58($"{param}.ne", ref hasValue, out var ne, Prefix, Base58Len, HexLen))
+        if (!bindingContext.TryGetHexOrBase58Bytes($"{param}.ne", ref hasValue, out var ne, Prefixes.B, HexLen))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetHexOrBase58List($"{param}.in", ref hasValue, out var @in, Prefix, Base58Len, HexLen))
+        if (!bindingContext.TryGetHexOrBase58BytesList($"{param}.in", ref hasValue, out var @in, Prefixes.B, HexLen))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetHexOrBase58List($"{param}.ni", ref hasValue, out var ni, Prefix, Base58Len, HexLen))
+        if (!bindingContext.TryGetHexOrBase58BytesList($"{param}.ni", ref hasValue, out var ni, Prefixes.B, HexLen))
             return Task.CompletedTask;
 
         bindingContext.Result = ModelBindingResult.Success(!hasValue ? null : new BlockHashParameter

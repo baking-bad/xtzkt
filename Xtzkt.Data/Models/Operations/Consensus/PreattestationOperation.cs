@@ -9,7 +9,7 @@ namespace Xtzkt.Data.Models
         public required int ChainId { get; set; }
         public required int Level { get; set; }
         public required DateTime Timestamp { get; set; }
-        public required string Hash { get; set; }
+        public required byte[] Hash { get; set; }
 
         public required int BakerId { get; set; }
         public long Power { get; set; }
@@ -27,8 +27,6 @@ namespace Xtzkt.Data.Models
             #region props
             modelBuilder.Entity<PreattestationOperation>()
                 .Property(x => x.Hash)
-                .IsFixedLength(true)
-                .HasMaxLength(51)
                 .IsRequired();
             #endregion
 

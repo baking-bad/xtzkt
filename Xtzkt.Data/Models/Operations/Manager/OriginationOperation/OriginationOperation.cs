@@ -12,7 +12,7 @@ public abstract class OriginationOperation(Env env) : IExplicitOperation, ISourc
     public required int ChainId { get; set; }
     public required int Level { get; set; }
     public required DateTime Timestamp { get; set; }
-    public required string Hash { get; set; }
+    public required byte[] Hash { get; set; }
 
     public int SenderId { get; set; }
     public int Counter { get; set; }

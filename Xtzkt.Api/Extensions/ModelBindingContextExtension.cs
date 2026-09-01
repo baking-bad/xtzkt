@@ -6,6 +6,8 @@ using Netezos.Encoding;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Utils;
 using Xtzkt.Utils;
+using Base58 = Xtzkt.Utils.Encoding.Base58;
+using Hex = Xtzkt.Utils.Encoding.Hex;
 
 namespace Xtzkt.Api.Extensions;
 
@@ -142,6 +144,42 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
+    public static bool TryGetBase58Bytes(this ModelBindingContext bindingContext, string name, ref bool hasValue, out byte[]? result, byte[] base58Prefix)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameter(name, out var rawValue))
+        {
+            if (!Base58.TryDecode(rawValue, base58Prefix, out result))
+            {
+                bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                return false;
+            }
+            hasValue = true;
+        }
+        return true;
+    }
+
+    public static bool TryGetBase58BytesList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<byte[]>? result, byte[] base58Prefix)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        {
+            var list = new List<byte[]>(rawValues.Length);
+            foreach (var rawValue in rawValues)
+            {
+                if (!Base58.TryDecode(rawValue, base58Prefix, out var value))
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                    return false;
+                }
+                list.Add(value);
+            }
+            hasValue = true;
+            result = list;
+        }
+        return true;
+    }
+
     public static bool TryGetHexOrBase58(this ModelBindingContext bindingContext, string name, ref bool hasValue, out string? result, string base58Prefix, int? base58Length = null, int? hexLength = null)
     {
         result = null;
@@ -204,6 +242,69 @@ internal static class ModelBindingContextExtension
                     }
                 }
                 else
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                    return false;
+                }
+                list.Add(value);
+            }
+            hasValue = true;
+            result = list;
+        }
+        return true;
+    }
+
+    public static bool TryGetHexOrBase58Bytes(this ModelBindingContext bindingContext, string name, ref bool hasValue, out byte[]? result, byte[] base58Prefix, int? hexLength = null)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameter(name, out var rawValue))
+        {
+            if (rawValue.StartsWith("0x"))
+            {
+                if (hexLength is int len && rawValue.Length != len + 2)
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "Invalid length.");
+                    return false;
+                }
+                if (!Hex.TryGetBytes(rawValue, out result))
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                    return false;
+                }
+            }
+            else if (!Base58.TryDecode(rawValue, base58Prefix, out result))
+            {
+                bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                return false;
+            }
+            hasValue = true;
+        }
+        return true;
+    }
+
+    public static bool TryGetHexOrBase58BytesList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<byte[]>? result, byte[] base58Prefix, int? hexLength = null)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        {
+            var list = new List<byte[]>(rawValues.Length);
+            foreach (var rawValue in rawValues)
+            {
+                byte[]? value;
+                if (rawValue.StartsWith("0x"))
+                {
+                    if (hexLength is int len && rawValue.Length != len + 2)
+                    {
+                        bindingContext.ModelState.TryAddModelError(name, "Invalid length.");
+                        return false;
+                    }
+                    if (!Hex.TryGetBytes(rawValue, out value))
+                    {
+                        bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                        return false;
+                    }
+                }
+                else if (!Base58.TryDecode(rawValue, base58Prefix, out value))
                 {
                     bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
                     return false;

@@ -17,7 +17,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     public XTransferTicketOperation Operation { get; private set; } = null!;
     public IEnumerable<TicketUpdates>? TicketUpdates { get; private set; }
 
-    public virtual async Task Apply(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
+    public virtual async Task Apply(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
     {
         #region init
         var block = Context.Block;

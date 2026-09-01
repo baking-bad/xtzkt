@@ -672,6 +672,25 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
+    public SqlBuilder Where(string column, ExpressionBytesParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+            _filters.Add($"{column} = {Param(value.Eq)}");
+
+        if (value.Ne != null)
+            _filters.Add($"{column} != {Param(value.Ne)}");
+
+        if (value.In != null)
+            _filters.Add($"{column} = ANY ({Param(value.In)})");
+
+        if (value.Ni != null)
+            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+
+        return this;
+    }
+
     public SqlBuilder Where(string column, MichelsonBlockHashParameter? value)
     {
         if (value == null) return this;
@@ -786,21 +805,21 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
-    public SqlBuilder Where(string column, OperationHashParameter? value, string type = "text")
+    public SqlBuilder Where(string column, OperationHashParameter? value)
     {
         if (value == null) return this;
 
         if (value.Eq != null)
-            _filters.Add($"{column} = {Param(value.Eq)}::{type}");
+            _filters.Add($"{column} = {Param(value.Eq)}");
 
         if (value.Ne != null)
-            _filters.Add($"{column} != {Param(value.Ne)}::{type}");
+            _filters.Add($"{column} != {Param(value.Ne)}");
 
         if (value.In != null)
-            _filters.Add($"{column} = ANY ({Param(value.In)}::{type}[])");
+            _filters.Add($"{column} = ANY ({Param(value.In)})");
 
         if (value.Ni != null)
-            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}::{type}[]))");
+            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
 
         return this;
     }

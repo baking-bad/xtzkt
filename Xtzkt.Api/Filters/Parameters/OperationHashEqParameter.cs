@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
@@ -14,7 +15,7 @@ public class OperationHashEqParameter : INormalizable
     ///
     /// Example: `?hash=o...` or `?hash=0x...`.
     /// </summary>
-    public string? Eq { get; set; }
+    public byte[]? Eq { get; set; }
 
     /// <summary>
     /// **In list** mode.
@@ -22,7 +23,7 @@ public class OperationHashEqParameter : INormalizable
     ///
     /// Example: `?hash.in=o...,0x...`.
     /// </summary>
-    public List<string>? In { get; set; }
+    public List<byte[]>? In { get; set; }
 
     public OperationHashParameter ToOperationHashParameter() => new() { Eq = Eq, In = In };
 
@@ -31,10 +32,10 @@ public class OperationHashEqParameter : INormalizable
         var sb = new StringBuilder();
 
         if (Eq != null)
-            sb.Append($"{name}.eq={Eq}&");
+            sb.Append($"{name}.eq={Hex.GetStringRaw(Eq)}&");
 
         if (In?.Count > 0)
-            sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x))}&");
+            sb.Append($"{name}.in={string.Join(",", In.Select(x => Hex.GetStringRaw(x)).OrderBy(x => x))}&");
 
         return sb.ToString();
     }

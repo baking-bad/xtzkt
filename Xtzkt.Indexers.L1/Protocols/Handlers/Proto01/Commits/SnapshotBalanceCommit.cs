@@ -83,15 +83,33 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
 
             if (deactivated.Count != 0)
             {
-                var values = string.Join(",\n", deactivated
-                    .SelectMany(row =>
-                        new[] { $"({block.ChainId}, {block.Level}, {row.baker.Id}, {row.baker.Id}, {row.baker.OwnDelegatedBalance}, {row.baker.ExternalDelegatedBalance}, {row.baker.DelegatorsCount})" }
-                        .Concat(row.delegators.Select(delegator => $"({block.ChainId}, {block.Level}, {delegator.BakerId}, {delegator.Id}, {delegator.Balance}, NULL::bigint, NULL::integer)"))));
+                var bakerIds = new List<int>();
+                var addressIds = new List<int>();
+                var ownDelegated = new List<long>();
+                var externalDelegated = new List<long?>();
+                var delegatorsCounts = new List<int?>();
 
-                if (values.Length > 0)
+                foreach (var row in deactivated)
                 {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                    await Db.Database.ExecuteSqlRawAsync($"""
+                    bakerIds.Add(row.baker.Id);
+                    addressIds.Add(row.baker.Id);
+                    ownDelegated.Add(row.baker.OwnDelegatedBalance);
+                    externalDelegated.Add(row.baker.ExternalDelegatedBalance);
+                    delegatorsCounts.Add(row.baker.DelegatorsCount);
+
+                    foreach (var delegator in row.delegators)
+                    {
+                        bakerIds.Add(delegator.BakerId!.Value);
+                        addressIds.Add(delegator.Id);
+                        ownDelegated.Add(delegator.Balance);
+                        externalDelegated.Add(null);
+                        delegatorsCounts.Add(null);
+                    }
+                }
+
+                if (bakerIds.Count > 0)
+                {
+                    await Db.Database.ExecuteSqlRawAsync("""
                         INSERT INTO "SnapshotBalances" (
                             "ChainId",
                             "Level",
@@ -101,10 +119,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                             "ExternalDelegatedBalance",
                             "DelegatorsCount"
                         )
-                        VALUES
-                        {values}
-                        """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+                        SELECT {0}, {1}, q.baker, q.address, q.own, q.external, q.delegators
+                        FROM unnest({2}::int[], {3}::int[], {4}::bigint[], {5}::bigint[], {6}::int[])
+                        AS q(baker, address, own, external, delegators)
+                        """,
+                        block.ChainId, block.Level,
+                        bakerIds, addressIds, ownDelegated, externalDelegated, delegatorsCounts);
                 }
             }
         }
@@ -114,31 +134,33 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             if (!block.Events.HasFlag(L1BlockEvents.CycleEnd))
                 return;
 
-            var rewards = string.Join(",\n", GetBalanceUpdates(rawBlock)
+            var bakerIds = new List<int>();
+            var values = new List<long>();
+
+            foreach (var updates in GetBalanceUpdates(rawBlock)
                 .Where(x => x.RequiredString("kind")[0] == 'f' &&
                             x.RequiredString("category")[0] == 'r' &&
                             x.RequiredInt64("change") < 0 &&
                             GetFreezerCycle(x) != block.Cycle)
                 .Select(x => (x.RequiredString("delegate"), x.RequiredInt64("change")))
-                .GroupBy(x => x.Item1)
-                .Select(updates => $"({Cache.Addresses.GetExistingBaker(updates.Key).Id}, {updates.Sum(x => -x.Item2)}::bigint)"));
-
-            if (rewards.Length > 0)
+                .GroupBy(x => x.Item1))
             {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                await Db.Database.ExecuteSqlRawAsync($"""
+                bakerIds.Add(Cache.Addresses.GetExistingBaker(updates.Key).Id);
+                values.Add(updates.Sum(x => -x.Item2));
+            }
+
+            if (bakerIds.Count > 0)
+            {
+                await Db.Database.ExecuteSqlRawAsync("""
                     UPDATE "SnapshotBalances" as sb
                     SET "OwnDelegatedBalance" = "OwnDelegatedBalance" - reward.value
-                    FROM (
-                        VALUES
-                        {rewards}
-                    ) as reward(baker, value)
-                    WHERE sb."ChainId" = {block.ChainId}
-                    AND sb."Level" = {block.Level}
+                    FROM unnest({2}::int[], {3}::bigint[]) as reward(baker, value)
+                    WHERE sb."ChainId" = {0}
+                    AND sb."Level" = {1}
                     AND sb."BakerId" = reward.baker
                     AND sb."AddressId" = reward.baker
-                    """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+                    """,
+                    block.ChainId, block.Level, bakerIds, values);
             }
         }
 
@@ -173,16 +195,33 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
 
             if (weirdOriginations.Any())
             {
-                var values = string.Join(",\n", weirdOriginations
-                    .Where(weirds => weirds.Sum(x => x.contract.Balance) >= protocol.MinimalStake)
-                    .SelectMany(weirds =>
-                        new[] { $"({block.ChainId}, {block.Level}, {weirds.Key}, {weirds.Key}, 0, {weirds.Sum(x => x.contract.Balance)}, {weirds.Count()})" }
-                        .Concat(weirds.Select(x => $"({block.ChainId}, {block.Level}, {weirds.Key}, {x.contract.Id}, {x.contract.Balance}, NULL::bigint, NULL::integer)"))));
+                var bakerIds = new List<int>();
+                var addressIds = new List<int>();
+                var ownDelegated = new List<long>();
+                var externalDelegated = new List<long?>();
+                var delegatorsCounts = new List<int?>();
 
-                if (values.Length > 0)
+                foreach (var weirds in weirdOriginations.Where(weirds => weirds.Sum(x => x.contract.Balance) >= protocol.MinimalStake))
                 {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                    await Db.Database.ExecuteSqlRawAsync($"""
+                    bakerIds.Add(weirds.Key);
+                    addressIds.Add(weirds.Key);
+                    ownDelegated.Add(0);
+                    externalDelegated.Add(weirds.Sum(x => x.contract.Balance));
+                    delegatorsCounts.Add(weirds.Count());
+
+                    foreach (var weird in weirds)
+                    {
+                        bakerIds.Add(weirds.Key);
+                        addressIds.Add(weird.contract.Id);
+                        ownDelegated.Add(weird.contract.Balance);
+                        externalDelegated.Add(null);
+                        delegatorsCounts.Add(null);
+                    }
+                }
+
+                if (bakerIds.Count > 0)
+                {
+                    await Db.Database.ExecuteSqlRawAsync("""
                         INSERT INTO "SnapshotBalances" (
                             "ChainId",
                             "Level",
@@ -192,10 +231,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                             "ExternalDelegatedBalance",
                             "DelegatorsCount"
                         )
-                        VALUES
-                        {values}
-                        """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+                        SELECT {0}, {1}, q.baker, q.address, q.own, q.external, q.delegators
+                        FROM unnest({2}::int[], {3}::int[], {4}::bigint[], {5}::bigint[], {6}::int[])
+                        AS q(baker, address, own, external, delegators)
+                        """,
+                        block.ChainId, block.Level,
+                        bakerIds, addressIds, ownDelegated, externalDelegated, delegatorsCounts);
                 }
             }
         }

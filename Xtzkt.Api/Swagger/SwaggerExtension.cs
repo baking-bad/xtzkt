@@ -84,7 +84,12 @@ static class SwaggerExtension
                 if (ctx.JsonTypeInfo.Type == typeof(SelectionParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(MichelineParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(HexBytesParameter) ||
-                    ctx.JsonTypeInfo.Type == typeof(Utf8BytesParameter))
+                    ctx.JsonTypeInfo.Type == typeof(Utf8BytesParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(OperationHashParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(OperationHashEqParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(BlockHashParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(MichelsonBlockHashParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(ExpressionBytesParameter))
                 {
                     foreach (var (_, prop) in schema.Properties!)
                     {

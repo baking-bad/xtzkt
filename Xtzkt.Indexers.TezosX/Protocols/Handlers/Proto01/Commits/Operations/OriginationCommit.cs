@@ -10,7 +10,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
+    public async Task<XEvmOriginationOperation> ApplyEvm(byte[] hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
     {
         #region init
         var block = Context.Block;

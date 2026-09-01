@@ -27,7 +27,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 ChainId = block.ChainId,
                 Level = Context.Block.Level,
                 Timestamp = Context.Block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),

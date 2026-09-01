@@ -21,7 +21,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             #region init
             var sender = await Cache.Addresses.GetExistingAsync(content.RequiredString("source"));
             var rollup = await Cache.Addresses.GetSmartRollupOrDefaultAsync(content.RequiredString("rollup"));
-            var commitment = await Cache.SmartRollupCommitments.GetOrDefaultAsync(content.RequiredString("cemented_commitment"), rollup?.Id);
+            var commitment = await Cache.SmartRollupCommitments.GetOrDefaultAsync(content.RequiredSrc1HashBytes("cemented_commitment"), rollup?.Id);
 
             var result = content.Required("metadata").Required("operation_result");
 
@@ -31,7 +31,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),

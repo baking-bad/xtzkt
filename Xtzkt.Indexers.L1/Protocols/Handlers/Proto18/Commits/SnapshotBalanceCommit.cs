@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Numerics;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto18
@@ -100,7 +101,16 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
 
             if (deactivated.Count > 0)
             {
-                var values = new List<string>();
+                var bakerIds = new List<int>();
+                var addressIds = new List<int>();
+                var ownDelegated = new List<long>();
+                var externalDelegated = new List<long?>();
+                var delegatorsCounts = new List<int?>();
+                var ownStaked = new List<long?>();
+                var externalStaked = new List<long?>();
+                var stakersCounts = new List<int?>();
+                var pseudotokens = new List<BigInteger?>();
+
                 foreach (var baker in deactivated)
                 {
                     var delegators = await Db.Addresses
@@ -119,55 +129,45 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                             .ToListAsync()
                         : [];
 
-                    values.Add("(" + string.Join(',',
-                        block.ChainId,
-                        block.Level,
-                        baker.Id,
-                        baker.Id,
-                        baker.Balance - baker.OwnStakedBalance - (baker.UnstakedBakerId != null && baker.UnstakedBakerId != baker.Id ? baker.UnstakedBalance : 0),
-                        baker.ExternalDelegatedBalance,
-                        baker.DelegatorsCount,
-                        baker.OwnStakedBalance,
-                        baker.ExternalStakedBalance,
-                        baker.StakersCount,
-                        baker.IssuedPseudotokens ?? (object)"NULL::numeric") + ")");
+                    bakerIds.Add(baker.Id);
+                    addressIds.Add(baker.Id);
+                    ownDelegated.Add(baker.Balance - baker.OwnStakedBalance - (baker.UnstakedBakerId != null && baker.UnstakedBakerId != baker.Id ? baker.UnstakedBalance : 0));
+                    externalDelegated.Add(baker.ExternalDelegatedBalance);
+                    delegatorsCounts.Add(baker.DelegatorsCount);
+                    ownStaked.Add(baker.OwnStakedBalance);
+                    externalStaked.Add(baker.ExternalStakedBalance);
+                    stakersCounts.Add(baker.StakersCount);
+                    pseudotokens.Add(baker.IssuedPseudotokens);
 
                     foreach (var delegator in delegators)
                     {
-                        values.Add("(" + string.Join(',',
-                            block.ChainId,
-                            block.Level,
-                            delegator.BakerId,
-                            delegator.Id,
-                            delegator.Balance - (delegator is L1User user && user.UnstakedBakerId != null && user.UnstakedBakerId != user.BakerId ? user.UnstakedBalance : 0),
-                            "NULL::bigint",
-                            "NULL::integer",
-                            "NULL::bigint",
-                            "NULL::bigint",
-                            "NULL::integer",
-                            (delegator as L1User)?.StakedPseudotokens ?? (object)"NULL::numeric") + ")");
+                        bakerIds.Add(delegator.BakerId!.Value);
+                        addressIds.Add(delegator.Id);
+                        ownDelegated.Add(delegator.Balance - (delegator is L1User user && user.UnstakedBakerId != null && user.UnstakedBakerId != user.BakerId ? user.UnstakedBalance : 0));
+                        externalDelegated.Add(null);
+                        delegatorsCounts.Add(null);
+                        ownStaked.Add(null);
+                        externalStaked.Add(null);
+                        stakersCounts.Add(null);
+                        pseudotokens.Add((delegator as L1User)?.StakedPseudotokens);
                     }
 
                     foreach (var unstaker in unstakers)
                     {
-                        values.Add("(" + string.Join(',',
-                            block.ChainId,
-                            block.Level,
-                            unstaker.UnstakedBakerId,
-                            unstaker.Id,
-                            unstaker.UnstakedBalance,
-                            "NULL::bigint",
-                            "NULL::integer",
-                            "NULL::bigint",
-                            "NULL::bigint",
-                            "NULL::integer",
-                            "NULL::numeric") + ")");
+                        bakerIds.Add(unstaker.UnstakedBakerId!.Value);
+                        addressIds.Add(unstaker.Id);
+                        ownDelegated.Add(unstaker.UnstakedBalance);
+                        externalDelegated.Add(null);
+                        delegatorsCounts.Add(null);
+                        ownStaked.Add(null);
+                        externalStaked.Add(null);
+                        stakersCounts.Add(null);
+                        pseudotokens.Add(null);
                     }
                 }
-                if (values.Count > 0)
+                if (bakerIds.Count > 0)
                 {
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                    await Db.Database.ExecuteSqlRawAsync($"""
+                    await Db.Database.ExecuteSqlRawAsync("""
                         INSERT INTO "SnapshotBalances" (
                             "ChainId",
                             "Level",
@@ -181,10 +181,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                             "StakersCount",
                             "Pseudotokens"
                         )
-                        VALUES
-                        {string.Join(",\n", values)}
-                        """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+                        SELECT {0}, {1}, q.baker, q.address, q.own_delegated, q.external_delegated, q.delegators, q.own_staked, q.external_staked, q.stakers, q.pseudotokens
+                        FROM unnest({2}::int[], {3}::int[], {4}::bigint[], {5}::bigint[], {6}::int[], {7}::bigint[], {8}::bigint[], {9}::int[], {10}::numeric[])
+                        AS q(baker, address, own_delegated, external_delegated, delegators, own_staked, external_staked, stakers, pseudotokens)
+                        """,
+                        block.ChainId, block.Level, bakerIds, addressIds, ownDelegated, externalDelegated, delegatorsCounts, ownStaked, externalStaked, stakersCounts, pseudotokens);
                 }
             }
         }

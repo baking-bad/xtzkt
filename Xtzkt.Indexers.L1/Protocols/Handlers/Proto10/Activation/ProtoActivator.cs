@@ -5,6 +5,7 @@ using Netezos.Encoding;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
@@ -243,12 +244,15 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 }
             }
 
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-            await Db.Database.ExecuteSqlRawAsync($"""
-                INSERT INTO "BakingRights" ("ChainId", "Cycle", "Level", "BakerId", "Type", "Status", "Slots") VALUES
-                {string.Join(',', newArs.Select(ar => $"({ar.ChainId},{ar.Cycle},{ar.Level},{ar.BakerId},{(int)ar.Type},{(int)ar.Status},{ar.Slots})"))}
-                """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            await Db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "BakingRights" ("ChainId", "Cycle", "Level", "BakerId", "Type", "Status", "Slots")
+                SELECT {0}, {1}, q.level, q.baker, {2}, {3}, q.slots
+                FROM unnest({4}::int[], {5}::int[], {6}::int[]) AS q(level, baker, slots)
+                """,
+                state.Id, state.Cycle, (int)BakingRightType.Attestation, (int)BakingRightStatus.Future,
+                newArs.Select(x => x.Level).ToArray(),
+                newArs.Select(x => x.BakerId).ToArray(),
+                newArs.Select(x => x.Slots).ToArray());
 
             foreach (var ar in newArs)
             {
@@ -268,20 +272,14 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 .EnumerateArray()
                 .ToList();
 
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-            await Db.Database.ExecuteSqlRawAsync($"""
-                INSERT INTO "BakingRights" ("ChainId", "Cycle", "Level", "BakerId", "Type", "Status", "Slots") VALUES
-                {string.Join(',', shiftedRights.Select(ar => $@"(
-                    {state.Id},
-                    {nextCycle},
-                    {nextCycleStart},
-                    {Cache.Addresses.GetExistingBaker(ar.RequiredString("delegate")).Id},
-                    {(int)BakingRightType.Attestation},
-                    {(int)BakingRightStatus.Future},
-                    {ar.RequiredArray("slots").Count()}
-                )"))}
-                """);
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            await Db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "BakingRights" ("ChainId", "Cycle", "Level", "BakerId", "Type", "Status", "Slots")
+                SELECT {0}, {1}, {2}, q.baker, {3}, {4}, q.slots
+                FROM unnest({5}::int[], {6}::int[]) AS q(baker, slots)
+                """,
+                state.Id, nextCycle, nextCycleStart, (int)BakingRightType.Attestation, (int)BakingRightStatus.Future,
+                shiftedRights.Select(ar => Cache.Addresses.GetExistingBaker(ar.RequiredString("delegate")).Id).ToArray(),
+                shiftedRights.Select(ar => ar.RequiredArray("slots").Count()).ToArray());
 
             foreach (var cycle in cycles)
             {
@@ -687,7 +685,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                         JsonValue = Regexes.RestrictedUnicode().Replace(schema.Value.Humanize(rawValue), Regexes.NullEscapeString),
                         RawKey = schema.Key.Optimize(rawKey).ToBytes(),
                         RawValue = schema.Value.Optimize(rawValue).ToBytes(),
-                        KeyHash = schema.GetKeyHash(rawKey),
+                        KeyHash = Hashes.ParseExprHash(schema.GetKeyHash(rawKey)),
                         Updates = 1
                     };
                     Db.BigMapKeys.Add(key);

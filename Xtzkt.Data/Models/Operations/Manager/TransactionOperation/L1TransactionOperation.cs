@@ -76,7 +76,7 @@ namespace Xtzkt.Data.Models
                 writer.WriteNullable(op.AddressRegistryIndex, NpgsqlDbType.Integer);
                 writer.Write(op.Level, NpgsqlDbType.Integer);
                 writer.Write(op.Timestamp, NpgsqlDbType.TimestampTz);
-                writer.Write(op.Hash, NpgsqlDbType.Char);
+                writer.Write(op.Hash, NpgsqlDbType.Bytea);
                 writer.Write(op.SenderId, NpgsqlDbType.Integer);
                 writer.Write(op.Counter, NpgsqlDbType.Integer);
                 writer.Write(op.BakerFee, NpgsqlDbType.Bigint);

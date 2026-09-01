@@ -18,7 +18,7 @@ public class BigMapKeyInfoParameter : INormalizable
     /// Filters by key hash (script expression).
     /// Click on the parameter to expand more details.
     /// </summary>
-    public ExpressionParameter? KeyHash { get; set; }
+    public ExpressionBytesParameter? KeyHash { get; set; }
 
     /// <summary>
     /// Filters by key in Micheline format (specified as a JSON value).

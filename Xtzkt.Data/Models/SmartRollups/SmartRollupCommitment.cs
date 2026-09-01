@@ -12,7 +12,7 @@ namespace Xtzkt.Data.Models
 
         public required int InboxLevel { get; set; }
         public required string State { get; set; }
-        public required string Hash { get; set; }
+        public required byte[] Hash { get; set; }
         public required long Ticks { get; set; }
 
         public required int FirstLevel { get; set; }

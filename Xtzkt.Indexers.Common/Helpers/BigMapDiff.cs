@@ -20,7 +20,7 @@ public class UpdateDiff : BigMapDiff
 {
     public override BigMapDiffAction Action => BigMapDiffAction.Update;
 
-    public required string KeyHash { get; set; }
+    public required byte[] KeyHash { get; set; }
     public required IMicheline Key { get; set; }
     public IMicheline? Value { get; set; }
 }
@@ -49,7 +49,7 @@ public abstract class BigMapDiff
             "update" => new UpdateDiff
             {
                 Ptr = diff.RequiredInt32("big_map"),
-                KeyHash = diff.RequiredString("key_hash"),
+                KeyHash = diff.RequiredExprHashBytes("key_hash"),
                 Key = diff.RequiredMicheline("key"),
                 Value = diff.OptionalMicheline("value")
             },
@@ -76,7 +76,7 @@ public abstract class BigMapDiff
                             yield return new UpdateDiff
                             {
                                 Ptr = diff.RequiredInt32("id"),
-                                KeyHash = update.RequiredString("key_hash"),
+                                KeyHash = update.RequiredExprHashBytes("key_hash"),
                                 Key = update.RequiredMicheline("key"),
                                 Value = update.OptionalMicheline("value")
                             };
@@ -99,7 +99,7 @@ public abstract class BigMapDiff
                             yield return new UpdateDiff
                             {
                                 Ptr = diff.RequiredInt32("id"),
-                                KeyHash = update.RequiredString("key_hash"),
+                                KeyHash = update.RequiredExprHashBytes("key_hash"),
                                 Key = update.RequiredMicheline("key"),
                                 Value = update.OptionalMicheline("value")
                             };
@@ -115,7 +115,7 @@ public abstract class BigMapDiff
                             yield return new UpdateDiff
                             {
                                 Ptr = diff.RequiredInt32("id"),
-                                KeyHash = update.RequiredString("key_hash"),
+                                KeyHash = update.RequiredExprHashBytes("key_hash"),
                                 Key = update.RequiredMicheline("key"),
                                 Value = update.OptionalMicheline("value")
                             };

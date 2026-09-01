@@ -11,7 +11,7 @@ public class BigMapKeyInfoBinder(IModelMetadataProvider _metadata, IModelBinderF
         var param = bindingContext.ModelName;
 
         var id = await bindingContext.BindChild<Int64NullParameter>(_metadata, _factory, $"{param}.{nameof(BigMapKeyInfoParameter.Id)}");
-        var keyHash = await bindingContext.BindChild<ExpressionParameter>(_metadata, _factory, $"{param}.{nameof(BigMapKeyInfoParameter.KeyHash)}");
+        var keyHash = await bindingContext.BindChild<ExpressionBytesParameter>(_metadata, _factory, $"{param}.{nameof(BigMapKeyInfoParameter.KeyHash)}");
         var rawKey = await bindingContext.BindChild<MichelineParameter>(_metadata, _factory, $"{param}.{nameof(BigMapKeyInfoParameter.RawKey)}");
         var key = await bindingContext.BindChild<JsonParameter>(_metadata, _factory, $"{param}.{nameof(BigMapKeyInfoParameter.Key)}");
 

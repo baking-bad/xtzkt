@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto12
@@ -22,7 +23,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = opHash,
+                Hash = Hashes.ParseMichelsonOperationHash(opHash),
                 Power = power,
                 BakerId = baker.Id
             };

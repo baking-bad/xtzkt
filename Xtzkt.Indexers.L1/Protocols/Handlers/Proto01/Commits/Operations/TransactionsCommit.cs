@@ -5,6 +5,7 @@ using Netezos.Contracts;
 using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
 using Xtzkt.Utils;
@@ -32,7 +33,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 Amount = content.RequiredInt64("amount"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
@@ -375,7 +376,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                         transaction.ParametersRaw ??= rawParam.ToBytes();
 
                         if (transaction.Status == OperationStatus.Applied)
-                            Logger.LogError(ex, "Failed to humanize tx {hash} parameters", transaction.Hash);
+                            Logger.LogError(ex, "Failed to humanize tx parameters");
                     }
                 }
             }
@@ -464,7 +465,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 new UpdateDiff
                 {
                     Ptr = transaction.TargetId,
-                    KeyHash = "exprteAx9hWkXvYSQ4nN9SqjJGVR1sTneHQS1QEcSdzckYdXZVvsqY",
+                    KeyHash = Hashes.ParseExprHash("exprteAx9hWkXvYSQ4nN9SqjJGVR1sTneHQS1QEcSdzckYdXZVvsqY"),
                     Key = new MichelineString("KT1R3uoZ6W1ZxEwzqtv75Ro7DhVY6UAcxuK2"),
                     Value = new MichelinePrim
                     {

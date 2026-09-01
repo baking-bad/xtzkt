@@ -7,6 +7,7 @@ using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -47,7 +48,7 @@ public class BlockRepository(
                     case "id":                   columns.Add(@"""Id"""); break;
                     case "chain":                columns.Add(@"""ChainId"""); break;
                     case "level":                columns.Add(@"""Level"""); break;
-                    case "hash":                 columns.Add(@"""Hash"""); break;
+                    case "hash":                 columns.Add(@"""Hash"""); columns.Add(@"""Layer"""); break;
                     case "timestamp":            columns.Add(@"""Timestamp"""); break;
                     // L1Block
                     case "cycle":                columns.Add(@"""Cycle"""); break;
@@ -157,7 +158,7 @@ public class BlockRepository(
                     Id = row.Id,
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonBlockHash(row.Hash),
                     Timestamp = row.Timestamp,
                     Cycle = row.Cycle,
                     Protocol = _protocolCache.GetInfo((int)row.ProtocolId),
@@ -188,13 +189,13 @@ public class BlockRepository(
                     Id = row.Id,
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatEvmBlockHash(row.Hash),
                     Timestamp = row.Timestamp,
                     Protocol = _protocolCache.GetInfo((int)row.ProtocolId),
                     DaFees = (BigInteger)row.BakerFees18,
                     BurnedFees = (BigInteger)row.BurnedFees18,
                     SequencerPool = _addressCache.GetInfo((int?)row.ProposerId),
-                    MichelsonHash = row.MichelsonHash,
+                    MichelsonHash = row.MichelsonHash is byte[] mh ? Hashes.FormatMichelsonBlockHash(mh) : null,
                 };
 
             throw new InvalidOperationException("Failed to read Block");
@@ -237,7 +238,7 @@ public class BlockRepository(
                     foreach (var row in rows) result[j++][i] = row.Level;
                     break;
                 case "hash":
-                    foreach (var row in rows) result[j++][i] = row.Hash;
+                    foreach (var row in rows) result[j++][i] = Hashes.FormatBlockHash(row.Hash, (Data.Models.Layer)(int)row.Layer);
                     break;
                 case "timestamp":
                     foreach (var row in rows) result[j++][i] = row.Timestamp;
@@ -365,7 +366,7 @@ public class BlockRepository(
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Alias;
                     break;
                 case "michelsonHash":
-                    foreach (var row in rows) result[j++][i] = row.MichelsonHash;
+                    foreach (var row in rows) result[j++][i] = row.MichelsonHash is byte[] mh2 ? Hashes.FormatMichelsonBlockHash(mh2) : null;
                     break;
             }
         }

@@ -1,4 +1,5 @@
-﻿using Xtzkt.Indexers.Common.Extensions;
+﻿using Xtzkt.Data.Utils;
+using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
@@ -14,7 +15,7 @@ partial class ProtoHelpers
         var batch = new MetaBatch
         {
             Delayed = delayed,
-            Hash = hash,
+            Hash = Hashes.ParseOperationHash(hash),
         };
 
         ProcessQueue(context, queue, batch);

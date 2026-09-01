@@ -14,7 +14,7 @@ namespace Xtzkt.Data.Models
         public required int ChainId { get; set; }
         public required int Level { get; set; }
         public required DateTime Timestamp { get; set; }
-        public required string Hash { get; set; }
+        public required byte[] Hash { get; set; }
 
         public int SenderId { get; set; }
         public int Counter { get; set; }
@@ -71,7 +71,7 @@ namespace Xtzkt.Data.Models
             writer.Write(ChainId, NpgsqlDbType.Integer);
             writer.Write(Level, NpgsqlDbType.Integer);
             writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
-            writer.Write(Hash, NpgsqlDbType.Text);
+            writer.Write(Hash, NpgsqlDbType.Bytea);
             writer.Write(SenderId, NpgsqlDbType.Integer);
             writer.Write(Counter, NpgsqlDbType.Integer);
             writer.Write(GasLimit, NpgsqlDbType.Integer);

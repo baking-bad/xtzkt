@@ -10,7 +10,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
 class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public virtual async Task<XRegisterConstantOperation> Apply(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
+    public virtual async Task<XRegisterConstantOperation> Apply(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
     {
         #region init
         var block = Context.Block;

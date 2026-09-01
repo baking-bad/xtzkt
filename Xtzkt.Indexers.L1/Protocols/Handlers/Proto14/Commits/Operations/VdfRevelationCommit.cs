@@ -24,7 +24,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerId = Context.Proposer.Id,
                 Cycle = block.Cycle,
                 RewardDelegated = reward,

@@ -10,7 +10,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task<XEvmDepositOperation> ApplyEvm(string hash, DelayedOperation deposit, JsonElement feederReceipt)
+    public async Task<XEvmDepositOperation> ApplyEvm(byte[] hash, DelayedOperation deposit, JsonElement feederReceipt)
     {
         #region init
         var block = Context.Block;

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto16
@@ -34,7 +35,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),
@@ -118,8 +119,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                     var initiatorCommitmentHash = refutation.RequiredString("player_commitment_hash");
                     var opponentCommitmentHash = refutation.RequiredString("opponent_commitment_hash");
 
-                    var initiatorCommitment = await Cache.SmartRollupCommitments.GetAsync(initiatorCommitmentHash, rollup!.Id);
-                    var opponentCommitment = await Cache.SmartRollupCommitments.GetAsync(opponentCommitmentHash, rollup.Id);
+                    var initiatorCommitment = await Cache.SmartRollupCommitments.GetAsync(Hashes.ParseSrc1Hash(initiatorCommitmentHash), rollup!.Id);
+                    var opponentCommitment = await Cache.SmartRollupCommitments.GetAsync(Hashes.ParseSrc1Hash(opponentCommitmentHash), rollup.Id);
 
                     game = new RefutationGame
                     {

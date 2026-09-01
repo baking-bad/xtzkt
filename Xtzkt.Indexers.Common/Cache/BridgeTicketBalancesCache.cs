@@ -75,7 +75,7 @@ public class BridgeTicketBalancesCache(XtzktContext db)
                 .FromSqlRaw("""
                     SELECT b.*
                     FROM "BridgeTicketBalances" AS b
-                    JOIN unnest({0}, {1}) AS k(address_id, ticket_id)
+                    INNER JOIN unnest({0}, {1}) AS k(address_id, ticket_id)
                     ON b."AddressId" = k.address_id AND b."TicketId" = k.ticket_id
                     """, addressIds, ticketIds)
                 .ToListAsync();

@@ -6,7 +6,7 @@ public sealed class MetaBlock
 {
     public required int Level { get; init; }
     public required DateTime Timestamp { get; init; }
-    public required string Hash { get; init; }
+    public required byte[] Hash { get; init; }
     public required List<MetaBatch> Batches { get; init; }
 
     public JsonElement EvmBlock { get; init; }
@@ -19,7 +19,7 @@ public sealed class MetaBlock
 public class MetaBatch
 {
     public bool Delayed { get; init; }
-    public required string Hash { get; init; }
+    public required byte[] Hash { get; init; }
     public List<MetaOperation> Operations { get; init; } = [];
 }
 

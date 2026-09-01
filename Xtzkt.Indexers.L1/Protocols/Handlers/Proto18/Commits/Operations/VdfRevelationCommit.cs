@@ -26,7 +26,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerId = Context.Proposer.Id,
                 Cycle = block.Cycle,
                 Solution = Hex.Parse(content.RequiredArray("solution", 2)[0].RequiredString()),

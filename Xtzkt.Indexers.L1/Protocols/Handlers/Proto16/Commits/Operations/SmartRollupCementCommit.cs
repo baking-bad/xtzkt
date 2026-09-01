@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto16
@@ -13,7 +14,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             #region init
             var sender = await Cache.Addresses.GetExistingAsync(content.RequiredString("source"));
             var rollup = await Cache.Addresses.GetSmartRollupOrDefaultAsync(content.RequiredString("rollup"));
-            var commitment = await Cache.SmartRollupCommitments.GetOrDefaultAsync(GetCommitment(content), rollup?.Id);
+            var commitment = await Cache.SmartRollupCommitments.GetOrDefaultAsync(GetCommitment(content) is string _c ? Hashes.ParseSrc1Hash(_c) : null, rollup?.Id);
 
             var result = content.Required("metadata").Required("operation_result");
 
@@ -23,7 +24,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),
@@ -74,7 +75,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             if (operation.Status == OperationStatus.Applied)
             {
                 rollup!.InboxLevel = commitment!.InboxLevel;
-                rollup.LastCommitment = commitment.Hash;
+                rollup.LastCommitment = Hashes.FormatSrc1Hash(commitment.Hash);
                 rollup.CementedCommitments++;
                 rollup.PendingCommitments--;
                 
@@ -109,7 +110,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 var prevCementedCommitment = await Cache.SmartRollupCommitments.GetOrDefaultAsync(prevCement?.CommitmentId);
 
                 rollup!.InboxLevel = prevCementedCommitment?.InboxLevel ?? 0;
-                rollup.LastCommitment = prevCementedCommitment?.Hash ?? rollup.GenesisCommitment;
+                rollup.LastCommitment = prevCementedCommitment?.Hash is byte[] _pc ? Hashes.FormatSrc1Hash(_pc) : rollup.GenesisCommitment;
                 rollup.CementedCommitments--;
                 rollup.PendingCommitments++;
 

@@ -19,7 +19,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
     public IEnumerable<BigMapDiff>? BigMapDiffs { get; private set; }
     public XMichelsonContract? Contract { get; private set; }
 
-    public Task<XEvmOriginationOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
+    public Task<XEvmOriginationOperation> ApplyEvm(byte[] hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
     {
         return ApplyEvm(hash, tx, receipt, trace, isDelayedOp, 0);
     }
@@ -31,7 +31,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
         return op;
     }
 
-    public virtual async Task Apply(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
+    public virtual async Task Apply(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
     {
         #region init
         var block = Context.Block;

@@ -38,7 +38,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto04
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
 
                 Kind = DoubleConsensusKind.DoubleAttestation,
 

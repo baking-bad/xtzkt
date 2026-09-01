@@ -6,6 +6,7 @@ using Xtzkt.Api.Filters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -230,7 +231,7 @@ public class BigMapKeyRepository(
                 StoragePath = row.BigMap_StoragePath,
             },
             Active = row.Active,
-            KeyHash = row.KeyHash,
+            KeyHash = Hashes.FormatExprHash(row.KeyHash),
             RawKey = Micheline.FromBytes((byte[])row.RawKey),
             Key = row.JsonKey,
             RawValue = Micheline.FromBytes((byte[])row.RawValue),
@@ -329,7 +330,7 @@ public class BigMapKeyRepository(
                     foreach (var row in rows) result[j++][i] = row.Active;
                     break;
                 case "keyHash":
-                    foreach (var row in rows) result[j++][i] = row.KeyHash;
+                    foreach (var row in rows) result[j++][i] = Hashes.FormatExprHash(row.KeyHash);
                     break;
                 case "rawKey":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.RawKey);

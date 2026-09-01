@@ -12,7 +12,7 @@ public class BridgeTicketsCache(XtzktContext db, ChainConfig chain)
     static int SoftCap = 0;
     static int TargetCap = 0;
     static Dictionary<long, BridgeTicket> CachedById = [];
-    static Dictionary<HashableBytes, BridgeTicket> CachedByWeakHash = [];
+    static Dictionary<HashKey, BridgeTicket> CachedByWeakHash = [];
 
     public static void Configure(CacheSize? size)
     {
@@ -84,7 +84,7 @@ public class BridgeTicketsCache(XtzktContext db, ChainConfig chain)
         }
     }
 
-    public async Task Preload(IEnumerable<HashableBytes> hashes)
+    public async Task Preload(IEnumerable<HashKey> hashes)
     {
         var missed = hashes
             .Where(x => !CachedByWeakHash.ContainsKey(x))

@@ -13,7 +13,7 @@ public abstract class Block(Layer layer) : ISourceOperation
     public required long Id { get; set; }
     public required int ChainId { get; set; }
     public required int Level { get; set; }
-    public required string Hash { get; set; }
+    public required byte[] Hash { get; set; }
     public required DateTime Timestamp { get; set; }
     public required int ProtocolId { get; set; }
 
@@ -41,7 +41,7 @@ public abstract class Block(Layer layer) : ISourceOperation
         writer.Write((int)Layer, NpgsqlDbType.Integer);
         writer.Write(ChainId, NpgsqlDbType.Integer);
         writer.Write(Level, NpgsqlDbType.Integer);
-        writer.Write(Hash, NpgsqlDbType.Text);
+        writer.Write(Hash, NpgsqlDbType.Bytea);
         writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
         writer.Write(ProtocolId, NpgsqlDbType.Integer);
         writer.WriteNullable(OpsCounter, NpgsqlDbType.Integer);

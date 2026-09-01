@@ -29,7 +29,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerId = baker.Id,
                 SenderId = sender.Id,
                 RevealedLevel = revealedBlock.Level,

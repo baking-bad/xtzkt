@@ -11,7 +11,7 @@ public class BigMapKeysCache(XtzktContext db, ChainConfig chain)
     #region static
     static int SoftCap = 0;
     static int TargetCap = 0;
-    static Dictionary<(int, string), BigMapKey> Cached = [];
+    static Dictionary<(int, HashKey), BigMapKey> Cached = [];
 
     public static void Configure(CacheSize? size)
     {
@@ -59,31 +59,33 @@ public class BigMapKeysCache(XtzktContext db, ChainConfig chain)
         Cached.Remove((key.BigMapId, key.KeyHash));
     }
 
-    public async Task Prefetch(IEnumerable<(int id, string hash)> keys)
+    public async Task Prefetch(IEnumerable<(int id, byte[] hash)> keys)
     {
-        var missed = keys.Where(x => !Cached.ContainsKey((x.id, x.hash))).ToHashSet();
+        var missed = keys
+            .Where(x => !Cached.ContainsKey((x.id, x.hash)))
+            .Select(x => (x.id, hash: (HashKey)x.hash))
+            .Distinct()
+            .ToList();
+
         if (missed.Count != 0)
         {
-            for (int i = 0, n = 2048; i < missed.Count; i += n)
-            {
-                var idHashes = string.Join(',', missed.Skip(i).Take(n).Select(x => $"({x.id}, '{x.hash}')")); // TODO: use parameters
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                var loaded = await Db.BigMapKeys
-                    .FromSqlRaw($"""
-                        SELECT *
-                        FROM "BigMapKeys"
-                        WHERE ("BigMapId", "KeyHash") IN ({idHashes})
-                        """)
-                    .ToListAsync();
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            var ids = missed.Select(x => x.id).ToArray();
+            var hashes = missed.Select(x => x.hash.Bytes).ToArray();
 
-                foreach (var item in loaded)
-                    Cached.Add((item.BigMapId, item.KeyHash), item);
-            }
+            var items = await Db.BigMapKeys
+                .FromSqlRaw("""
+                    SELECT k.*
+                    FROM unnest({0}::int[], {1}::bytea[]) AS q(id, hash)
+                    INNER JOIN "BigMapKeys" k ON k."BigMapId" = q.id AND k."KeyHash" = q.hash
+                    """, ids, hashes)
+                .ToListAsync();
+
+            foreach (var item in items)
+                Add(item);
         }
     }
 
-    public bool TryGet(int id, string hash, [NotNullWhen(true)] out BigMapKey? key)
+    public bool TryGet(int id, byte[] hash, [NotNullWhen(true)] out BigMapKey? key)
     {
         return Cached.TryGetValue((id, hash), out key);
     }

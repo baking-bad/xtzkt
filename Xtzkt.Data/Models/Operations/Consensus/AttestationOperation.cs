@@ -11,7 +11,7 @@ namespace Xtzkt.Data.Models
         public required int ChainId { get; set; }
         public required int Level { get; set; }
         public required DateTime Timestamp { get; set; }
-        public required string Hash { get; set; }
+        public required byte[] Hash { get; set; }
 
         public required int BakerId { get; set; }
         public long Power { get; set; }
@@ -52,7 +52,7 @@ namespace Xtzkt.Data.Models
                 writer.WriteNullable(op.ResetDeactivation, NpgsqlDbType.Integer);
                 writer.Write(op.Level, NpgsqlDbType.Integer);
                 writer.Write(op.Timestamp, NpgsqlDbType.TimestampTz);
-                writer.Write(op.Hash, NpgsqlDbType.Char);
+                writer.Write(op.Hash, NpgsqlDbType.Bytea);
             }
 
             writer.Complete();
@@ -72,8 +72,6 @@ namespace Xtzkt.Data.Models
             #region props
             modelBuilder.Entity<AttestationOperation>()
                 .Property(x => x.Hash)
-                .IsFixedLength(true)
-                .HasMaxLength(51)
                 .IsRequired();
             #endregion
 

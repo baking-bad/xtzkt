@@ -47,7 +47,7 @@ public class BigMapKeyFilter : INormalizable
     ///
     /// Example: `?keyHash=expr...`.
     /// </summary>
-    public ExpressionParameter? KeyHash { get; set; }
+    public ExpressionBytesParameter? KeyHash { get; set; }
 
     /// <summary>
     /// Filters by key in Micheline format (specified as a JSON value).

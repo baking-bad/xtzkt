@@ -305,7 +305,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
             #region precache
             var addressesSet = new HashSet<string>();
             var tokensSet = new HashSet<(int, BigInteger)>();
-            var balancesSet = new HashSet<(int, HashableBytes?, long)>();
+            var balancesSet = new HashSet<(int, HashKey?, long)>();
             var nftAddressesSet = new HashSet<int>();
 
             foreach (var (op, opCtx) in ops)
@@ -337,22 +337,22 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                         if (Cache.Tokens.TryGet(opCtx.Contract.Id, tokenId, out var token))
                         {
                             if (Cache.Addresses.TryGetCached(from, out var fromAcc))
-                                balancesSet.Add((fromAcc.Id, HashableBytes.From(fromEp), token.Id));
+                                balancesSet.Add((fromAcc.Id, HashKey.From(fromEp), token.Id));
                             
                             if (Cache.Addresses.TryGetCached(to, out var toAcc))
-                                balancesSet.Add((toAcc.Id, HashableBytes.From(toEp), token.Id));
+                                balancesSet.Add((toAcc.Id, HashKey.From(toEp), token.Id));
                         }
 
                     foreach (var (address, ep, _) in tokenCtx.Balances)
                         if (Cache.Tokens.TryGet(opCtx.Contract.Id, tokenId, out var token))
                         {
                             if (Cache.Addresses.TryGetCached(address, out var acc))
-                                balancesSet.Add((acc.Id, HashableBytes.From(ep), token.Id));
+                                balancesSet.Add((acc.Id, HashKey.From(ep), token.Id));
 
                             if (token.OwnerId != null)
                             {
                                 nftAddressesSet.Add(token.OwnerId.Value);
-                                balancesSet.Add((token.OwnerId.Value, HashableBytes.From(token.OwnerEntrypoint), token.Id));
+                                balancesSet.Add((token.OwnerId.Value, HashKey.From(token.OwnerEntrypoint), token.Id));
                             }
                         }
                 }
@@ -448,26 +448,26 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
         static bool ValidateTransfers((List<(string, byte[]?, string, byte[]?, BigInteger)> Transfers, List<(string, byte[]?, BigInteger)> Balances) ctx)
         {
-            var dic = new Dictionary<(string, HashableBytes?), BigInteger>();
+            var dic = new Dictionary<(string, HashKey?), BigInteger>();
             foreach (var (from, fromEp, to, toEp, amount) in ctx.Transfers)
             {
-                if (!dic.ContainsKey((from, HashableBytes.From(fromEp))))
-                    dic.Add((from, HashableBytes.From(fromEp)), BigInteger.Zero);
+                if (!dic.ContainsKey((from, HashKey.From(fromEp))))
+                    dic.Add((from, HashKey.From(fromEp)), BigInteger.Zero);
 
-                if (!dic.ContainsKey((to, HashableBytes.From(toEp))))
-                    dic.Add((to, HashableBytes.From(toEp)), BigInteger.Zero);
+                if (!dic.ContainsKey((to, HashKey.From(toEp))))
+                    dic.Add((to, HashKey.From(toEp)), BigInteger.Zero);
 
-                dic[(from, HashableBytes.From(fromEp))] -= amount;
-                dic[(to, HashableBytes.From(toEp))] += amount;
+                dic[(from, HashKey.From(fromEp))] -= amount;
+                dic[(to, HashKey.From(toEp))] += amount;
             }
             foreach (var (address, ep, balance) in ctx.Balances)
             {
                 if (balance != BigInteger.Zero)
                 {
-                    if (!dic.ContainsKey((address, HashableBytes.From(ep))))
+                    if (!dic.ContainsKey((address, HashKey.From(ep))))
                         return false;
 
-                    dic[(address, HashableBytes.From(ep))] -= balance;
+                    dic[(address, HashKey.From(ep))] -= balance;
                 }
             }
             return dic.Values.All(x => x == BigInteger.Zero);
@@ -475,17 +475,17 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
         bool ValidateTransfers(Token token, (List<(string, byte[]?, string, byte[]?, BigInteger)> Transfers, List<(string, byte[]?, BigInteger)> Balances) ctx)
         {
-            var dic = new Dictionary<(string, HashableBytes?), BigInteger>();
+            var dic = new Dictionary<(string, HashKey?), BigInteger>();
             foreach (var (from, fromEp, to, toEp, amount) in ctx.Transfers)
             {
-                if (!dic.ContainsKey((from, HashableBytes.From(fromEp))))
-                    dic.Add((from, HashableBytes.From(fromEp)), BigInteger.Zero);
+                if (!dic.ContainsKey((from, HashKey.From(fromEp))))
+                    dic.Add((from, HashKey.From(fromEp)), BigInteger.Zero);
 
-                if (!dic.ContainsKey((to, HashableBytes.From(toEp))))
-                    dic.Add((to, HashableBytes.From(toEp)), BigInteger.Zero);
+                if (!dic.ContainsKey((to, HashKey.From(toEp))))
+                    dic.Add((to, HashKey.From(toEp)), BigInteger.Zero);
 
-                dic[(from, HashableBytes.From(fromEp))] -= amount;
-                dic[(to, HashableBytes.From(toEp))] += amount;
+                dic[(from, HashKey.From(fromEp))] -= amount;
+                dic[(to, HashKey.From(toEp))] += amount;
             }
             foreach (var (addressHash, ep, balance) in ctx.Balances)
             {
@@ -497,10 +497,10 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                 var diff = balance - prevBalance;
                 if (diff != BigInteger.Zero)
                 {
-                    if (!dic.ContainsKey((addressHash, HashableBytes.From(ep))))
+                    if (!dic.ContainsKey((addressHash, HashKey.From(ep))))
                         return false;
 
-                    dic[(addressHash, HashableBytes.From(ep))] -= diff;
+                    dic[(addressHash, HashKey.From(ep))] -= diff;
                 }
             }
             return dic.Values.All(x => x == BigInteger.Zero);
@@ -860,7 +860,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
             #region precache
             var addressesSet = new HashSet<int>();
             var tokensSet = new HashSet<long>();
-            var tokenBalancesSet = new HashSet<(int, HashableBytes?, long)>();
+            var tokenBalancesSet = new HashSet<(int, HashKey?, long)>();
 
             foreach (var tr in transfers)
                 tokensSet.Add(tr.TokenId);
@@ -872,13 +872,13 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                 if (tr.FromId is int fromId)
                 {
                     addressesSet.Add(fromId);
-                    tokenBalancesSet.Add((fromId, HashableBytes.From(tr.FromEntrypoint), tr.TokenId));
+                    tokenBalancesSet.Add((fromId, HashKey.From(tr.FromEntrypoint), tr.TokenId));
                 }
 
                 if (tr.ToId is int toId)
                 {
                     addressesSet.Add(toId);
-                    tokenBalancesSet.Add((toId, HashableBytes.From(tr.ToEntrypoint), tr.TokenId));
+                    tokenBalancesSet.Add((toId, HashKey.From(tr.ToEntrypoint), tr.TokenId));
                 }
             }
 

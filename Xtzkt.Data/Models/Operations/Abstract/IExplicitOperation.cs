@@ -2,5 +2,5 @@
 
 public interface IExplicitOperation : IOperation
 {
-    public string Hash { get; }
+    public byte[] Hash { get; }
 }

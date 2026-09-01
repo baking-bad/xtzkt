@@ -21,7 +21,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto15
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = block.ChainId,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 Level = block.Level,
                 Timestamp = block.Timestamp,
                 BakerFee = content.RequiredInt64("fee"),

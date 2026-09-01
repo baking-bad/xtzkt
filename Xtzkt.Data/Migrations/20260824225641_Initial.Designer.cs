@@ -44,11 +44,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -188,11 +186,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("Deposit")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -534,11 +530,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Epoch")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -668,11 +662,9 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("KeyHash")
+                    b.Property<byte[]>("KeyHash")
                         .IsRequired()
-                        .HasMaxLength(54)
-                        .HasColumnType("character(54)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("LastLevel")
                         .HasColumnType("integer");
@@ -767,9 +759,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Extras")
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Layer")
                         .HasColumnType("integer");
@@ -1189,11 +1181,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1250,11 +1240,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1322,11 +1310,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("InitiatorId")
                         .HasColumnType("integer");
@@ -1464,9 +1450,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<int>("InboxLevel")
                         .HasColumnType("integer");
@@ -1565,11 +1551,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1629,11 +1613,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Kind")
                         .HasColumnType("integer");
@@ -1702,11 +1684,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("Fee")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1834,11 +1814,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Layer")
                         .HasColumnType("integer");
@@ -1980,11 +1958,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2060,9 +2036,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("InitiatorId")
                         .HasColumnType("integer");
@@ -2116,11 +2092,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ChainId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2160,9 +2134,9 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<string>("Hash")
                         .IsRequired()
+                        .IsFixedLength()
                         .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("character(51)");
 
                     b.Property<int>("InitiatorId")
                         .HasColumnType("integer");
@@ -2212,11 +2186,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Epoch")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2416,11 +2388,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Layer")
                         .HasColumnType("integer");
@@ -2492,11 +2462,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Layer")
                         .HasColumnType("integer");
@@ -2650,11 +2618,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2721,11 +2687,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2789,11 +2753,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2858,11 +2820,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2914,9 +2874,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("FirstLevel")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<int>("InboxLevel")
                         .HasColumnType("integer");
@@ -2990,11 +2950,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("InternalOperations")
                         .HasColumnType("integer");
@@ -3070,11 +3028,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("GenesisCommitment")
                         .HasColumnType("text");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<byte[]>("Kernel")
                         .IsRequired()
@@ -3160,11 +3116,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -3236,11 +3190,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -3320,11 +3272,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -3523,11 +3473,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -4148,9 +4096,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<bool?>("Guessed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("InitiatorId")
                         .HasColumnType("integer");
@@ -4232,11 +4180,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("InternalOperations")
                         .HasColumnType("integer");
@@ -4386,11 +4332,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("KeyType")
                         .HasColumnType("integer");
@@ -4453,11 +4397,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Cycle")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Hash")
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
-                        .HasMaxLength(51)
-                        .HasColumnType("character(51)")
-                        .IsFixedLength();
+                        .HasColumnType("bytea");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -4825,8 +4767,8 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Events");
 
-                    b.Property<string>("MichelsonHash")
-                        .HasColumnType("text")
+                    b.Property<byte[]>("MichelsonHash")
+                        .HasColumnType("bytea")
                         .HasColumnName("MichelsonHash");
 
                     b.Property<long>("Operations")
@@ -5166,9 +5108,17 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("OriginationId")
                         .HasColumnType("bigint");
 
-                    b.PrimitiveCollection<byte[][]>("Topics")
-                        .IsRequired()
-                        .HasColumnType("bytea[]");
+                    b.Property<byte[]>("Topic0")
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("Topic1")
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("Topic2")
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("Topic3")
+                        .HasColumnType("bytea");
 
                     b.Property<long?>("TransactionId")
                         .ValueGeneratedOnUpdateSometimes()

@@ -11,7 +11,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
 partial class TransactionCommit
 {
-    public virtual async Task<XMichelsonEvmTransactionOperation> ApplyMichelsonEvm(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp, JsonElement trace)
+    public virtual async Task<XMichelsonEvmTransactionOperation> ApplyMichelsonEvm(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp, JsonElement trace)
     {
         #region init
         var block = Context.Block;

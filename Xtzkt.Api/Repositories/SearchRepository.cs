@@ -1,4 +1,5 @@
 using Dapper;
+using Netezos;
 using Npgsql;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Filters.Parameters;
@@ -7,7 +8,9 @@ using Xtzkt.Api.Models.Search;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Services.Database;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 using Xtzkt.Utils;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -79,27 +82,27 @@ public class SearchRepository(
         #region operation by mich hash
         else if (Regexes.MichelsonOperationHash().IsMatch(query))
         {
-            if (scopes.Contains(SearchScopes.Operation))
-                results.AddRange(await SearchOperationsByHash(db, chains, query, filter.Limit));
+            if (scopes.Contains(SearchScopes.Operation) && Base58.TryDecode(query, Prefixes.o, out var operationHash))
+                results.AddRange(await SearchOperationsByHash(db, chains, operationHash, query, filter.Limit));
         }
         #endregion
 
         #region operation + block by evm hash
-        else if (Regexes.EvmHash().IsMatch(query))
+        else if (Regexes.EvmHash().IsMatch(query) && Hex.TryGetBytes(query, out var evmHash))
         {
             if (scopes.Contains(SearchScopes.Operation))
-                results.AddRange(await SearchOperationsByHash(db, xChains, query, filter.Limit));
+                results.AddRange(await SearchOperationsByHash(db, xChains, evmHash, query, filter.Limit));
 
             if (scopes.Contains(SearchScopes.Block))
-                results.AddRange(await SearchBlocksByEvmHash(db, xChains, query, filter.Limit));
+                results.AddRange(await SearchBlocksByEvmHash(db, xChains, evmHash, query, filter.Limit));
         }
         #endregion
 
         #region block by mich hash
         else if (Regexes.MichelsonBlockHash().IsMatch(query))
         {
-            if (scopes.Contains(SearchScopes.Block))
-                results.AddRange(await SearchBlocksByMichHash(db, chains, query, filter.Limit));
+            if (scopes.Contains(SearchScopes.Block) && Base58.TryDecode(query, Prefixes.B, out var blockHash))
+                results.AddRange(await SearchBlocksByMichHash(db, chains, blockHash, filter.Limit));
         }
         #endregion
 
@@ -201,7 +204,7 @@ public class SearchRepository(
     #endregion
 
     #region blocks
-    async Task<IEnumerable<(double, SearchResult)>> SearchBlocksByEvmHash(NpgsqlConnection db, int[] chains, string hash, int limit)
+    async Task<IEnumerable<(double, SearchResult)>> SearchBlocksByEvmHash(NpgsqlConnection db, int[] chains, byte[] hash, string hashStr, int limit)
     {
         var rows = await db.QueryAsync("""
             SELECT "ChainId", "Level", "Timestamp", "MichelsonHash"
@@ -216,15 +219,15 @@ public class SearchRepository(
             Chain = _chainCache.GetInfo((int)row.ChainId),
             Level = row.Level,
             Timestamp = row.Timestamp,
-            Hash = hash,
-            MichelsonHash = row.MichelsonHash,
+            Hash = hashStr,
+            MichelsonHash = row.MichelsonHash is byte[] mh ? Hashes.FormatMichelsonBlockHash(mh) : null,
         }));
     }
 
-    async Task<IEnumerable<(double, SearchResult)>> SearchBlocksByMichHash(NpgsqlConnection db, int[] chains, string hash, int limit)
+    async Task<IEnumerable<(double, SearchResult)>> SearchBlocksByMichHash(NpgsqlConnection db, int[] chains, byte[] hash, int limit)
     {
         var rows = await db.QueryAsync("""
-            SELECT "ChainId", "Level", "Timestamp", "Hash", "MichelsonHash"
+            SELECT "ChainId", "Level", "Timestamp", "Layer", "Hash", "MichelsonHash"
             FROM "Blocks"
             WHERE "ChainId" = ANY (@chains) AND ("Hash" = @hash OR "MichelsonHash" = @hash)
             ORDER BY "Id"
@@ -236,15 +239,15 @@ public class SearchRepository(
             Chain = _chainCache.GetInfo((int)row.ChainId),
             Level = row.Level,
             Timestamp = row.Timestamp,
-            Hash = row.Hash,
-            MichelsonHash = row.MichelsonHash,
+            Hash = Hashes.FormatBlockHash(row.Hash, (Data.Models.Layer)row.Layer),
+            MichelsonHash = row.MichelsonHash is byte[] mh ? Hashes.FormatMichelsonBlockHash(mh) : null,
         }));
     }
 
     async Task<IEnumerable<(double, SearchResult)>> SearchBlocksByLevel(NpgsqlConnection db, int[] chains, int level, int limit)
     {
         var rows = await db.QueryAsync("""
-            SELECT "ChainId", "Timestamp", "Hash", "MichelsonHash"
+            SELECT "ChainId", "Timestamp", "Layer", "Hash", "MichelsonHash"
             FROM "Blocks"
             WHERE "ChainId" = ANY (@chains) AND "Level" = @level
             ORDER BY "Id"
@@ -256,51 +259,51 @@ public class SearchRepository(
             Chain = _chainCache.GetInfo((int)row.ChainId),
             Level = level,
             Timestamp = row.Timestamp,
-            Hash = row.Hash,
-            MichelsonHash = row.MichelsonHash,
+            Hash = Hashes.FormatBlockHash(row.Hash, (Data.Models.Layer)row.Layer),
+            MichelsonHash = row.MichelsonHash is byte[] mh ? Hashes.FormatMichelsonBlockHash(mh) : null,
         }));
     }
     #endregion
 
     #region operations
-    async Task<IEnumerable<(double, SearchResult)>> SearchOperationsByHash(NpgsqlConnection db, int[] chains, string hash, int limit)
+    async Task<IEnumerable<(double, SearchResult)>> SearchOperationsByHash(NpgsqlConnection db, int[] chains, byte[] hash, string hashStr, int limit)
     {
         var rows = await db.QueryAsync("""
             -- manager
             SELECT "ChainId", "Level", "Timestamp" FROM "DepositOps"                WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "IncreasePaidStorageOps"    WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "IncreasePaidStorageOps"    WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
             SELECT "ChainId", "Level", "Timestamp" FROM "OriginationOps"            WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "RegisterConstantOps"       WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "RevealOps"                 WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "RegisterConstantOps"       WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "RevealOps"                 WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
             SELECT "ChainId", "Level", "Timestamp" FROM "TransactionOps"            WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "TransferTicketOps"         WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DalPublishCommitmentOps"   WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DelegationOps"             WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SetDelegateParametersOps"  WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SetDepositsLimitOps"       WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupOriginateOps"   WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupAddMessagesOps" WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupCementOps"      WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupExecuteOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupPublishOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupRecoverBondOps" WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupRefuteOps"      WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "StakingOps"                WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "UpdateSecondaryKeyOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "TransferTicketOps"         WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DalPublishCommitmentOps"   WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DelegationOps"             WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SetDelegateParametersOps"  WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SetDepositsLimitOps"       WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupOriginateOps"   WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupAddMessagesOps" WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupCementOps"      WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupExecuteOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupPublishOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupRecoverBondOps" WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "SmartRollupRefuteOps"      WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "StakingOps"                WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "UpdateSecondaryKeyOps"     WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
             -- anonymous
-            SELECT "ChainId", "Level", "Timestamp" FROM "ActivationOps"             WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DalEntrapmentEvidenceOps"  WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DoubleBakingOps"           WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DoubleConsensusOps"        WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "DrainDelegateOps"          WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "NonceRevelationOps"        WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "VdfRevelationOps"          WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "ActivationOps"             WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DalEntrapmentEvidenceOps"  WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DoubleBakingOps"           WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DoubleConsensusOps"        WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "DrainDelegateOps"          WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "NonceRevelationOps"        WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "VdfRevelationOps"          WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
             -- governance
-            SELECT "ChainId", "Level", "Timestamp" FROM "BallotOps"                 WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "ProposalOps"               WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "BallotOps"                 WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "ProposalOps"               WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
             -- consensus
-            SELECT "ChainId", "Level", "Timestamp" FROM "AttestationOps"            WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51) UNION
-            SELECT "ChainId", "Level", "Timestamp" FROM "PreattestationOps"         WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash::char(51)
+            SELECT "ChainId", "Level", "Timestamp" FROM "AttestationOps"            WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash UNION
+            SELECT "ChainId", "Level", "Timestamp" FROM "PreattestationOps"         WHERE "ChainId" = ANY (@chains) AND "Hash" = @hash
             -- 
             ORDER BY "Timestamp" DESC, "ChainId"
             LIMIT @limit
@@ -311,7 +314,7 @@ public class SearchRepository(
             Chain = _chainCache.GetInfo((int)row.ChainId),
             Level = row.Level,
             Timestamp = row.Timestamp,
-            Hash = hash,
+            Hash = hashStr,
         }));
     }
     #endregion

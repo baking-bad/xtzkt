@@ -17,7 +17,7 @@ partial class TransactionCommit
         XMichelsonAddress,
         IEnumerable<BigMapDiff>?,
         IEnumerable<TicketUpdates>?
-        )> ApplyMichelson(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
+        )> ApplyMichelson(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
     {
         #region init
         var block = Context.Block;

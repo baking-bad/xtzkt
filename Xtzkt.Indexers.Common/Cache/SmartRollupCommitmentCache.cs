@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Utils;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.Common.Cache;
 
@@ -10,7 +12,7 @@ public class SmartRollupCommitmentCache(XtzktContext db)
     static int SoftCap = 0;
     static int TargetCap = 0;
     static Dictionary<int, SmartRollupCommitment> CachedById = [];
-    static Dictionary<(string, int), SmartRollupCommitment> CachedByKey = [];
+    static Dictionary<(HashKey, int), SmartRollupCommitment> CachedByKey = [];
 
     public static void Configure(CacheSize? size)
     {
@@ -66,7 +68,7 @@ public class SmartRollupCommitmentCache(XtzktContext db)
         return item;
     }
 
-    public async Task<SmartRollupCommitment> GetAsync(string hash, int rollupId)
+    public async Task<SmartRollupCommitment> GetAsync(byte[] hash, int rollupId)
     {
         if (!CachedByKey.TryGetValue((hash, rollupId), out var item))
         {
@@ -74,7 +76,7 @@ public class SmartRollupCommitmentCache(XtzktContext db)
                 .Where(x => x.SmartRollupId == rollupId && x.Hash == hash)
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefaultAsync()
-                ?? throw new Exception($"Smart rollup commitment ({hash}, {rollupId}) doesn't exist");
+                ?? throw new Exception($"Smart rollup commitment ({Hex.GetStringRaw(hash)}, {rollupId}) doesn't exist");
             Add(item);
         }
         return item;
@@ -94,9 +96,9 @@ public class SmartRollupCommitmentCache(XtzktContext db)
         return item;
     }
 
-    public async Task<SmartRollupCommitment?> GetOrDefaultAsync(string? hash, int? rollupId)
+    public async Task<SmartRollupCommitment?> GetOrDefaultAsync(byte[]? hash, int? rollupId)
     {
-        if (hash is not string _hash || rollupId is not int _rollupId)
+        if (hash is not byte[] _hash || rollupId is not int _rollupId)
             return null;
 
         if (!CachedByKey.TryGetValue((_hash, _rollupId), out var item))

@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
@@ -14,7 +15,7 @@ public class BlockHashParameter : INormalizable
     ///
     /// Example: `?hash=B...` or `?hash=0x...`.
     /// </summary>
-    public string? Eq { get; set; }
+    public byte[]? Eq { get; set; }
 
     /// <summary>
     /// **Not equal** mode.
@@ -22,7 +23,7 @@ public class BlockHashParameter : INormalizable
     ///
     /// Example: `?hash.ne=B...`.
     /// </summary>
-    public string? Ne { get; set; }
+    public byte[]? Ne { get; set; }
 
     /// <summary>
     /// **In list** mode.
@@ -30,7 +31,7 @@ public class BlockHashParameter : INormalizable
     ///
     /// Example: `?hash.in=B...,0x...`.
     /// </summary>
-    public List<string>? In { get; set; }
+    public List<byte[]>? In { get; set; }
 
     /// <summary>
     /// **Not in list** mode.
@@ -38,25 +39,24 @@ public class BlockHashParameter : INormalizable
     ///
     /// Example: `?hash.ni=B...,0x...`.
     /// </summary>
-    public List<string>? Ni { get; set; }
+    public List<byte[]>? Ni { get; set; }
 
-    public static implicit operator BlockHashParameter(string value) => new() { Eq = value };
 
     public string Normalize(string name)
     {
         var sb = new StringBuilder();
 
         if (Eq != null)
-            sb.Append($"{name}.eq={Eq}&");
+            sb.Append($"{name}.eq={Hex.GetStringRaw(Eq)}&");
 
         if (Ne != null)
-            sb.Append($"{name}.ne={Ne}&");
+            sb.Append($"{name}.ne={Hex.GetStringRaw(Ne)}&");
 
         if (In?.Count > 0)
-            sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x))}&");
+            sb.Append($"{name}.in={string.Join(",", In.Select(x => Hex.GetStringRaw(x)).OrderBy(x => x))}&");
 
         if (Ni?.Count > 0)
-            sb.Append($"{name}.ni={string.Join(",", Ni.OrderBy(x => x))}&");
+            sb.Append($"{name}.ni={string.Join(",", Ni.Select(x => Hex.GetStringRaw(x)).OrderBy(x => x))}&");
 
         return sb.ToString();
     }

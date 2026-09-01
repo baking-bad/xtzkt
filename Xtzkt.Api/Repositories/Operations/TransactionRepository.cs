@@ -8,6 +8,7 @@ using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Models.Operations;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories.Operations;
 
@@ -67,7 +68,7 @@ public class TransactionRepository(
                     case "chain":                  columns.Add(@"""ChainId"""); break;
                     case "level":                  columns.Add(@"""Level"""); break;
                     case "timestamp":              columns.Add(@"""Timestamp"""); break;
-                    case "hash":                   columns.Add(@"""Hash"""); break;
+                    case "hash":                   columns.Add(@"""Hash"""); columns.Add(@"""Direction"""); break;
                     case "sender":                 columns.Add(@"""SenderId"""); break;
                     case "senderCodeHash":         columns.Add(@"""SenderCodeHash"""); break;
                     case "initiator":              columns.Add(@"""InitiatorId"""); break;
@@ -237,7 +238,7 @@ public class TransactionRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     SenderCodeHash = row.SenderCodeHash,
                     Initiator = _addressCache.GetInfo((int?)row.InitiatorId),
@@ -271,7 +272,7 @@ public class TransactionRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     SenderCodeHash = row.SenderCodeHash,
                     Initiator = _addressCache.GetInfo((int?)row.InitiatorId),
@@ -307,7 +308,7 @@ public class TransactionRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatEvmOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     SenderCodeHash = row.SenderCodeHash,
                     Initiator = _addressCache.GetInfo((int?)row.InitiatorId),
@@ -346,7 +347,7 @@ public class TransactionRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatEvmOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     SenderCodeHash = row.SenderCodeHash,
                     Initiator = _addressCache.GetInfo((int?)row.InitiatorId),
@@ -390,7 +391,7 @@ public class TransactionRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     SenderCodeHash = row.SenderCodeHash,
                     Initiator = _addressCache.GetInfo((int?)row.InitiatorId),
@@ -471,7 +472,7 @@ public class TransactionRepository(
                     foreach (var row in rows) result[j++][i] = row.Timestamp;
                     break;
                 case "hash":
-                    foreach (var row in rows) result[j++][i] = row.Hash;
+                    foreach (var row in rows) result[j++][i] = Hashes.FormatOperationHash(row.Hash, (Data.Models.Direction)(int)row.Direction);
                     break;
                 case "sender":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.SenderId);

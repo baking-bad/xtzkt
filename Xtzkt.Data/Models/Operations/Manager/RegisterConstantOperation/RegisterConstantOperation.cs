@@ -12,7 +12,7 @@ public abstract class RegisterConstantOperation(Layer layer) : IManagerOperation
     public required int ChainId { get; set; }
     public required int Level { get; set; }
     public required DateTime Timestamp { get; set; }
-    public required string Hash { get; set; }
+    public required byte[] Hash { get; set; }
     public int SenderId { get; set; }
     public int Counter { get; set; }
     public long? StorageFee { get; set; }
@@ -40,8 +40,6 @@ public static class RegisterConstantOperationModel
         #region props
         modelBuilder.Entity<RegisterConstantOperation>()
             .Property(x => x.Hash)
-            .IsFixedLength(true)
-            .HasMaxLength(51)
             .IsRequired();
 
         modelBuilder.Entity<RegisterConstantOperation>()

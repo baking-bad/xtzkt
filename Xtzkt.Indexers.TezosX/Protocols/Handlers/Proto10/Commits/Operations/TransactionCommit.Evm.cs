@@ -6,7 +6,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
 partial class TransactionCommit
 {
-    public Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
+    public Task<XEvmTransactionOperation> ApplyEvm(byte[] hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp)
     {
         return ApplyEvm(hash, tx, receipt, trace, isDelayedOp, 0);
     }
@@ -25,6 +25,6 @@ partial class TransactionCommit
         return op.OpCode is EvmOpCode.SelfDestruct or EvmOpCode.Suicide
             && op.SenderId == op.TargetId
             && op.Amount != 0
-            && Context.OriginationOps.Any(x => x.Hash == op.Hash && x.ContractId == op.SenderId);
+            && Context.OriginationOps.Any(x => x.Hash.SequenceEqual(op.Hash) && x.ContractId == op.SenderId);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Utils.Encoding;
@@ -17,7 +18,7 @@ partial class ProtoHelpers
         var batch = new MetaBatch
         {
             Delayed = delayed,
-            Hash = hash,
+            Hash = Hashes.ParseOperationHash(hash),
         };
 
         ProcessQueue(context, queue, batch);

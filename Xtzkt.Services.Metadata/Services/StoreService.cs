@@ -63,7 +63,7 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         var sql = $"""
             SELECT t."Id", c."Hash", t."TokenId"::text, t."Tags", t."MetadataStatus"
             FROM "Tokens" AS t
-            JOIN "Addresses" c ON c."Id" = t."ContractId"
+            INNER JOIN "Addresses" c ON c."Id" = t."ContractId"
             WHERE (t."Tags" & {(int)TokenTags.Erc}) = {(int)TokenTags.Erc}
             AND "MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
             AND "MetadataLink" IS NULL
@@ -261,7 +261,7 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         var sql = $"""
             SELECT t."Id", c."Hash", t."TokenId"::text, t."Tags", t."MetadataStatus"
             FROM "Tokens" AS t
-            JOIN "Addresses" c ON c."Id" = t."ContractId"
+            INNER JOIN "Addresses" c ON c."Id" = t."ContractId"
             WHERE (t."Tags" & {(int)TokenTags.Fa}) = {(int)TokenTags.Fa}
             AND t."MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
             AND (t."MetadataSyncedAt" IS NULL OR t."MetadataSyncedAt" < @now - COALESCE((@delays::int[])[t."MetadataStatus"], 0) * interval '1 second')

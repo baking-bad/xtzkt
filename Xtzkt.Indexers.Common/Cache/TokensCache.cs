@@ -87,25 +87,22 @@ public class TokensCache(XtzktContext db, ChainConfig chain)
 
     public async Task Preload(IEnumerable<(int, BigInteger)> ids)
     {
-        var missed = ids.Where(x => !CachedByKey.ContainsKey(x)).ToHashSet();
+        var missed = ids.Where(x => !CachedByKey.ContainsKey(x)).Distinct().ToList();
         if (missed.Count != 0)
         {
-            for (int i = 0, n = 2048; i < missed.Count; i += n)
-            {
-                var corteges = string.Join(',', missed.Skip(i).Take(n).Select(x => $"({x.Item1}, '{x.Item2}'::numeric)"));
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                var items = await Db.Tokens
-                    .FromSqlRaw($"""
-                        SELECT *
-                        FROM "Tokens"
-                        WHERE ("ContractId", "TokenId") IN ({corteges})
-                        """)
-                    .ToListAsync();
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            var contractIds = missed.Select(x => x.Item1).ToArray();
+            var tokenIds = missed.Select(x => x.Item2).ToArray();
 
-                foreach (var item in items)
-                    Add(item);
-            }
+            var items = await Db.Tokens
+                .FromSqlRaw("""
+                    SELECT t.*
+                    FROM unnest({0}::int[], {1}::numeric[]) AS q(contract, token)
+                    INNER JOIN "Tokens" t ON t."ContractId" = q.contract AND t."TokenId" = q.token
+                    """, contractIds, tokenIds)
+                .ToListAsync();
+
+            foreach (var item in items)
+                Add(item);
         }
     }
 }

@@ -1,9 +1,12 @@
-﻿using Netezos.Encoding;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Text.Json;
+using Netezos;
+using Netezos.Encoding;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Utils;
+using Base58 = Xtzkt.Utils.Encoding.Base58;
 
 namespace Xtzkt.Indexers.Common.Extensions;
 
@@ -23,7 +26,7 @@ public static class JsonElementExtension
 
     public static int Count(this JsonElement el)
     {
-        return el.EnumerateArray().Count();
+        return el.GetArrayLength();
     }
 
     public static JsonElement RequiredArray(this JsonElement el)
@@ -233,6 +236,41 @@ public static class JsonElementExtension
             : throw new SerializationException($"Missed required bytes hex");
     }
 
+    public static byte[] RequiredMichelsonBlockHashBytes(this JsonElement el, string name)
+    {
+        return el.TryGetString(name, out var hash) && Base58.TryDecode(hash, Prefixes.B, out var bytes) ? bytes
+            : throw new SerializationException($"Missed required michelson block hash");
+    }
+
+    public static byte[] RequiredMichelsonOperationHashBytes(this JsonElement el, string name)
+    {
+        return el.TryGetString(name, out var hash) && Base58.TryDecode(hash, Prefixes.o, out var bytes) ? bytes
+            : throw new SerializationException($"Missed required michelson operation hash");
+    }
+
+    public static byte[] RequiredExprHashBytes(this JsonElement el, string name)
+    {
+        return el.TryGetString(name, out var hash) && Base58.TryDecode(hash, Prefixes.expr, out var bytes) ? bytes
+            : throw new SerializationException($"Missed required expr hash");
+    }
+
+    public static byte[] RequiredSrc1HashBytes(this JsonElement el, string name)
+    {
+        return el.TryGetString(name, out var hash) && Base58.TryDecode(hash, Prefixes.src1, out var bytes) ? bytes
+            : throw new SerializationException($"Missed required src1 hash");
+    }
+
+    public static byte[]? OptionalSrc1HashBytes(this JsonElement el, string name)
+    {
+        if (!el.TryGetString(name, out var hash))
+            return null;
+
+        if (!Base58.TryDecode(hash, Prefixes.src1, out var bytes))
+            throw new SerializationException($"Invalid src1 hash");
+
+        return bytes;
+    }
+
     public static BigInteger? OptionalHexBigInteger(this JsonElement el, string name)
     {
         if (!el.TryGetProperty(name, out var prop) || prop.ValueKind == JsonValueKind.Null)
@@ -273,6 +311,17 @@ public static class JsonElementExtension
 
         return BigInteger.TryParse(prop.GetString(), out var res) ? res
             : throw new SerializationException($"Invalid BigInteger {name}");
+    }
+
+    public static bool TryGetString(this JsonElement el, string name, [NotNullWhen(true)] out string? str)
+    {
+        if (!el.TryGetProperty(name, out var prop) || prop.ValueKind != JsonValueKind.String)
+        {
+            str = null;
+            return false;
+        }
+        str = prop.GetString()!;
+        return true;
     }
 
     public static bool TryGetBigInteger(this JsonElement el, string name, out BigInteger res)

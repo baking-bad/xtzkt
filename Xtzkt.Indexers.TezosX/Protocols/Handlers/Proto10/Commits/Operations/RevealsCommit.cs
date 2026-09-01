@@ -9,7 +9,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
 class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public virtual async Task<XRevealOperation> Apply(string hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
+    public virtual async Task<XRevealOperation> Apply(byte[] hash, JsonElement content, bool isDelayedOp, bool isFirstOp)
     {
         #region init
         var block = Context.Block;

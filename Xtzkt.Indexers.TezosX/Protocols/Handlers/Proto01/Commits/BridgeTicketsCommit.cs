@@ -15,7 +15,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
                 return;
 
             #region precache
-            var hashesSet = new HashSet<HashableBytes>();
+            var hashesSet = new HashSet<HashKey>();
             var addressesSet = new HashSet<string>();
 
             foreach (var update in Context.BridgeTicketUpdates)

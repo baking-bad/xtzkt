@@ -48,7 +48,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = chain.Id,
-                Hash = rawBlock.RequiredString("hash"),
+                Hash = rawBlock.RequiredMichelsonBlockHashBytes("hash"),
                 Cycle = protocol.GetCycle(level),
                 Level = level,
                 ProtocolId = protocol.Id,

@@ -6,38 +6,38 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
-[ModelBinder(BinderType = typeof(OperationHashBinder))]
-public class OperationHashParameter : INormalizable
+[ModelBinder(BinderType = typeof(ExpressionBytesBinder))]
+public class ExpressionBytesParameter : INormalizable
 {
     /// <summary>
-    /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
-    /// Returns items where 'param' is equal to 'value'.
+    /// **Equal** filter mode (optional, i.e. `param.eq=123` is the same as `param=123`).
+    /// Specify an expression hash to get items where the specified field is equal to the specified value.
     ///
-    /// Example: `?hash=o...` or `?hash=0x...`.
+    /// Example: `?address=expr...`.
     /// </summary>
     public byte[]? Eq { get; set; }
 
     /// <summary>
-    /// **Not equal** mode.
-    /// Returns items where 'param' is not equal to 'value'.
+    /// **Not equal** filter mode.
+    /// Specify an expression hash to get items where the specified field is not equal to the specified value.
     ///
-    /// Example: `?hash.ne=o...`.
+    /// Example: `?address.ne=expr...`.
     /// </summary>
     public byte[]? Ne { get; set; }
 
     /// <summary>
-    /// **In list** mode.
-    /// Returns items where 'param' is equal to any of comma-separated 'values'.
+    /// **In list** (any of) filter mode.
+    /// Specify a comma-separated list of expression hashes to get items where the specified field is equal to one of the specified values.
     ///
-    /// Example: `?hash.in=o...,0x...`.
+    /// Example: `?address.in=expr...,expr...`.
     /// </summary>
     public List<byte[]>? In { get; set; }
 
     /// <summary>
-    /// **Not in list** mode.
-    /// Returns items where 'param' is not equal to any of comma-separated 'values'.
+    /// **Not in list** (none of) filter mode.
+    /// Specify a comma-separated list of expression hashes to get items where the specified field is not equal to all the specified values.
     ///
-    /// Example: `?hash.ni=o...,0x...`.
+    /// Example: `?address.ni=expr...,expr...`.
     /// </summary>
     public List<byte[]>? Ni { get; set; }
 

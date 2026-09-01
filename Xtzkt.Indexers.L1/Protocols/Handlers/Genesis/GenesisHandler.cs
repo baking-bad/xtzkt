@@ -7,6 +7,7 @@ using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Services;
 using Xtzkt.Indexers.L1.Services;
 using Xtzkt.Indexers.L1.Protocols.Genesis;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Indexers.L1.Protocols
 {
@@ -51,12 +52,13 @@ namespace Xtzkt.Indexers.L1.Protocols
             #endregion
 
             #region add block
+            var hash = rawBlock.RequiredString("hash");
             var timestamp = rawBlock.Required("header").RequiredDateTime("timestamp");
             var block = new L1Block
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = chain.Id,
-                Hash = rawBlock.RequiredString("hash"),
+                Hash = Hashes.ParseMichelsonBlockHash(hash),
                 Cycle = -1,
                 Level = rawBlock.Required("header").RequiredInt32("level"),
                 ProtocolId = protocol.Id,
@@ -85,7 +87,7 @@ namespace Xtzkt.Indexers.L1.Protocols
             chain.Timestamp = block.Timestamp;
             chain.Protocol = protocol.Hash;
             chain.NextProtocol = rawBlock.Required("metadata").RequiredString("next_protocol");
-            chain.Hash = block.Hash;
+            chain.Hash = hash;
             chain.BlocksCount++;
             #endregion
 

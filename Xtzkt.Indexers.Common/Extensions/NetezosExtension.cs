@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Netezos.Contracts;
 using Netezos.Encoding;
+using Base58 = Xtzkt.Utils.Encoding.Base58;
 
 namespace Xtzkt.Indexers.Common.Extensions;
 
@@ -11,7 +12,6 @@ public static class NetezosExtension
     static readonly byte[] tz3 = [6, 161, 164];
     static readonly byte[] tz4 = [6, 161, 166];
     static readonly byte[] KT1 = [2, 90, 121];
-    static readonly byte[] txr1 = [1, 128, 120, 31];
     static readonly byte[] sr1 = [6, 124, 117];
 
     public static (string, byte[]?) ParseAddressWithEntrypoint(this IMicheline micheline)
@@ -20,11 +20,6 @@ public static class NetezosExtension
         {
             if (s.Value.Length == 36)
                 return (s.Value, null);
-
-            if (s.Value.StartsWith("txr1"))
-                return s.Value.Length == 37
-                    ? (s.Value, null)
-                    : (s.Value[..37], Utf8.Parse(s.Value[38..]));
 
             return (s.Value[..36], Utf8.Parse(s.Value[37..]));
         }
@@ -51,13 +46,12 @@ public static class NetezosExtension
                 prefix = value[0] switch
                 {
                     1 => KT1,
-                    2 => txr1,
                     3 => sr1,
                     _ => throw new Exception("Invalid address prefix"),
                 };
                 bytes = value.GetBytes(1, 20);
             }
-            var address = Base58.Convert(bytes, prefix);
+            var address = Base58.Encode(bytes, prefix);
             return value.Length == 22 ? (address, null) : (address, value[22..]);
         }
 
@@ -72,19 +66,6 @@ public static class NetezosExtension
             {
                 address = s.Value;
                 entrypoint = null;
-            }
-            else if (s.Value.StartsWith("txr1"))
-            {
-                if (s.Value.Length == 37)
-                {
-                    address = s.Value;
-                    entrypoint = null;
-                }
-                else
-                {
-                    address = s.Value[..37];
-                    entrypoint = Utf8.Parse(s.Value[38..]);
-                }
             }
             else
             {
@@ -103,39 +84,28 @@ public static class NetezosExtension
             {
                 if (value[1] == 0)
                 {
-                    address = Base58.Convert(value.GetBytes(2, 20), tz1);
-                    return true;
+                    return Base58.TryEncode(value.GetBytes(2, 20), tz1, out address);
                 }
                 else if (value[1] == 1)
                 {
-                    address = Base58.Convert(value.GetBytes(2, 20), tz2);
-                    return true;
+                    return Base58.TryEncode(value.GetBytes(2, 20), tz2, out address);
                 }
                 else if (value[1] == 2)
                 {
-                    address = Base58.Convert(value.GetBytes(2, 20), tz3);
-                    return true;
+                    return Base58.TryEncode(value.GetBytes(2, 20), tz3, out address);
                 }
                 else if (value[1] == 3)
                 {
-                    address = Base58.Convert(value.GetBytes(2, 20), tz4);
-                    return true;
+                    return Base58.TryEncode(value.GetBytes(2, 20), tz4, out address);
                 }
             }
             else if (value[0] == 1 && value[21] == 0)
             {
-                address = Base58.Convert(value.GetBytes(1, 20), KT1);
-                return true;
-            }
-            else if (value[0] == 2 && value[21] == 0)
-            {
-                address = Base58.Convert(value.GetBytes(1, 20), txr1);
-                return true;
+                return Base58.TryEncode(value.GetBytes(1, 20), KT1, out address);
             }
             else if (value[0] == 3 && value[21] == 0)
             {
-                address = Base58.Convert(value.GetBytes(1, 20), sr1);
-                return true;
+                return Base58.TryEncode(value.GetBytes(1, 20), sr1, out address);
             }
         }
 

@@ -14,7 +14,7 @@ namespace Xtzkt.Data.Models
         public int Updates { get; set; }
         public bool Active { get; set; }
 
-        public required string KeyHash { get; set; }
+        public required byte[] KeyHash { get; set; }
         public required byte[] RawKey { get; set; }
         public required string JsonKey { get; set; }
 
@@ -32,11 +32,6 @@ namespace Xtzkt.Data.Models
             #endregion
 
             #region props
-            modelBuilder.Entity<BigMapKey>()
-                .Property(x => x.KeyHash)
-                .IsFixedLength(true)
-                .HasMaxLength(54);
-
             modelBuilder.Entity<BigMapKey>()
                 .Property(x => x.JsonKey)
                 .HasColumnType("jsonb");

@@ -24,7 +24,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto22
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
 
                 AccuserId = accuser.Id,
                 OffenderId = offender.Id,

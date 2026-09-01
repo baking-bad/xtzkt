@@ -10,7 +10,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01;
 
 class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 {
-    public async Task<XEvmTransactionOperation> ApplyEvm(string hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
+    public async Task<XEvmTransactionOperation> ApplyEvm(byte[] hash, JsonElement tx, JsonElement receipt, JsonElement trace, bool isDelayedOp, int frameGasOffset)
     {
         // legacy transactions carry no chain id at all, only the typed ones do
         if ((tx.OptionalString("chain_id") ?? tx.OptionalString("chainId")) is string chainId && chainId != Cache.Chain.Get().ChainId)

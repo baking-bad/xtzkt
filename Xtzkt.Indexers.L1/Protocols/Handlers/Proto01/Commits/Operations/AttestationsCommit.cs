@@ -27,7 +27,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 Power = metadata.RequiredArray("slots").Count(),
                 BakerId = sender.Id,
                 Reward = reward.ValueKind != JsonValueKind.Undefined ? reward.RequiredInt64("change") : 0,

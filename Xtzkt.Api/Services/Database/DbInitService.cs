@@ -94,7 +94,7 @@ public class DbInitService(
             var invalidIndexes = await db.QueryAsync<string>("""
                 SELECT c.relname
                 FROM pg_index i
-                JOIN pg_class c ON c.oid = i.indexrelid
+                INNER JOIN pg_class c ON c.oid = i.indexrelid
                 WHERE NOT i.indisvalid AND c.relname LIKE 'AX\_%'
                 ORDER BY c.relname
                 """);

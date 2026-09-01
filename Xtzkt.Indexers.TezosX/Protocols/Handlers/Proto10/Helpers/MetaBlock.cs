@@ -139,7 +139,7 @@ partial class ProtoHelpers
         {
             Level = blueprint.Level,
             Timestamp = blueprint.Timestamp,
-            Hash = evmBlock.RequiredString("hash"),
+            Hash = evmBlock.RequiredHexBytes("hash"),
             Batches = batches,
             EvmBlock = evmBlock,
             MichelsonBlock = michelsonBlock,

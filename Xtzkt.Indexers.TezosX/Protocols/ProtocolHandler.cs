@@ -9,6 +9,7 @@ using Xtzkt.Indexers.TezosX.Protocols;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Services;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX
 {
@@ -258,7 +259,7 @@ namespace Xtzkt.Indexers.TezosX
                     Hash = block.Hash,
                     Level = block.Level,
                     Timestamp = block.Timestamp,
-                    MichelsonHash = block.MichelsonBlock?.RequiredString("hash"),
+                    MichelsonHash = block.MichelsonBlock?.RequiredMichelsonBlockHashBytes("hash"),
                     ProtocolId = -1, // set in proto activator
                 },
                 Protocol = null!, // set in proto activator
@@ -289,7 +290,7 @@ namespace Xtzkt.Indexers.TezosX
                     Hash = block.Hash,
                     Level = block.Level,
                     Timestamp = timestamp,
-                    MichelsonHash = block.MichelsonBlock?.RequiredString("hash"),
+                    MichelsonHash = block.MichelsonBlock?.RequiredMichelsonBlockHashBytes("hash"),
                     ProtocolId = protocol.Id,
                 },
                 Protocol = protocol,

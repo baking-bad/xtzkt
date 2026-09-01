@@ -9,6 +9,7 @@ using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Models.Operations;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories.Operations;
 
@@ -84,7 +85,7 @@ public class RegisterConstantRepository(
             .Where(@"""ChainId""",   filter.Chain?.Id)
             .Where(@"""Level""",     filter.Level)
             .Where(@"""Timestamp""", filter.Timestamp)
-            .Where(@"""Hash""",      filter.Hash, "char(51)")
+            .Where(@"""Hash""",      filter.Hash)
             .Where(@"""SenderId""",  filter.Sender?.Id)
             .Where(@"""Counter""",   filter.Counter)
             .Where(@"""Status""",    filter.Status)
@@ -114,7 +115,7 @@ public class RegisterConstantRepository(
             .Where(@"""ChainId""",   filter.Chain?.Id)
             .Where(@"""Level""",     filter.Level)
             .Where(@"""Timestamp""", filter.Timestamp)
-            .Where(@"""Hash""",      filter.Hash, "char(51)")
+            .Where(@"""Hash""",      filter.Hash)
             .Where(@"""SenderId""",  filter.Sender?.Id)
             .Where(@"""Counter""",   filter.Counter)
             .Where(@"""Status""",    filter.Status)
@@ -138,7 +139,7 @@ public class RegisterConstantRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     Address = row.Address,
                     Value = Decode.ToMicheline((byte[]?)row.Value),
@@ -159,7 +160,7 @@ public class RegisterConstantRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
                     Address = row.Address,
                     Value = Decode.ToMicheline((byte[]?)row.Value),
@@ -219,7 +220,7 @@ public class RegisterConstantRepository(
                     foreach (var row in rows) result[j++][i] = row.Timestamp;
                     break;
                 case "hash":
-                    foreach (var row in rows) result[j++][i] = row.Hash;
+                    foreach (var row in rows) result[j++][i] = Hashes.FormatMichelsonOperationHash(row.Hash);
                     break;
                 case "sender":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.SenderId);

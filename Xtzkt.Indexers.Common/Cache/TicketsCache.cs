@@ -13,7 +13,7 @@ public class TicketsCache(XtzktContext db, ChainConfig chain)
     static int SoftCap = 0;
     static int TargetCap = 0;
     static Dictionary<long, Ticket> CachedById = [];
-    static Dictionary<(int TicketerId, HashableBytes RawType, HashableBytes RawContent), Ticket> CachedByKey = [];
+    static Dictionary<(int TicketerId, HashKey RawType, HashKey RawContent), Ticket> CachedByKey = [];
 
     public static void Configure(CacheSize? size)
     {
@@ -90,7 +90,7 @@ public class TicketsCache(XtzktContext db, ChainConfig chain)
         var missed = keys
             .Where(x => !CachedByKey.ContainsKey((x.TicketerId, x.Identity.RawType, x.Identity.RawContent)))
             .Select(x => x.Identity.WeakHash)
-            .DistinctBy(x => (HashableBytes)x)
+            .DistinctBy(x => (HashKey)x)
             .ToList();
 
         if (missed.Count != 0)

@@ -4,6 +4,7 @@ using Netezos.Contracts;
 using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
 using Xtzkt.Indexers.Common.Utils;
@@ -33,7 +34,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 Balance = content.RequiredInt64("balance"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
@@ -758,7 +759,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                             Ptr = res[0].Ptr,
                             Key = key,
                             Value = value,
-                            KeyHash = (bigmap.Schema as BigMapSchema)!.GetKeyHash(key)
+                            KeyHash = Hashes.ParseExprHash((bigmap.Schema as BigMapSchema)!.GetKeyHash(key))
                         });
                     }
                 }

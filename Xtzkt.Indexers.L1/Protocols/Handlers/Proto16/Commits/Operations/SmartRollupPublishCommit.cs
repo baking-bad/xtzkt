@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.Common.Extensions;
 
@@ -14,7 +15,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
         {
             #region init
             var result = content.Required("metadata").Required("operation_result");
-            var commitmentHash = result.OptionalString("staked_hash");
+            var commitmentHash = result.OptionalSrc1HashBytes("staked_hash");
             var bond = result.OptionalArray("balance_updates")?.EnumerateArray()
                 .FirstOrDefault(x => x.RequiredString("kind") == "contract") ?? default;
 
@@ -28,7 +29,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredString("hash"),
+                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),
@@ -131,7 +132,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                     var predecessorHash = commitmentEl.RequiredString("predecessor");
                     if (predecessorHash != rollup.GenesisCommitment)
                     {
-                        var predecessor = await Cache.SmartRollupCommitments.GetAsync(predecessorHash, rollup.Id);
+                        var predecessor = await Cache.SmartRollupCommitments.GetAsync(Hashes.ParseSrc1Hash(predecessorHash), rollup.Id);
                         Db.TryAttach(predecessor);
                         predecessor.Successors++;
                         predecessor.LastLevel = operation.Level;

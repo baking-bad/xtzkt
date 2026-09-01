@@ -29,7 +29,7 @@ class DepositCommit(ProtocolHandler protocol) : Proto01.DepositCommit(protocol)
         return null;
     }
 
-    public async Task ApplyMichelson(string hash, DelayedOperation deposit, JsonElement feederContent)
+    public async Task ApplyMichelson(byte[] hash, DelayedOperation deposit, JsonElement feederContent)
     {
         #region init
         var block = Context.Block;

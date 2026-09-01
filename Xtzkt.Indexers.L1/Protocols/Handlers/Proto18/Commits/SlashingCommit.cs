@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto18
@@ -28,10 +29,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             foreach (var slashing in slashings.GroupBy(x => x.RequiredString("delayed_operation_hash")).Reverse())
             {
                 var opHash = slashing.Key;
-                var accusation = Context.DoubleBakingOps.FirstOrDefault(x => x.Hash == opHash)
-                    ?? Context.DoubleConsensusOps.FirstOrDefault(x => x.Hash == opHash)
-                    ?? Db.DoubleBakingOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHash)
-                    ?? (IOperation?)Db.DoubleConsensusOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHash)
+                var opHashBytes = Hashes.ParseMichelsonOperationHash(opHash);
+                var accusation = Context.DoubleBakingOps.FirstOrDefault(x => x.Hash.SequenceEqual(opHashBytes))
+                    ?? Context.DoubleConsensusOps.FirstOrDefault(x => x.Hash.SequenceEqual(opHashBytes))
+                    ?? Db.DoubleBakingOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHashBytes)
+                    ?? (IOperation?)Db.DoubleConsensusOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHashBytes)
                     ?? throw new Exception($"Cannot find delayed operation '{opHash}'");
 
                 var (accuserId, offenderId) = accusation switch

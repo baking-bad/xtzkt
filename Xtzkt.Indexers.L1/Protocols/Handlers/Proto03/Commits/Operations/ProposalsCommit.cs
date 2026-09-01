@@ -49,7 +49,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto03
                     ChainId = block.ChainId,
                     Level = block.Level,
                     Timestamp = block.Timestamp,
-                    Hash = op.RequiredString("hash"),
+                    Hash = op.RequiredMichelsonOperationHashBytes("hash"),
                     SenderId = sender.Id,
                     VotingPower = snapshot.VotingPower,
                     Duplicated = duplicated,

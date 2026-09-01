@@ -24,7 +24,7 @@ public class XBlock() : Block(Layer.TezosX)
     public int? SequencerPoolId { get; set; }
 
     [Column(nameof(MichelsonHash))]
-    public string? MichelsonHash { get; set; }
+    public byte[]? MichelsonHash { get; set; }
 
     #region binary writer
     public static void Write(NpgsqlConnection conn, IEnumerable<XBlock> blocks)
@@ -51,7 +51,7 @@ public class XBlock() : Block(Layer.TezosX)
             writer.Write(block.DaFees, NpgsqlDbType.Numeric);
             writer.Write(block.BurnedFees, NpgsqlDbType.Numeric);
             writer.WriteNullable(block.SequencerPoolId, NpgsqlDbType.Integer);
-            writer.WriteNullable(block.MichelsonHash, NpgsqlDbType.Text);
+            writer.WriteNullable(block.MichelsonHash, NpgsqlDbType.Bytea);
         }
 
         writer.Complete();

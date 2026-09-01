@@ -8,6 +8,7 @@ using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Models.Operations;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories.Operations;
 
@@ -57,7 +58,7 @@ public class DepositRepository(
                     case "chain":          columns.Add(@"""ChainId"""); break;
                     case "level":          columns.Add(@"""Level"""); break;
                     case "timestamp":      columns.Add(@"""Timestamp"""); break;
-                    case "hash":           columns.Add(@"""Hash"""); break;
+                    case "hash":           columns.Add(@"""Hash"""); columns.Add(@"""Runtime"""); break;
                     case "status":         columns.Add(@"""Status"""); break;
                     case "inboxLevel":     columns.Add(@"""InboxLevel"""); break;
                     case "inboxMessageId": columns.Add(@"""InboxMessageId"""); break;
@@ -148,7 +149,7 @@ public class DepositRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Status = OperationStatuses.ToString((int)row.Status),
                     InboxLevel = row.InboxLevel,
                     InboxMessageId = row.InboxMessageId,
@@ -162,7 +163,7 @@ public class DepositRepository(
                     Chain = _chainCache.GetInfo((int)row.ChainId),
                     Level = row.Level,
                     Timestamp = row.Timestamp,
-                    Hash = row.Hash,
+                    Hash = Hashes.FormatEvmOperationHash(row.Hash),
                     Status = OperationStatuses.ToString((int)row.Status),
                     InboxLevel = row.InboxLevel,
                     InboxMessageId = row.InboxMessageId,
@@ -220,7 +221,7 @@ public class DepositRepository(
                     foreach (var row in rows) result[j++][i] = row.Timestamp;
                     break;
                 case "hash":
-                    foreach (var row in rows) result[j++][i] = row.Hash;
+                    foreach (var row in rows) result[j++][i] = Hashes.FormatOperationHash(row.Hash, (Data.Models.Runtime)(int)row.Runtime);
                     break;
                 case "status":
                     foreach (var row in rows) result[j++][i] = OperationStatuses.ToString((int)row.Status);

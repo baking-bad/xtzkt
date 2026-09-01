@@ -67,25 +67,22 @@ public class TicketBalancesCache(XtzktContext db, ChainConfig chain)
 
     public async Task Preload(IEnumerable<(int, long)> ids)
     {
-        var missed = ids.Where(x => !Cached.ContainsKey(x)).ToHashSet();
+        var missed = ids.Where(x => !Cached.ContainsKey(x)).Distinct().ToList();
         if (missed.Count != 0)
         {
-            for (int i = 0, n = 2048; i < missed.Count; i += n)
-            {
-                var corteges = string.Join(',', missed.Skip(i).Take(n).Select(x => $"({x.Item1}, '{x.Item2}'::bigint)"));
-#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
-                var items = await Db.TicketBalances
-                    .FromSqlRaw($"""
-                        SELECT *
-                        FROM "TicketBalances"
-                        WHERE ("AddressId", "TicketId") IN ({corteges})
-                        """)
-                    .ToListAsync();
-#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
+            var addressIds = missed.Select(x => x.Item1).ToArray();
+            var ticketIds = missed.Select(x => x.Item2).ToArray();
 
-                foreach (var item in items)
-                    Add(item);
-            }
+            var items = await Db.TicketBalances
+                .FromSqlRaw("""
+                    SELECT b.*
+                    FROM unnest({0}::int[], {1}::bigint[]) AS q(address, ticket)
+                    INNER JOIN "TicketBalances" b ON b."AddressId" = q.address AND b."TicketId" = q.ticket
+                    """, addressIds, ticketIds)
+                .ToListAsync();
+
+            foreach (var item in items)
+                Add(item);
         }
     }
 }

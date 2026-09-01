@@ -50,7 +50,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     transaction.Guessed = false;
 
                     if (transaction.Status == OperationStatus.Applied)
-                        Logger.LogError(ex, "Failed to humanize tx {hash} parameters", transaction.Hash);
+                        Logger.LogError(ex, "Failed to humanize tx parameters");
                 }
             }
             else if (target is L1SmartRollup smartRollup)
@@ -73,7 +73,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     transaction.Guessed = false;
 
                     if (transaction.Status == OperationStatus.Applied)
-                        Logger.LogError(ex, "Failed to humanize tx {hash} parameters", transaction.Hash);
+                        Logger.LogError(ex, "Failed to humanize tx parameters");
                 }
             }
             else

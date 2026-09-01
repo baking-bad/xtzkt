@@ -7,6 +7,7 @@ using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -260,7 +261,7 @@ public class BigMapUpdateRepository(
             BigMapKey = row.BigMapKey_Id == null ? null : new BigMapKeyInfo
             {
                 Id = row.BigMapKey_Id,
-                KeyHash = row.BigMapKey_KeyHash,
+                KeyHash = Hashes.FormatExprHash(row.BigMapKey_KeyHash),
                 RawKey = Micheline.FromBytes((byte[])row.BigMapKey_RawKey),
                 Key = row.BigMapKey_Key,
             },
@@ -358,7 +359,7 @@ public class BigMapUpdateRepository(
                     foreach (var row in rows) result[j++][i] = row.BigMapKey_Id == null ? null : new BigMapKeyInfo
                     {
                         Id = row.BigMapKey_Id,
-                        KeyHash = row.BigMapKey_KeyHash,
+                        KeyHash = Hashes.FormatExprHash(row.BigMapKey_KeyHash),
                         RawKey = Micheline.FromBytes((byte[])row.BigMapKey_RawKey),
                         Key = row.BigMapKey_Key,
                     };
@@ -367,7 +368,7 @@ public class BigMapUpdateRepository(
                     foreach (var row in rows) result[j++][i] = row.BigMapKey_Id?.ToString();
                     break;
                 case "bigMapKey.keyHash":
-                    foreach (var row in rows) result[j++][i] = row.BigMapKey_KeyHash;
+                    foreach (var row in rows) result[j++][i] = row.BigMapKey_KeyHash == null ? null : Hashes.FormatExprHash(row.BigMapKey_KeyHash);
                     break;
                 case "bigMapKey.rawKey":
                     foreach (var row in rows) result[j++][i] = row.BigMapKey_RawKey == null ? null : Micheline.FromBytes((byte[])row.BigMapKey_RawKey);

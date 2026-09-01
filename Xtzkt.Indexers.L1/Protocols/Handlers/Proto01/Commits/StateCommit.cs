@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto01
@@ -20,7 +21,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             state.Timestamp = block.Timestamp;
             state.Protocol = Context.Protocol.Hash;
             state.NextProtocol = nextProtocol;
-            state.Hash = block.Hash;
+            state.Hash = Hashes.FormatMichelsonBlockHash(block.Hash);
 
             if (block.Events.HasFlag(L1BlockEvents.CycleBegin)) state.CyclesCount++;
 
@@ -43,7 +44,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             state.Timestamp = prevBlock.Timestamp;
             state.Protocol = prevProtocol.Hash;
             state.NextProtocol = nextProtocol;
-            state.Hash = prevBlock.Hash;
+            state.Hash = Hashes.FormatMichelsonBlockHash(prevBlock.Hash);
 
             if (block.Events.HasFlag(L1BlockEvents.CycleBegin)) state.CyclesCount--;
 

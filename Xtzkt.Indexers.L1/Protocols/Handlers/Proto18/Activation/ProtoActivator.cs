@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
 using Newtonsoft.Json.Linq;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto18
@@ -335,8 +336,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             var contract = await Cache.Addresses.GetAsync(bigmap.ContractId);
             Db.TryAttach(contract);
 
+            var keyHashBytes = keyHashes.Select(Hashes.ParseExprHash).ToList();
             var keys = await Db.BigMapKeys
-                .Where(x => x.BigMapId == bigmap.Id && keyHashes.Contains(x.KeyHash) && x.Active)
+                .Where(x => x.BigMapId == bigmap.Id && keyHashBytes.Contains(x.KeyHash) && x.Active)
                 .ToListAsync();
 
             foreach (var key in keys)

@@ -7,6 +7,7 @@ using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.TezosX.Services.Observer;
 using Xtzkt.Utils.Extensions;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Services
 {
@@ -260,7 +261,7 @@ namespace Xtzkt.Indexers.TezosX.Services
                 using var scope = _services.CreateScope();
                 var cache = scope.ServiceProvider.GetRequiredService<CacheService>();
                 var local = await cache.Blocks.GetAsync(head.Level);
-                return local.Hash == head.Hash;
+                return Hex.GetString(local.Hash) == head.Hash;
             }
 
             return head.Hash == _state.Hash;

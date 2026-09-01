@@ -6,6 +6,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
+using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
@@ -95,7 +96,7 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         BigMapUpdate bigMapUpdate;
         var bigMapUpdates = new List<BigMapUpdate>(Updates.Count);
-        var images = new Dictionary<int, Dictionary<string, (byte[] RawKey, byte[] RawValue)>>();
+        var images = new Dictionary<int, Dictionary<HashKey, (byte[] RawKey, byte[] RawValue)>>();
         foreach (var diff in Diffs)
         {
             switch (diff.diff)
@@ -177,7 +178,7 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                         var sourceId = Cache.BigMaps.Get(copy.SourcePtr).Id;
                         src = copiedKeys
                             .Where(x => x.BigMapId == sourceId)
-                            .ToDictionary(x => x.KeyHash, x => (x.RawKey, x.RawValue));
+                            .ToDictionary(x => (HashKey)x.KeyHash, x => (x.RawKey, x.RawValue));
                     }
                     if (copy.Ptr >= 0)
                     {
@@ -233,7 +234,7 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                                 ChainId = Cache.Chain.Get().Id,
                                 BigMapId = copiedBigMap.Id,
                                 Active = true,
-                                KeyHash = kv.Key,
+                                KeyHash = kv.Key.Bytes,
                                 JsonKey = Regexes.RestrictedUnicode().Replace(bigMapSchema.Key.Humanize(rawKey), Regexes.NullEscapeString),
                                 JsonValue = Regexes.RestrictedUnicode().Replace(bigMapSchema.Value.Humanize(rawValue), Regexes.NullEscapeString),
                                 RawKey = bigMapSchema.Key.Optimize(rawKey).ToBytes(),
@@ -290,7 +291,7 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                         }
                         diff.op.BigMapUpdates = (diff.op.BigMapUpdates ?? 0) + keys.Count + 1;
 
-                        images.Add(copy.Ptr, keys.ToDictionary(x => x.KeyHash, x => (x.RawKey, x.RawValue)));
+                        images.Add(copy.Ptr, keys.ToDictionary(x => (HashKey)x.KeyHash, x => (x.RawKey, x.RawValue)));
                         #endregion
                     }
                     else
