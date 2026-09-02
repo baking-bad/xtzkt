@@ -36,6 +36,9 @@ public sealed class EvmInternalOperation : MetaInternalOperation
 
     // needed for bug-ish kernels, adding intrinsic gas to every frame
     public int FrameGasOffset { get; init; }
+
+    // needed for skipping static subtrees
+    public OperationStatus? StaticRootStatus { get; init; }
 }
 
 public sealed class EvmDeposit : MetaOperation

@@ -5,6 +5,19 @@
         public int BatchSize { get; set; } = 256;
         public int PrefetchDepth { get; set; } = 8;
         public bool FallbackToLatestKernel { get; set; } = false;
+        public StaticCalls StaticCalls { get; set; } = StaticCalls.StoreFailed;
+    }
+
+    public enum StaticCalls
+    {
+        /// <summary>Store every static call.</summary>
+        StoreAll,
+
+        /// <summary> Store only static subtrees whose caller is not applied. </summary>
+        StoreFailed,
+
+        /// <summary>Drop every static call.</summary>
+        Drop,
     }
 
     public static class TezosProtocolsConfigExt

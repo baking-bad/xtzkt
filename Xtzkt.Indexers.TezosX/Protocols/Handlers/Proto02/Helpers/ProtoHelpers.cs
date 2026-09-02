@@ -4,6 +4,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Utils.Encoding;
@@ -113,6 +114,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
             Logs = x.Logs,
             Status = x.Status,
             ParentStatus = x.ParentStatus,
+            StaticRootStatus = x.StaticRootStatus,
             From = x.Trace.RequiredString("from"),
             To = x.Trace.OptionalString("to"),
         }).ToList();
@@ -128,14 +130,13 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
         return trace.OptionalArray("logs") is JsonElement logs ? [.. logs.EnumerateArray()] : [];
     }
 
-    static IEnumerable<(JsonElement Trace, int Depth, OperationStatus Status, OperationStatus ParentStatus, List<JsonElement> Logs)> EnumerateTraces(
-        JsonElement trace, List<JsonElement> subtreeLogs, string? context = null, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied)
+    static IEnumerable<TraceFrame> EnumerateTraces(
+        JsonElement trace, List<JsonElement> subtreeLogs, string? context = null, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied, OperationStatus? staticRootStatus = null)
     {
-        var status = HasFailed(trace)
-            ? OperationStatus.Failed
-            : parentStatus != OperationStatus.Applied
-                ? OperationStatus.Backtracked
-                : OperationStatus.Applied;
+        var status = trace.TraceStatus(parentStatus);
+
+        if (staticRootStatus == null && depth > 0 && trace.IsStaticCall())
+            staticRootStatus = parentStatus;
 
         context = ExecutionContext(trace, context);
 
@@ -149,7 +150,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
             var end = Math.Clamp(subtrace.OptionalArray("logs")?.GetArrayLength() ?? 0, pos, subtreeLogs.Count);
             var start = end;
 
-            if (start > pos && !HasFailed(subtrace))
+            if (start > pos && !subtrace.HasFailed() && !subtrace.IsStaticCall())
             {
                 var subtreeContexts = SubtreeContexts(subtrace, context);
                 while (start > pos && subtreeLogs[start - 1].RequiredString("address") is string address && (subtreeContexts.Contains(address) || address != context))
@@ -163,16 +164,19 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
 
         ownLogs.AddRange(subtreeLogs[pos..]);
 
-        yield return (trace, depth, status, parentStatus, ownLogs);
+        yield return new TraceFrame
+        {
+            Trace = trace,
+            Depth = depth,
+            Status = status,
+            ParentStatus = parentStatus,
+            StaticRootStatus = staticRootStatus,
+            Logs = ownLogs,
+        };
 
         for (int i = 0; i < subtraces.Count; i++)
-            foreach (var item in EnumerateTraces(subtraces[i], subtraceLogs[i], context, depth + 1, status))
+            foreach (var item in EnumerateTraces(subtraces[i], subtraceLogs[i], context, depth + 1, status, staticRootStatus))
                 yield return item;
-    }
-
-    static bool HasFailed(JsonElement trace)
-    {
-        return trace.OptionalString("error") != null || trace.OptionalString("revertReason") != null;
     }
 
     static string? ExecutionContext(JsonElement trace, string? callerContext)
@@ -197,6 +201,16 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(prot
             foreach (var subtrace in trace.OptionalArray("calls")?.EnumerateArray() ?? [])
                 Collect(subtrace, context);
         }
+    }
+
+    readonly struct TraceFrame
+    {
+        public required JsonElement Trace { get; init; }
+        public required int Depth { get; init; }
+        public required OperationStatus Status { get; init; }
+        public required OperationStatus ParentStatus { get; init; }
+        public required OperationStatus? StaticRootStatus { get; init; }
+        public required List<JsonElement> Logs { get; init; }
     }
     #endregion
 }

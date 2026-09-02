@@ -261,7 +261,7 @@ namespace Xtzkt.Indexers.TezosX.Services
                 using var scope = _services.CreateScope();
                 var cache = scope.ServiceProvider.GetRequiredService<CacheService>();
                 var local = await cache.Blocks.GetAsync(head.Level);
-                return Hex.GetString(local.Hash) == head.Hash;
+                return local.Hash.SequenceEqual(Hex.GetBytes(head.Hash));
             }
 
             return head.Hash == _state.Hash;

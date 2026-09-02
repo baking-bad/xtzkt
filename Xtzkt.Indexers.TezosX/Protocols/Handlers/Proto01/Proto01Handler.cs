@@ -85,6 +85,9 @@ class Proto01Handler(
                 {
                     switch (iop)
                     {
+                        case EvmInternalOperation eiop when CanSkip(eiop.StaticRootStatus):
+                            if (eiop.Logs.Count != 0) throw new Exception("Unexpected logs in a static call");
+                            break;
                         case EvmInternalOperation eiop:
                             switch (eiop.Trace.RequiredString("type"))
                             {

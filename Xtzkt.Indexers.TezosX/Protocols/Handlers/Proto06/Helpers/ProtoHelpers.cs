@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
 
@@ -47,6 +48,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(prot
             Logs = frame.Logs,
             Status = frame.Status,
             ParentStatus = frame.ParentStatus,
+            StaticRootStatus = frame.StaticRootStatus,
             From = frame.Trace.RequiredString("from"),
             To = frame.Trace.OptionalString("to"),
             FrameGasOffset = op.FrameGasOffset,
@@ -58,7 +60,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(prot
 
     static Frame BuildFrames(JsonElement trace)
     {
-        var root = BuildFrame(trace, null, 0, OperationStatus.Applied, null);
+        var root = BuildFrame(trace, null, 0, OperationStatus.Applied, null, null);
 
         if (root.Subframes.Count == 0)
         {
@@ -73,27 +75,23 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(prot
         return root;
     }
 
-    static Frame BuildFrame(JsonElement trace, Frame? parent, int depth, OperationStatus parentStatus, string? callerContext)
+    static Frame BuildFrame(JsonElement trace, Frame? parent, int depth, OperationStatus parentStatus, string? callerContext, OperationStatus? staticRootStatus)
     {
-        var failed = trace.OptionalString("error") != null || trace.OptionalString("revertReason") != null;
         var frame = new Frame
         {
             Trace = trace,
             Depth = depth,
-            Status = failed
-                ? OperationStatus.Failed
-                : parentStatus != OperationStatus.Applied
-                    ? OperationStatus.Backtracked
-                    : OperationStatus.Applied,
+            Status = trace.TraceStatus(parentStatus),
             ParentStatus = parentStatus,
             Parent = parent,
             Context = trace.RequiredString("type") is "DELEGATECALL" or "CALLCODE"
                 ? callerContext
                 : trace.OptionalString("to"),
+            StaticRootStatus = staticRootStatus ?? (depth > 0 && trace.IsStaticCall() ? parentStatus : null),
         };
 
         foreach (var subtrace in trace.OptionalArray("calls")?.EnumerateArray() ?? [])
-            frame.Subframes.Add(BuildFrame(subtrace, frame, depth + 1, frame.Status, frame.Context));
+            frame.Subframes.Add(BuildFrame(subtrace, frame, depth + 1, frame.Status, frame.Context, frame.StaticRootStatus));
 
         return frame;
     }
@@ -108,7 +106,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(prot
             var address = log.RequiredString("address");
 
             var emitter = frame;
-            while (emitter != null && emitter.Context != address)
+            while (emitter != null && (emitter.Context != address || emitter.StaticRootStatus != null))
                 emitter = emitter.Parent;
 
             // 1. In case emitter is not found, the indexer should stop (and will stop because of assertion check above).
@@ -131,6 +129,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(prot
         public required OperationStatus ParentStatus { get; init; }
         public required Frame? Parent { get; init; }
         public required string? Context { get; init; }
+        public required OperationStatus? StaticRootStatus { get; init; }
         public List<Frame> Subframes { get; } = [];
         public List<JsonElement> Logs { get; } = [];
     }

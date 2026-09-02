@@ -10,7 +10,8 @@ partial class TransactionCommit(ProtocolHandler protocol) : Proto01.TransactionC
     protected override (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
     {
         var gasUsed = receipt.RequiredHexInt32("gasUsed");
-        var ownGasUsed = gasUsed - SubcallsGasUsed(trace, frameGasOffset);
+        // status is taken from the trace to match skipping logic in ProtocolHandler
+        var ownGasUsed = gasUsed - SubcallsGasUsed(trace, trace.TraceStatus(), frameGasOffset);
         return (gasUsed, ownGasUsed);
     }
 

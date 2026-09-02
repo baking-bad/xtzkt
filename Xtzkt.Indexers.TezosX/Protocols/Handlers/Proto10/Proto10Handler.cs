@@ -227,6 +227,9 @@ class Proto10Handler(
                                     throw new NotImplementedException($"internal '{miop.Content.RequiredString("kind")}' is not implemented");
                             }
                             break;
+                        case EvmInternalOperation eiop when CanSkip(eiop.StaticRootStatus):
+                            if (eiop.Logs.Count != 0) throw new Exception("Unexpected logs in a static call");
+                            break;
                         case EvmInternalOperation eiop:
                             switch (eiop.Trace.RequiredString("type"))
                             {

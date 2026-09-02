@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
@@ -9,7 +10,6 @@ using Xtzkt.Indexers.TezosX.Protocols;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Services;
-using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX
 {
@@ -219,6 +219,17 @@ namespace Xtzkt.Indexers.TezosX
             var blueprint = await EvmRpc.GetBlueprint(state.Level + 1);
             var timestamp = blueprint.Required("blueprint").RequiredDateTime("timestamp");
             return state.KernelUpgradeTime <= timestamp;
+        }
+
+        public bool CanSkip(OperationStatus? staticRootStatus)
+        {
+            if (staticRootStatus is not OperationStatus status)
+                return false;
+
+            if (Config.StaticCalls == StaticCalls.StoreFailed)
+                return status == OperationStatus.Applied;
+
+            return Config.StaticCalls == StaticCalls.Drop;
         }
 
         protected virtual Task CheckMichelsonActivationLevel(XChain state)

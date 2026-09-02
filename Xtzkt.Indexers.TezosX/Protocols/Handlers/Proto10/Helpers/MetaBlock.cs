@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
 
@@ -190,24 +191,41 @@ partial class ProtoHelpers
             Logs = x.Trace.OptionalArray("logs")?.EnumerateArray().ToList() ?? [],
             Status = x.Status,
             ParentStatus = x.ParentStatus,
+            StaticRootStatus = x.StaticRootStatus,
             From = x.Trace.RequiredString("from"),
             To = x.Trace.OptionalString("to"),
         })];
     }
 
-    protected static IEnumerable<(JsonElement Trace, int Depth, OperationStatus Status, OperationStatus ParentStatus)> EnumerateTraces(
-        JsonElement trace, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied)
+    protected static IEnumerable<TraceFrame> EnumerateTraces(
+        JsonElement trace, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied, OperationStatus? staticRootStatus = null)
     {
-        var status = trace.OptionalString("error") != null || trace.OptionalString("revertReason") != null
-            ? OperationStatus.Failed
-            : parentStatus != OperationStatus.Applied
-                ? OperationStatus.Backtracked
-                : OperationStatus.Applied;
+        var status = trace.TraceStatus(parentStatus);
 
-        yield return (trace, depth, status, parentStatus);
+        if (staticRootStatus == null && depth > 0 && trace.IsStaticCall())
+            staticRootStatus = parentStatus;
+
+        yield return new TraceFrame
+        {
+            Trace = trace,
+            Depth = depth,
+            Status = status,
+            ParentStatus = parentStatus,
+            StaticRootStatus = staticRootStatus,
+        };
+
         foreach (var subtrace in trace.OptionalArray("calls")?.EnumerateArray() ?? [])
-            foreach (var item in EnumerateTraces(subtrace, depth + 1, status))
+            foreach (var item in EnumerateTraces(subtrace, depth + 1, status, staticRootStatus))
                 yield return item;
+    }
+
+    protected readonly struct TraceFrame
+    {
+        public required JsonElement Trace { get; init; }
+        public required int Depth { get; init; }
+        public required OperationStatus Status { get; init; }
+        public required OperationStatus ParentStatus { get; init; }
+        public required OperationStatus? StaticRootStatus { get; init; }
     }
 
     protected bool IsMichelsonCrac(MichelsonOperation op, List<MichelsonInternalOperation> iops, [NotNullWhen(true)] out string? cracId)

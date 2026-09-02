@@ -5,6 +5,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Services;
 
@@ -171,10 +172,22 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             return null;
         }
 
-        protected static int SubcallsGasUsed(JsonElement trace, int frameGasOffset = 0)
+        protected int SubcallsGasUsed(JsonElement trace, OperationStatus traceStatus, int frameGasOffset = 0)
         {
-            return trace.OptionalArray("calls")?.EnumerateArray()
-                .Sum(x => x.RequiredHexInt32("gasUsed") - frameGasOffset) ?? 0;
+            if (trace.OptionalArray("calls") is not JsonElement calls)
+                return 0;
+
+            var skippingStatic = Proto.CanSkip(traceStatus);
+
+            var res = 0;
+            foreach (var call in calls.EnumerateArray())
+            {
+                if (skippingStatic && call.IsStaticCall())
+                    continue;
+
+                res += call.RequiredHexInt32("gasUsed") - frameGasOffset;
+            }
+            return res;
         }
 
         protected int GetGasLimit(JsonElement tx)

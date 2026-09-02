@@ -187,7 +187,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Guessed = Guessed(paramsGuessed, resultGuessed),
             Amount = trace.RequiredHexBigInteger("value"),
             Counter = parent.Counter,
-            GasUsed = trace.RequiredHexInt32("gasUsed") - frameGasOffset - SubcallsGasUsed(trace, frameGasOffset),
+            GasUsed = trace.RequiredHexInt32("gasUsed") - frameGasOffset - SubcallsGasUsed(trace, traceStatus, frameGasOffset),
             Status = status,
             Errors = status != OperationStatus.Applied
                 ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")

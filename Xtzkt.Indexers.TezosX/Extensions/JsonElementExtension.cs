@@ -21,6 +21,25 @@ public static class JsonElementExtension
         };
     }
 
+    public static bool IsStaticCall(this JsonElement trace)
+    {
+        return trace.Required("type").ValueEquals("STATICCALL");
+    }
+
+    public static bool HasFailed(this JsonElement trace)
+    {
+        return trace.Optional("error") != null || trace.Optional("revertReason") != null;
+    }
+
+    public static OperationStatus TraceStatus(this JsonElement trace, OperationStatus parentStatus = OperationStatus.Applied)
+    {
+        return trace.HasFailed()
+            ? OperationStatus.Failed
+            : parentStatus != OperationStatus.Applied
+                ? OperationStatus.Backtracked
+                : OperationStatus.Applied;
+    }
+
     public static EvmOpCode RequiredEvmOpCode(this JsonElement el, string name)
     {
         var value = el.RequiredString(name);
