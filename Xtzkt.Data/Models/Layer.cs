@@ -1,6 +1,6 @@
 ﻿namespace Xtzkt.Data.Models;
 
-public enum Layer
+public enum Layer : byte
 {
     L1,
     TezosX,

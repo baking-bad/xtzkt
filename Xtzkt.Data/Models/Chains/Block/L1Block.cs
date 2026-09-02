@@ -5,44 +5,64 @@ namespace Xtzkt.Data.Models;
 
 public class L1Block() : Block(Layer.L1)
 {
+    [Column(Order = 19)]
     public required int Cycle { get; set; }
 
+    [Column(Order = 22)]
     public int? SoftwareId { get; set; }
 
+    [Column(Order = 23)]
     public int PayloadRound { get; set; }
+    [Column(Order = 24)]
     public int BlockRound { get; set; }
+    [Column(Order = 3)]
     public long AttestationPower { get; set; }
+    [Column(Order = 4)]
     public long AttestationCommittee { get; set; }
 
-    [Column(nameof(Events))]
+    [Column(nameof(Events), Order = 25)]
     public L1BlockEvents Events { get; set; }
 
-    [Column(nameof(Operations))]
+    [Column(nameof(Operations), Order = 2)]
     public L1Operations Operations { get; set; }
 
+    [Column(Order = 5)]
     public long RewardDelegated { get; set; }
+    [Column(Order = 6)]
     public long RewardStakedOwn { get; set; }
+    [Column(Order = 7)]
     public long RewardStakedEdge { get; set; }
+    [Column(Order = 8)]
     public long RewardStakedShared { get; set; }
+    [Column(Order = 9)]
     public long BonusDelegated { get; set; }
+    [Column(Order = 10)]
     public long BonusStakedOwn { get; set; }
+    [Column(Order = 11)]
     public long BonusStakedEdge { get; set; }
+    [Column(Order = 12)]
     public long BonusStakedShared { get; set; }
 
-    [Column(nameof(BakerFees))]
+    [Column(nameof(BakerFees), Order = 13)]
     public long BakerFees { get; set; }
 
-    [Column(nameof(BurnedFees))]
+    [Column(nameof(BurnedFees), Order = 14)]
     public long BurnedFees { get; set; }
 
-    [Column(nameof(ProposerId))]
+    [Column(nameof(ProposerId), Order = 26)]
     public int? ProposerId { get; set; }
+    [Column(Order = 27)]
     public int? ProducerId { get; set; }
+    [Column(Order = 15)]
     public long? RevelationId { get; set; }
+    [Column(Order = 28)]
     public int? ResetBakerDeactivation { get; set; }
+    [Column(Order = 29)]
     public int? ResetProposerDeactivation { get; set; }
 
+    [Column(Order = 32)]
     public bool? LBToggle { get; set; }
+    [Column(Order = 30)]
     public int LBToggleEma { get; set; }
 }
 

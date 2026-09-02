@@ -256,7 +256,7 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
             switch (fields[i].Full)
             {
                 case "layer":
-                    foreach (var row in rows) result[j++][i] = Layers.ToString(row.Layer);
+                    foreach (var row in rows) result[j++][i] = Layers.ToString((int)row.Layer);
                     break;
                 // Protocol
                 case "id":

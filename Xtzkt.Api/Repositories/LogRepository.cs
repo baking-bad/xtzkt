@@ -241,7 +241,7 @@ public class LogRepository(
             switch (fields[i].Full)
             {
                 case "runtime":
-                    foreach (var row in rows) result[j++][i] = Runtimes.ToString(row.Runtime);
+                    foreach (var row in rows) result[j++][i] = Runtimes.ToString((int)row.Runtime);
                     break;
                 // Log
                 case "id":

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using NpgsqlTypes;
@@ -7,22 +8,34 @@ namespace Xtzkt.Data.Models
 {
     public class TokenTransfer
     {
+        [Column(Order = 0)]
         public required long Id { get; set; }
+        [Column(Order = 6)]
         public required int ChainId { get; set; }
+        [Column(Order = 1)]
         public required long TokenId { get; set; }
+        [Column(Order = 7)]
         public required int ContractId { get; set; }
+        [Column(Order = 8)]
         public required int Level { get; set; }
+        [Column(Order = 2)]
         public required DateTime Timestamp { get; set; }
         public BigInteger Amount { get; set; }
 
+        [Column(Order = 9)]
         public int? FromId { get; set; }
         public byte[]? FromEntrypoint { get; set; }
+        [Column(Order = 10)]
         public int? ToId { get; set; }
         public byte[]? ToEntrypoint { get; set; }
 
+        [Column(Order = 3)]
         public long? OriginationId { get; set; }
+        [Column(Order = 4)]
         public long? TransactionId { get; set; }
+        [Column(Order = 5)]
         public long? MigrationId { get; set; }
+        [Column(Order = 11)]
         public int? IndexedAt { get; set; }
 
         #region binary writer

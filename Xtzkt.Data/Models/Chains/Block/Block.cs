@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql;
 using NpgsqlTypes;
@@ -8,16 +9,24 @@ namespace Xtzkt.Data.Models;
 
 public abstract class Block(Layer layer) : ISourceOperation
 {
+    [Column(Order = 31)]
     public Layer Layer { get; private set; } = layer;
 
+    [Column(Order = 0)]
     public required long Id { get; set; }
+    [Column(Order = 16)]
     public required int ChainId { get; set; }
+    [Column(Order = 17)]
     public required int Level { get; set; }
     public required byte[] Hash { get; set; }
+    [Column(Order = 1)]
     public required DateTime Timestamp { get; set; }
+    [Column(Order = 18)]
     public required int ProtocolId { get; set; }
 
+    [Column(Order = 20)]
     public int? OpsCounter { get; set; }
+    [Column(Order = 21)]
     public int? SubsCounter { get; set; }
 
     #region binary writer
@@ -38,7 +47,7 @@ public abstract class Block(Layer layer) : ISourceOperation
         writer.StartRow();
 
         writer.Write(Id, NpgsqlDbType.Bigint);
-        writer.Write((int)Layer, NpgsqlDbType.Integer);
+        writer.Write((short)Layer, NpgsqlDbType.Smallint);
         writer.Write(ChainId, NpgsqlDbType.Integer);
         writer.Write(Level, NpgsqlDbType.Integer);
         writer.Write(Hash, NpgsqlDbType.Bytea);

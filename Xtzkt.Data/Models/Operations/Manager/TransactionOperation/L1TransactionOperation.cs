@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -6,7 +7,9 @@ namespace Xtzkt.Data.Models
 {
     public class L1TransactionOperation() : MichelsonTransactionOperation(Direction.L1)
     {
+        [Column(Order = 12)]
         public long? BakerFee { get; set; } // null for internal operations
+        [Column(Order = 33)]
         public int? ResetDeactivation { get; set; }
 
         #region binary writer
@@ -59,7 +62,7 @@ namespace Xtzkt.Data.Models
                 writer.StartRow();
 
                 writer.Write(op.Id, NpgsqlDbType.Bigint);
-                writer.Write((int)op.Direction, NpgsqlDbType.Integer);
+                writer.Write((short)op.Direction, NpgsqlDbType.Smallint);
                 writer.Write(op.ChainId, NpgsqlDbType.Integer);
                 writer.WriteNullable(op.SenderCodeHash, NpgsqlDbType.Integer);
                 writer.Write(op.TargetId, NpgsqlDbType.Integer);
@@ -86,7 +89,7 @@ namespace Xtzkt.Data.Models
                 writer.Write(op.GasUsed, NpgsqlDbType.Integer);
                 writer.WriteNullable(op.StorageLimit, NpgsqlDbType.Integer);
                 writer.Write(op.StorageUsed, NpgsqlDbType.Integer);
-                writer.Write((int)op.Status, NpgsqlDbType.Smallint);
+                writer.Write((short)op.Status, NpgsqlDbType.Smallint);
                 writer.WriteNullable(op.Errors, NpgsqlDbType.Text);
                 writer.WriteNullable(op.InitiatorId, NpgsqlDbType.Integer);
                 writer.WriteNullable(op.Nonce, NpgsqlDbType.Integer);

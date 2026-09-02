@@ -8,10 +8,10 @@ namespace Xtzkt.Data.Models;
 
 public class XBlock() : Block(Layer.TezosX)
 {
-    [Column(nameof(Events))]
+    [Column(nameof(Events), Order = 25)]
     public XBlockEvents Events { get; set; }
 
-    [Column(nameof(Operations))]
+    [Column(nameof(Operations), Order = 2)]
     public XOperations Operations { get; set; }
 
     [Column($"{nameof(L1Block.BakerFees)}18")]
@@ -20,7 +20,7 @@ public class XBlock() : Block(Layer.TezosX)
     [Column($"{nameof(BurnedFees)}18")]
     public BigInteger BurnedFees { get; set; }
 
-    [Column(nameof(L1Block.ProposerId))]
+    [Column(nameof(L1Block.ProposerId), Order = 26)]
     public int? SequencerPoolId { get; set; }
 
     [Column(nameof(MichelsonHash))]

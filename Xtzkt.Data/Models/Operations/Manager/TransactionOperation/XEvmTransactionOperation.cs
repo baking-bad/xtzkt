@@ -9,10 +9,10 @@ namespace Xtzkt.Data.Models;
 
 public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), IParentOperation
 {
-    [Column(nameof(OpType))]
+    [Column(nameof(OpType), Order = 38)]
     public EvmOpType OpType { get; set; }
 
-    [Column(nameof(OpCode))]
+    [Column(nameof(OpCode), Order = 39)]
     public EvmOpCode OpCode { get; set; }
 
     [Column(nameof(GasPrice))]
@@ -48,14 +48,14 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
     public string? Result { get; set; }
 
 
-    [Column(nameof(Eip7702DelegationCount))]
+    [Column(nameof(Eip7702DelegationCount), Order = 31)]
     public int? Eip7702DelegationCount { get; set; }
 
-    [Column(nameof(BridgeTicketTransfers))]
+    [Column(nameof(BridgeTicketTransfers), Order = 30)]
     public int? BridgeTicketTransfers { get; set; }
 
     // id of the deposit operation this operation claims
-    [Column(nameof(ClaimDepositId))]
+    [Column(nameof(ClaimDepositId), Order = 16)]
     public long? ClaimDepositId { get; set; }
 
     #region binary writer
@@ -87,8 +87,8 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
         {
             op.WriteBinaryBase(writer);
 
-            writer.Write((int)op.OpType, NpgsqlDbType.Integer);
-            writer.Write((int)op.OpCode, NpgsqlDbType.Integer);
+            writer.Write((short)op.OpType, NpgsqlDbType.Smallint);
+            writer.Write((short)op.OpCode, NpgsqlDbType.Smallint);
             writer.WriteNullable(op.GasPrice, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.MaxFeePerGas, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.MaxPriorityFeePerGas, NpgsqlDbType.Numeric);
@@ -109,7 +109,7 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
     #endregion
 }
 
-public enum EvmOpType
+public enum EvmOpType : byte
 {
     Legacy,
     AccessList,
@@ -119,7 +119,7 @@ public enum EvmOpType
     Trace = 255
 }
 
-public enum EvmOpCode
+public enum EvmOpCode : byte
 {
     Create,
     Create2,

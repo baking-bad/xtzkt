@@ -40,7 +40,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             #region apply operation
-            ReceiveLockedRewards(sender, attestation.Reward);
+            ReceiveLockedRewards(sender, attestation.Reward.Value);
 
             sender.AttestationsCount++;
 
@@ -58,8 +58,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             }
 
             Cache.Chain.Get().AttestationOpsCount++;
-            Cache.Statistics.Current.TotalCreated += attestation.Reward;
-            Cache.Statistics.Current.TotalFrozen += attestation.Reward + attestation.Deposit;
+            Cache.Statistics.Current.TotalCreated += attestation.Reward.Value;
+            Cache.Statistics.Current.TotalFrozen += attestation.Reward.Value + attestation.Deposit.Value;
             #endregion
 
             //Db.AttestationOps.Add(attestation);
@@ -74,7 +74,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             #region revert operation
-            RevertReceiveLockedRewards(sender, attestation.Reward);
+            RevertReceiveLockedRewards(sender, attestation.Reward!.Value);
 
             sender.AttestationsCount--;
 

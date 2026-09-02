@@ -328,8 +328,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 writer.Write(cycle.Index, NpgsqlTypes.NpgsqlDbType.Integer);
                 writer.Write(br.RequiredInt32("level"), NpgsqlTypes.NpgsqlDbType.Integer);
                 writer.Write(bakerId, NpgsqlTypes.NpgsqlDbType.Integer);
-                writer.Write((int)BakingRightType.Baking, NpgsqlTypes.NpgsqlDbType.Integer);
-                writer.Write((int)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Integer);
+                writer.Write((short)BakingRightType.Baking, NpgsqlTypes.NpgsqlDbType.Smallint);
+                writer.Write((short)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Smallint);
                 writer.Write(round, NpgsqlTypes.NpgsqlDbType.Integer);
                 writer.WriteNull();
             }
@@ -374,8 +374,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 writer.Write(protocol.GetCycle(ar.RequiredInt32("level") + 1), NpgsqlTypes.NpgsqlDbType.Integer);
                 writer.Write(ar.RequiredInt32("level") + 1, NpgsqlTypes.NpgsqlDbType.Integer);
                 writer.Write(Cache.Addresses.GetExistingBaker(ar.RequiredString("delegate")).Id, NpgsqlTypes.NpgsqlDbType.Integer);
-                writer.Write((int)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Integer);
-                writer.Write((int)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Integer);
+                writer.Write((short)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Smallint);
+                writer.Write((short)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Smallint);
                 writer.WriteNull();
                 writer.Write(ar.RequiredArray("slots").Count(), NpgsqlTypes.NpgsqlDbType.Integer);
             }

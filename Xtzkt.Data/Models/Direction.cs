@@ -1,6 +1,6 @@
 ﻿namespace Xtzkt.Data.Models;
 
-public enum Direction
+public enum Direction : byte
 {
     L1,
     XEvm,

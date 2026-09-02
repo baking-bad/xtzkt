@@ -97,8 +97,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<DateTime>("LastTimestamp")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("MigrationsCount")
                         .HasColumnType("integer");
@@ -106,8 +106,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("OriginationsCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Runtime")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Runtime")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("TicketBalancesCount")
                         .HasColumnType("integer");
@@ -170,37 +170,46 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(0);
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("BakerId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(7);
 
                     b.Property<int>("ChainId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(5);
 
-                    b.Property<long>("Deposit")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deposit")
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(4);
 
                     b.Property<byte[]>("Hash")
                         .IsRequired()
                         .HasColumnType("bytea");
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(6);
 
                     b.Property<long>("Power")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(2);
 
                     b.Property<int?>("ResetDeactivation")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(8);
 
-                    b.Property<long>("Reward")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Reward")
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(3);
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(1);
 
                     b.HasKey("Id");
 
@@ -500,11 +509,11 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("Slots")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint");
 
                     b.HasKey("Id");
 
@@ -746,12 +755,14 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(0);
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("ChainId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(16);
 
                     b.Property<string>("Extras")
                         .HasColumnType("jsonb");
@@ -760,23 +771,29 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint")
+                        .HasColumnOrder(31);
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(17);
 
                     b.Property<int?>("OpsCounter")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(20);
 
                     b.Property<int>("ProtocolId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(18);
 
                     b.Property<int?>("SubsCounter")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(21);
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(1);
 
                     b.HasKey("Id");
 
@@ -784,7 +801,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Blocks");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -965,8 +982,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("KnownLevel")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1039,7 +1056,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Chains");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -1463,8 +1480,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ReceiverId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Runtime")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Runtime")
+                        .HasColumnType("smallint");
 
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
@@ -1481,7 +1498,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("DepositOps");
 
-                    b.HasDiscriminator<int>("Runtime");
+                    b.HasDiscriminator<byte>("Runtime");
 
                     b.UseTphMappingStrategy();
                 });
@@ -1815,8 +1832,8 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -1845,7 +1862,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("IncreasePaidStorageOps");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -1854,27 +1871,34 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(0);
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("AddressId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(7);
 
                     b.Property<int>("ChainId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(5);
 
                     b.Property<int>("ContractCodeHash")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(9);
 
                     b.Property<int>("ContractTypeHash")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(8);
 
                     b.Property<bool?>("Guessed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnOrder(11);
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(6);
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -1882,11 +1906,13 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Payload")
                         .HasColumnType("jsonb");
 
-                    b.Property<int>("Runtime")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Runtime")
+                        .HasColumnType("smallint")
+                        .HasColumnOrder(10);
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(1);
 
                     b.HasKey("Id");
 
@@ -1894,7 +1920,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Logs");
 
-                    b.HasDiscriminator<int>("Runtime");
+                    b.HasDiscriminator<byte>("Runtime");
 
                     b.UseTphMappingStrategy();
                 });
@@ -1919,8 +1945,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Runtime")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Runtime")
+                        .HasColumnType("smallint");
 
                     b.Property<int?>("ScriptId")
                         .HasColumnType("integer");
@@ -1936,7 +1962,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("MigrationOps");
 
-                    b.HasDiscriminator<int>("Runtime");
+                    b.HasDiscriminator<byte>("Runtime");
 
                     b.UseTphMappingStrategy();
                 });
@@ -2240,8 +2266,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("LastLevel")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Version")
                         .HasColumnType("integer");
@@ -2252,7 +2278,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Protocols");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -2389,8 +2415,8 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2428,7 +2454,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("RegisterConstantOps");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -2463,8 +2489,8 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -2493,7 +2519,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("RevealOps");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -2560,8 +2586,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("OriginationId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Runtime")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Runtime")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("TypeHash")
                         .HasColumnType("integer");
@@ -2575,7 +2601,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Scripts");
 
-                    b.HasDiscriminator<int>("Runtime");
+                    b.HasDiscriminator<byte>("Runtime");
 
                     b.UseTphMappingStrategy();
                 });
@@ -3599,8 +3625,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<DateTime?>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
@@ -3609,7 +3635,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("Statistics");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -4008,7 +4034,8 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(0);
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
@@ -4016,43 +4043,54 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<int>("ChainId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(6);
 
                     b.Property<int>("ContractId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(7);
 
                     b.Property<byte[]>("FromEntrypoint")
                         .HasColumnType("bytea");
 
                     b.Property<int?>("FromId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(9);
 
                     b.Property<int?>("IndexedAt")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(11);
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(8);
 
                     b.Property<long?>("MigrationId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(5);
 
                     b.Property<long?>("OriginationId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(3);
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(2);
 
                     b.Property<byte[]>("ToEntrypoint")
                         .HasColumnType("bytea");
 
                     b.Property<int?>("ToId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(10);
 
                     b.Property<long>("TokenId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(1);
 
                     b.Property<long?>("TransactionId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(4);
 
                     b.HasKey("Id");
 
@@ -4065,18 +4103,22 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(0);
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("ChainId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(2);
 
                     b.Property<int>("Counter")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(5);
 
-                    b.Property<int>("Direction")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Direction")
+                        .HasColumnType("smallint")
+                        .HasColumnOrder(36);
 
                     b.Property<string>("Entrypoint")
                         .HasColumnType("text");
@@ -4085,56 +4127,71 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int?>("GasLimit")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(21);
 
                     b.Property<int>("GasUsed")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(6);
 
                     b.Property<bool?>("Guessed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnOrder(40);
 
                     b.Property<byte[]>("Hash")
                         .IsRequired()
                         .HasColumnType("bytea");
 
                     b.Property<int?>("InitiatorId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(17);
 
                     b.Property<int?>("InternalOperations")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(24);
 
                     b.Property<int>("Level")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(3);
 
                     b.Property<int?>("LogsCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(25);
 
                     b.Property<string>("Parameters")
                         .HasColumnType("jsonb");
 
                     b.Property<int?>("SenderCodeHash")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(19);
 
                     b.Property<int>("SenderId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(4);
 
                     b.Property<byte>("Status")
-                        .HasColumnType("smallint");
+                        .HasColumnType("smallint")
+                        .HasColumnOrder(37);
 
                     b.Property<int?>("SubsCounter")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(26);
 
                     b.Property<int?>("TargetCodeHash")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(20);
 
                     b.Property<int>("TargetId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(7);
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(1);
 
                     b.Property<int?>("TokenTransfers")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(27);
 
                     b.HasKey("Id");
 
@@ -4142,7 +4199,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("TransactionOps");
 
-                    b.HasDiscriminator<int>("Direction");
+                    b.HasDiscriminator<byte>("Direction");
 
                     b.UseTphMappingStrategy();
                 });
@@ -4187,8 +4244,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("JsonContent")
                         .HasColumnType("jsonb");
 
-                    b.Property<int>("Layer")
-                        .HasColumnType("integer");
+                    b.Property<byte>("Layer")
+                        .HasColumnType("smallint");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -4235,7 +4292,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.ToTable("TransferTicketOps");
 
-                    b.HasDiscriminator<int>("Layer");
+                    b.HasDiscriminator<byte>("Layer");
 
                     b.UseTphMappingStrategy();
                 });
@@ -4662,89 +4719,114 @@ namespace Xtzkt.Data.Migrations
                     b.HasBaseType("Xtzkt.Data.Models.Block");
 
                     b.Property<long>("AttestationCommittee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(4);
 
                     b.Property<long>("AttestationPower")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(3);
 
                     b.Property<long>("BakerFees")
                         .HasColumnType("bigint")
-                        .HasColumnName("BakerFees");
+                        .HasColumnName("BakerFees")
+                        .HasColumnOrder(13);
 
                     b.Property<int>("BlockRound")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(24);
 
                     b.Property<long>("BonusDelegated")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(9);
 
                     b.Property<long>("BonusStakedEdge")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(11);
 
                     b.Property<long>("BonusStakedOwn")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(10);
 
                     b.Property<long>("BonusStakedShared")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(12);
 
                     b.Property<long>("BurnedFees")
                         .HasColumnType("bigint")
-                        .HasColumnName("BurnedFees");
+                        .HasColumnName("BurnedFees")
+                        .HasColumnOrder(14);
 
                     b.Property<int>("Cycle")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(19);
 
                     b.Property<int>("Events")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Events");
+                        .HasColumnName("Events")
+                        .HasColumnOrder(25);
 
                     b.Property<bool?>("LBToggle")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnOrder(32);
 
                     b.Property<int>("LBToggleEma")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(30);
 
                     b.Property<long>("Operations")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("Operations");
+                        .HasColumnName("Operations")
+                        .HasColumnOrder(2);
 
                     b.Property<int>("PayloadRound")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(23);
 
                     b.Property<int?>("ProducerId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(27);
 
                     b.Property<int?>("ProposerId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("ProposerId");
+                        .HasColumnName("ProposerId")
+                        .HasColumnOrder(26);
 
                     b.Property<int?>("ResetBakerDeactivation")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(28);
 
                     b.Property<int?>("ResetProposerDeactivation")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(29);
 
                     b.Property<long?>("RevelationId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(15);
 
                     b.Property<long>("RewardDelegated")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(5);
 
                     b.Property<long>("RewardStakedEdge")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(7);
 
                     b.Property<long>("RewardStakedOwn")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(6);
 
                     b.Property<long>("RewardStakedShared")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(8);
 
                     b.Property<int?>("SoftwareId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(22);
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XBlock", b =>
@@ -4762,7 +4844,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("Events")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Events");
+                        .HasColumnName("Events")
+                        .HasColumnOrder(25);
 
                     b.Property<byte[]>("MichelsonHash")
                         .HasColumnType("bytea")
@@ -4771,14 +4854,16 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("Operations")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("Operations");
+                        .HasColumnName("Operations")
+                        .HasColumnOrder(2);
 
                     b.Property<int?>("SequencerPoolId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("ProposerId");
+                        .HasColumnName("ProposerId")
+                        .HasColumnOrder(26);
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1Chain", b =>
@@ -4965,7 +5050,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("VotingPeriod")
                         .HasColumnType("integer");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XChain", b =>
@@ -5013,7 +5098,7 @@ namespace Xtzkt.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XEvmDepositOperation", b =>
@@ -5051,7 +5136,7 @@ namespace Xtzkt.Data.Migrations
                     b.HasIndex(new[] { "DepositId" }, "IX_DepositOps_DepositId_Partial")
                         .HasFilter("\"DepositId\" is not null");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XMichelsonDepositOperation", b =>
@@ -5062,7 +5147,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("Amount");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1IncreasePaidStorageOperation", b =>
@@ -5072,7 +5157,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("BakerFee")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XIncreasePaidStorageOperation", b =>
@@ -5088,7 +5173,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasRefund")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.EvmLog", b =>
@@ -5100,10 +5185,12 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bytea");
 
                     b.Property<long?>("DepositId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(4);
 
                     b.Property<long?>("OriginationId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(3);
 
                     b.Property<byte[]>("Topic0")
                         .HasColumnType("bytea");
@@ -5120,9 +5207,10 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("TransactionId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("TransactionId");
+                        .HasColumnName("TransactionId")
+                        .HasColumnOrder(2);
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.MichelsonLog", b =>
@@ -5135,12 +5223,13 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("TransactionId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("TransactionId");
+                        .HasColumnName("TransactionId")
+                        .HasColumnOrder(2);
 
                     b.Property<byte[]>("Type")
                         .HasColumnType("bytea");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.EvmMigrationOperation", b =>
@@ -5154,7 +5243,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("NonceChange")
                         .HasColumnType("integer");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.MichelsonMigrationOperation", b =>
@@ -5177,7 +5266,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("TokenTransfers")
                         .HasColumnType("integer");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.MichelsonOriginationOperation", b =>
@@ -5247,11 +5336,11 @@ namespace Xtzkt.Data.Migrations
                     b.Property<bool?>("NonceConsumed")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("OpCode")
-                        .HasColumnType("integer");
+                    b.Property<byte>("OpCode")
+                        .HasColumnType("smallint");
 
-                    b.Property<int>("OpType")
-                        .HasColumnType("integer");
+                    b.Property<byte>("OpType")
+                        .HasColumnType("smallint");
 
                     b.Property<bool?>("ReOriginated")
                         .HasColumnType("boolean");
@@ -5420,7 +5509,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("ToleratedInactivityPeriod")
                         .HasColumnType("integer");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XProtocol", b =>
@@ -5473,7 +5562,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("OriginationSize");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1RegisterConstantOperation", b =>
@@ -5483,7 +5572,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("BakerFee")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XRegisterConstantOperation", b =>
@@ -5499,7 +5588,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasRefund")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1RevealOperation", b =>
@@ -5509,7 +5598,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("BakerFee")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XRevealOperation", b =>
@@ -5525,7 +5614,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasRefund")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.EvmScript", b =>
@@ -5554,7 +5643,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("SolidityMetadataSolc")
                         .HasColumnType("text");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.MichelsonScript", b =>
@@ -5576,7 +5665,7 @@ namespace Xtzkt.Data.Migrations
                     b.PrimitiveCollection<byte[][]>("Views")
                         .HasColumnType("bytea[]");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1Statistics", b =>
@@ -5640,7 +5729,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("TotalVotingPower")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XStatistics", b =>
@@ -5667,7 +5756,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("TotalLost18");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.MichelsonTransactionOperation", b =>
@@ -5677,27 +5766,32 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("AddressRegistryIndex")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("AddressRegistryIndex");
+                        .HasColumnName("AddressRegistryIndex")
+                        .HasColumnOrder(32);
 
                     b.Property<long?>("AllocationFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("AllocationFee");
+                        .HasColumnName("AllocationFee")
+                        .HasColumnOrder(10);
 
                     b.Property<long>("Amount")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("Amount");
+                        .HasColumnName("Amount")
+                        .HasColumnOrder(8);
 
                     b.Property<int?>("BigMapUpdates")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("BigMapUpdates");
+                        .HasColumnName("BigMapUpdates")
+                        .HasColumnOrder(29);
 
                     b.Property<int?>("Nonce")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Nonce");
+                        .HasColumnName("Nonce")
+                        .HasColumnOrder(18);
 
                     b.Property<byte[]>("ParametersRaw")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5707,27 +5801,32 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("StorageFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("StorageFee");
+                        .HasColumnName("StorageFee")
+                        .HasColumnOrder(9);
 
                     b.Property<long?>("StorageId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("StorageId");
+                        .HasColumnName("StorageId")
+                        .HasColumnOrder(11);
 
                     b.Property<int?>("StorageLimit")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("StorageLimit");
+                        .HasColumnName("StorageLimit")
+                        .HasColumnOrder(22);
 
                     b.Property<int>("StorageUsed")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("StorageUsed");
+                        .HasColumnName("StorageUsed")
+                        .HasColumnOrder(23);
 
                     b.Property<int?>("TicketTransfers")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("TicketTransfers");
+                        .HasColumnName("TicketTransfers")
+                        .HasColumnOrder(28);
 
                     b.HasIndex(new[] { "TargetId" }, "IX_TransactionOps_TargetId_Partial")
                         .HasFilter("\"Entrypoint\" = 'transfer' AND \"TokenTransfers\" IS NULL AND \"Status\" = 1");
@@ -5740,17 +5839,20 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("AddressRegistryIndex")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("AddressRegistryIndex");
+                        .HasColumnName("AddressRegistryIndex")
+                        .HasColumnOrder(32);
 
                     b.Property<int>("AliasId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("AliasId");
+                        .HasColumnName("AliasId")
+                        .HasColumnOrder(34);
 
                     b.Property<long>("AmountReceived")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("Amount");
+                        .HasColumnName("Amount")
+                        .HasColumnOrder(8);
 
                     b.Property<BigInteger>("AmountSent")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5760,7 +5862,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("BigMapUpdates")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("BigMapUpdates");
+                        .HasColumnName("BigMapUpdates")
+                        .HasColumnOrder(29);
 
                     b.Property<BigInteger?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5775,7 +5878,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("Eip7702DelegationCount")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Eip7702DelegationCount");
+                        .HasColumnName("Eip7702DelegationCount")
+                        .HasColumnOrder(31);
 
                     b.Property<BigInteger?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5795,7 +5899,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GatewayId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("GatewayId");
+                        .HasColumnName("GatewayId")
+                        .HasColumnOrder(35);
 
                     b.Property<byte[]>("GatewayInput")
                         .HasColumnType("bytea")
@@ -5816,15 +5921,17 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("MaxPriorityFeePerGas");
 
-                    b.Property<int>("OpCode")
+                    b.Property<byte>("OpCode")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("OpCode");
+                        .HasColumnType("smallint")
+                        .HasColumnName("OpCode")
+                        .HasColumnOrder(39);
 
-                    b.Property<int>("OpType")
+                    b.Property<byte>("OpType")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("OpType");
+                        .HasColumnType("smallint")
+                        .HasColumnName("OpType")
+                        .HasColumnOrder(38);
 
                     b.Property<byte[]>("ParametersRaw")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5837,14 +5944,16 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("StorageId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("StorageId");
+                        .HasColumnName("StorageId")
+                        .HasColumnOrder(11);
 
                     b.Property<int?>("TicketTransfers")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("TicketTransfers");
+                        .HasColumnName("TicketTransfers")
+                        .HasColumnOrder(28);
 
-                    b.HasDiscriminator().HasValue(3);
+                    b.HasDiscriminator().HasValue((byte)3);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XEvmTransactionOperation", b =>
@@ -5859,12 +5968,14 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("BridgeTicketTransfers")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("BridgeTicketTransfers");
+                        .HasColumnName("BridgeTicketTransfers")
+                        .HasColumnOrder(30);
 
                     b.Property<long?>("ClaimDepositId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("ClaimDepositId");
+                        .HasColumnName("ClaimDepositId")
+                        .HasColumnOrder(16);
 
                     b.Property<BigInteger?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5879,7 +5990,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("Eip7702DelegationCount")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Eip7702DelegationCount");
+                        .HasColumnName("Eip7702DelegationCount")
+                        .HasColumnOrder(31);
 
                     b.Property<BigInteger?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5906,15 +6018,17 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("MaxPriorityFeePerGas");
 
-                    b.Property<int>("OpCode")
+                    b.Property<byte>("OpCode")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("OpCode");
+                        .HasColumnType("smallint")
+                        .HasColumnName("OpCode")
+                        .HasColumnOrder(39);
 
-                    b.Property<int>("OpType")
+                    b.Property<byte>("OpType")
                         .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("OpType");
+                        .HasColumnType("smallint")
+                        .HasColumnName("OpType")
+                        .HasColumnOrder(38);
 
                     b.Property<byte[]>("Output")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5926,7 +6040,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("Result");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XMichelsonEvmTransactionOperation", b =>
@@ -5936,12 +6050,14 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("AliasId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("AliasId");
+                        .HasColumnName("AliasId")
+                        .HasColumnOrder(34);
 
                     b.Property<long?>("AllocationFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("AllocationFee");
+                        .HasColumnName("AllocationFee")
+                        .HasColumnOrder(10);
 
                     b.Property<BigInteger>("AmountReceived")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5951,32 +6067,38 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("AmountSent")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("Amount");
+                        .HasColumnName("Amount")
+                        .HasColumnOrder(8);
 
                     b.Property<int?>("BridgeTicketTransfers")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("BridgeTicketTransfers");
+                        .HasColumnName("BridgeTicketTransfers")
+                        .HasColumnOrder(30);
 
                     b.Property<long?>("ClaimDepositId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("ClaimDepositId");
+                        .HasColumnName("ClaimDepositId")
+                        .HasColumnOrder(16);
 
                     b.Property<long?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("DaFee");
+                        .HasColumnName("DaFee")
+                        .HasColumnOrder(13);
 
                     b.Property<long?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasFee");
+                        .HasColumnName("GasFee")
+                        .HasColumnOrder(14);
 
                     b.Property<long?>("GasRefund")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasRefund");
+                        .HasColumnName("GasRefund")
+                        .HasColumnOrder(15);
 
                     b.Property<string>("GatewayEntrypoint")
                         .ValueGeneratedOnUpdateSometimes()
@@ -5986,7 +6108,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("GatewayId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("GatewayId");
+                        .HasColumnName("GatewayId")
+                        .HasColumnOrder(35);
 
                     b.Property<string>("GatewayParameters")
                         .ValueGeneratedOnUpdateSometimes()
@@ -6005,7 +6128,8 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int?>("Nonce")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("Nonce");
+                        .HasColumnName("Nonce")
+                        .HasColumnOrder(18);
 
                     b.Property<byte[]>("Output")
                         .ValueGeneratedOnUpdateSometimes()
@@ -6020,19 +6144,22 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("StorageFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("StorageFee");
+                        .HasColumnName("StorageFee")
+                        .HasColumnOrder(9);
 
                     b.Property<int?>("StorageLimit")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("StorageLimit");
+                        .HasColumnName("StorageLimit")
+                        .HasColumnOrder(22);
 
                     b.Property<int>("StorageUsed")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
-                        .HasColumnName("StorageUsed");
+                        .HasColumnName("StorageUsed")
+                        .HasColumnOrder(23);
 
-                    b.HasDiscriminator().HasValue(4);
+                    b.HasDiscriminator().HasValue((byte)4);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1TransferTicketOperation", b =>
@@ -6042,7 +6169,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("BakerFee")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XTransferTicketOperation", b =>
@@ -6058,7 +6185,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasRefund")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue(1);
+                    b.HasDiscriminator().HasValue((byte)1);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1Contract", b =>
@@ -6323,12 +6450,14 @@ namespace Xtzkt.Data.Migrations
                     b.HasBaseType("Xtzkt.Data.Models.MichelsonTransactionOperation");
 
                     b.Property<long?>("BakerFee")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(12);
 
                     b.Property<int?>("ResetDeactivation")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnOrder(33);
 
-                    b.HasDiscriminator().HasValue(0);
+                    b.HasDiscriminator().HasValue((byte)0);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.XMichelsonTransactionOperation", b =>
@@ -6338,19 +6467,22 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("DaFee");
+                        .HasColumnName("DaFee")
+                        .HasColumnOrder(13);
 
                     b.Property<long?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasFee");
+                        .HasColumnName("GasFee")
+                        .HasColumnOrder(14);
 
                     b.Property<long?>("GasRefund")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasRefund");
+                        .HasColumnName("GasRefund")
+                        .HasColumnOrder(15);
 
-                    b.HasDiscriminator().HasValue(2);
+                    b.HasDiscriminator().HasValue((byte)2);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1Baker", b =>

@@ -19,13 +19,13 @@ namespace Xtzkt.Data.Models
         public int? Slots { get; set; }
     }
 
-    public enum BakingRightType
+    public enum BakingRightType : byte
     {
         Baking = 0,
         Attestation = 1
     }
 
-    public enum BakingRightStatus
+    public enum BakingRightStatus : byte
     {
         Future = 0,
         Realized = 1,

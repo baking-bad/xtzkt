@@ -29,7 +29,7 @@ namespace Xtzkt.Data.Models
 
             writer.Write(ChainId, NpgsqlDbType.Integer);
             writer.Write(Level, NpgsqlDbType.Integer);
-            writer.Write((int)Layer, NpgsqlDbType.Integer);
+            writer.Write((short)Layer, NpgsqlDbType.Smallint);
             writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
             writer.WriteNullable(Date, NpgsqlDbType.TimestampTz);
         }

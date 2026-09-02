@@ -9,10 +9,10 @@ namespace Xtzkt.Data.Models;
 
 public class XEvmMichelsonTransactionOperation() : TransactionOperation(Direction.XEvmMichelson), IBigmapOperation
 {
-    [Column(nameof(OpType))]
+    [Column(nameof(OpType), Order = 38)]
     public EvmOpType OpType { get; set; }
 
-    [Column(nameof(OpCode))]
+    [Column(nameof(OpCode), Order = 39)]
     public EvmOpCode OpCode { get; set; }
 
     [Column(nameof(GasPrice))]
@@ -39,30 +39,30 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
 
     public BigInteger RoundingLoss { get; set; }
 
-    [Column(nameof(XMichelsonTransactionOperation.Amount))]
+    [Column(nameof(XMichelsonTransactionOperation.Amount), Order = 8)]
     public long AmountReceived { get; set; }
 
 
-    [Column(nameof(StorageId))]
+    [Column(nameof(StorageId), Order = 11)]
     public long? StorageId { get; set; }
 
-    [Column(nameof(BigMapUpdates))]
+    [Column(nameof(BigMapUpdates), Order = 29)]
     public int? BigMapUpdates { get; set; }
 
-    [Column(nameof(TicketTransfers))]
+    [Column(nameof(TicketTransfers), Order = 28)]
     public int? TicketTransfers { get; set; }
 
-    [Column(nameof(AddressRegistryIndex))]
+    [Column(nameof(AddressRegistryIndex), Order = 32)]
     public int? AddressRegistryIndex { get; set; }
 
     [Column(nameof(ParametersRaw))]
     public byte[]? ParametersRaw { get; set; }
 
 
-    [Column(nameof(AliasId))]
+    [Column(nameof(AliasId), Order = 34)]
     public int AliasId { get; set; }
 
-    [Column(nameof(GatewayId))]
+    [Column(nameof(GatewayId), Order = 35)]
     public int GatewayId { get; set; }
 
     [Column(nameof(GatewayEntrypoint))]
@@ -75,7 +75,7 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
     public byte[]? GatewayInput { get; set; }
 
 
-    [Column(nameof(Eip7702DelegationCount))]
+    [Column(nameof(Eip7702DelegationCount), Order = 31)]
     public int? Eip7702DelegationCount { get; set; }
 
     #region binary writer
@@ -114,8 +114,8 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
         {
             op.WriteBinaryBase(writer);
 
-            writer.Write((int)op.OpType, NpgsqlDbType.Integer);
-            writer.Write((int)op.OpCode, NpgsqlDbType.Integer);
+            writer.Write((short)op.OpType, NpgsqlDbType.Smallint);
+            writer.Write((short)op.OpCode, NpgsqlDbType.Smallint);
             writer.WriteNullable(op.GasPrice, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.MaxFeePerGas, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.MaxPriorityFeePerGas, NpgsqlDbType.Numeric);

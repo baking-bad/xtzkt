@@ -9,33 +9,33 @@ namespace Xtzkt.Data.Models;
 
 public class XMichelsonEvmTransactionOperation() : TransactionOperation(Direction.XMichelsonEvm), IXManagerOperation
 {
-    [Column(nameof(DaFee))]
+    [Column(nameof(DaFee), Order = 13)]
     public long? DaFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasFee))]
+    [Column(nameof(GasFee), Order = 14)]
     public long? GasFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasRefund))]
+    [Column(nameof(GasRefund), Order = 15)]
     public long? GasRefund { get; set; } // null for internal operations
 
 
-    [Column(nameof(StorageFee))]
+    [Column(nameof(StorageFee), Order = 9)]
     public long? StorageFee { get; set; }
 
-    [Column(nameof(AllocationFee))]
+    [Column(nameof(AllocationFee), Order = 10)]
     public long? AllocationFee { get; set; }
 
-    [Column(nameof(StorageLimit))]
+    [Column(nameof(StorageLimit), Order = 22)]
     public int? StorageLimit { get; set; } // null for internal operations
 
-    [Column(nameof(StorageUsed))]
+    [Column(nameof(StorageUsed), Order = 23)]
     public int StorageUsed { get; set; }
 
-    [Column(nameof(Nonce))]
+    [Column(nameof(Nonce), Order = 18)]
     public int? Nonce { get; set; }
 
 
-    [Column(nameof(MichelsonTransactionOperation.Amount))]
+    [Column(nameof(MichelsonTransactionOperation.Amount), Order = 8)]
     public long AmountSent { get; set; }
 
     [Column($"{nameof(XEvmTransactionOperation.Amount)}18")]
@@ -51,18 +51,18 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
     [Column(nameof(Result))]
     public string? Result { get; set; }
 
-    [Column(nameof(BridgeTicketTransfers))]
+    [Column(nameof(BridgeTicketTransfers), Order = 30)]
     public int? BridgeTicketTransfers { get; set; }
 
     // id of the deposit operation this operation claims
-    [Column(nameof(XEvmTransactionOperation.ClaimDepositId))]
+    [Column(nameof(XEvmTransactionOperation.ClaimDepositId), Order = 16)]
     public long? ClaimDepositId { get; set; }
 
 
-    [Column(nameof(AliasId))]
+    [Column(nameof(AliasId), Order = 34)]
     public int AliasId { get; set; }
 
-    [Column(nameof(GatewayId))]
+    [Column(nameof(GatewayId), Order = 35)]
     public int GatewayId { get; set; }
 
     [Column(nameof(GatewayEntrypoint))]

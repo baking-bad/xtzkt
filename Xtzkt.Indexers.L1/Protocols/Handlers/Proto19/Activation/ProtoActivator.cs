@@ -211,8 +211,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
                         writer.Write(cycle.Index + 1, NpgsqlTypes.NpgsqlDbType.Integer);
                         writer.Write(ar.Level + 1, NpgsqlTypes.NpgsqlDbType.Integer);
                         writer.Write(ar.Baker, NpgsqlTypes.NpgsqlDbType.Integer);
-                        writer.Write((int)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Integer);
-                        writer.Write((int)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Integer);
+                        writer.Write((short)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Smallint);
+                        writer.Write((short)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Smallint);
                         writer.WriteNull();
                         writer.Write(ar.Slots, NpgsqlTypes.NpgsqlDbType.Integer);
                     }
@@ -239,8 +239,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
                             writer.Write(nextProto.GetCycle(ar.Level + 1), NpgsqlTypes.NpgsqlDbType.Integer);
                             writer.Write(ar.Level + 1, NpgsqlTypes.NpgsqlDbType.Integer);
                             writer.Write(ar.Baker, NpgsqlTypes.NpgsqlDbType.Integer);
-                            writer.Write((int)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Integer);
-                            writer.Write((int)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Integer);
+                            writer.Write((short)BakingRightType.Attestation, NpgsqlTypes.NpgsqlDbType.Smallint);
+                            writer.Write((short)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Smallint);
                             writer.WriteNull();
                             writer.Write(ar.Slots, NpgsqlTypes.NpgsqlDbType.Integer);
                         }
@@ -252,8 +252,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
                             writer.Write(cycle.Index, NpgsqlTypes.NpgsqlDbType.Integer);
                             writer.Write(br.Level, NpgsqlTypes.NpgsqlDbType.Integer);
                             writer.Write(br.Baker, NpgsqlTypes.NpgsqlDbType.Integer);
-                            writer.Write((int)BakingRightType.Baking, NpgsqlTypes.NpgsqlDbType.Integer);
-                            writer.Write((int)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Integer);
+                            writer.Write((short)BakingRightType.Baking, NpgsqlTypes.NpgsqlDbType.Smallint);
+                            writer.Write((short)BakingRightStatus.Future, NpgsqlTypes.NpgsqlDbType.Smallint);
                             writer.Write(br.Round, NpgsqlTypes.NpgsqlDbType.Integer);
                             writer.WriteNull();
                         }

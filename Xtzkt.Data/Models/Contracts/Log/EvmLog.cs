@@ -7,9 +7,11 @@ namespace Xtzkt.Data.Models;
 
 public class EvmLog() : Log(Runtime.Evm)
 {
-    [Column(nameof(TransactionId))]
+    [Column(nameof(TransactionId), Order = 2)]
     public long? TransactionId { get; set; }
+    [Column(Order = 3)]
     public long? OriginationId { get; set; }
+    [Column(Order = 4)]
     public long? DepositId { get; set; }
 
     public byte[]? Topic0 { get; set; }

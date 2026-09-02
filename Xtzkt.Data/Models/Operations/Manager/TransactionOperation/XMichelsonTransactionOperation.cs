@@ -8,13 +8,13 @@ namespace Xtzkt.Data.Models;
 
 public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Direction.XMichelson), IXManagerOperation
 {
-    [Column(nameof(DaFee))]
+    [Column(nameof(DaFee), Order = 13)]
     public long? DaFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasFee))]
+    [Column(nameof(GasFee), Order = 14)]
     public long? GasFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasRefund))]
+    [Column(nameof(GasRefund), Order = 15)]
     public long? GasRefund { get; set; } // null for internal operations
 
     #region binary writer

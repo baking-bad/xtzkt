@@ -7,7 +7,7 @@ namespace Xtzkt.Data.Models;
 
 public class MichelsonLog() : Log(Runtime.Michelson)
 {
-    [Column(nameof(TransactionId))]
+    [Column(nameof(TransactionId), Order = 2)]
     public required long TransactionId { get; set; }
 
     public byte[]? Type { get; set; }
