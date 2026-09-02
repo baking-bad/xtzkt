@@ -7,9 +7,6 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
 {
     protected override async Task ApplyMigrations(XChain state, MetaBlock block)
     {
-        Context.Protocol.HardEvmBlockGasLimit = 2L << 50;
-        Context.Protocol.HardEvmOperationGasLimit = 2L << 50;
-
         await Helpers.UpgradeEvmPrecompile(EvmRuntime.NullAddress, ProtoActivator.NullAddressAbi, state);
         await Helpers.UpgradeEvmPrecompile(EvmRuntime.XtzBridge, ProtoActivator.XtzBridgeAbi, state);
         await Helpers.UpgradeEvmPrecompile(EvmRuntime.FaBridge, Proto08.ProtoActivator.FaBridgeAbi, state);

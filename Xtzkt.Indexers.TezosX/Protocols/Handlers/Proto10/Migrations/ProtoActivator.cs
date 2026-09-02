@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
@@ -30,25 +29,6 @@ class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
         (EvmRuntime.AliasForwarder,         AliasForwarderAbi),
         (EvmRuntime.VerifyTezosSignature,   VerifyTezosSignatureAbi),
     ];
-
-    protected override XProtocol CreateProtocol(XChain state)
-    {
-        return new XProtocol
-        {
-            Id = Cache.Chain.NextProtocolId(),
-            ChainId = state.Id,
-            Hash = state.Kernel,
-            Version = Proto.Version,
-            FirstLevel = 0,
-            LastLevel = 0,
-            MinBlockTimeMs = 500,
-            MaxBlockTimeMs = 6000,
-            HardEvmBlockGasLimit = 2L << 50,
-            HardEvmOperationGasLimit = 2L << 50,
-            DaFeePerByte = 4,
-            DaFeePerByte18 = new BigInteger(4_000_000_000_000),
-        };
-    }
     #endregion
 
     #region michelson
