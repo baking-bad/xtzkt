@@ -141,8 +141,8 @@ partial class TransactionCommit
 
         #region apply operation
         Db.TryAttach(sender);
-        PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee - op.GasRefund);
+        PayFee(sender, op.DaFee.Value);
+        BurnFee(sender, op.GasFee.Value - op.GasRefund.Value);
         sender.Counter = op.Counter;
         sender.TransactionsCount++;
         sender.LastLevel = op.Level;
@@ -260,9 +260,6 @@ partial class TransactionCommit
             Hash = parent.Hash,
             AmountSent = amountSent,
             AmountReceived = amountReceived,
-            DaFee = 0,
-            GasFee = 0,
-            GasRefund = 0,
             Counter = parent.Counter,
             Nonce = content.RequiredInt32("nonce"),
             InitiatorId = initiator.Id,
@@ -374,8 +371,8 @@ partial class TransactionCommit
         #endregion
 
         #region revert operation
-        RevertPayFee(sender, op.DaFee);
-        RevertBurnFee(sender, op.GasFee - op.GasRefund);
+        RevertPayFee(sender, op.DaFee!.Value);
+        RevertBurnFee(sender, op.GasFee!.Value - op.GasRefund!.Value);
         sender.Counter = op.Counter - 1;
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;

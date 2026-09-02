@@ -292,9 +292,9 @@ class Proto10Handler(
                 var totalGasLimit = 0L;
                 foreach (var op in managerOps)
                 {
-                    totalGasFee += op.GasFee;
-                    totalGasRefund += op.GasRefund;
-                    totalGasLimit += op.GasLimit;
+                    totalGasFee += op.GasFee!.Value;
+                    totalGasRefund += op.GasRefund!.Value;
+                    totalGasLimit += op.GasLimit!.Value;
                 }
 
                 if (totalGasLimit != 0)
@@ -303,12 +303,12 @@ class Proto10Handler(
                     var sumRefund = 0L;
                     foreach (var op in managerOps)
                     {
-                        op.GasFee = totalGasFee * op.GasLimit / totalGasLimit;
-                        sumFee += op.GasFee;
+                        op.GasFee = totalGasFee * op.GasLimit!.Value / totalGasLimit;
+                        sumFee += op.GasFee.Value;
 
                         // TODO: when GasUsed is fixed, distribute GasRefund by GasUsed instead
-                        op.GasRefund = totalGasRefund * op.GasLimit / totalGasLimit;
-                        sumRefund += op.GasRefund;
+                        op.GasRefund = totalGasRefund * op.GasLimit.Value / totalGasLimit;
+                        sumRefund += op.GasRefund.Value;
                     }
 
                     managerOps[0].GasFee += totalGasFee - sumFee;

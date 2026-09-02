@@ -9,13 +9,13 @@ namespace Xtzkt.Data.Models;
 public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Direction.XMichelson), IXManagerOperation
 {
     [Column(nameof(DaFee))]
-    public long DaFee { get; set; }
+    public long? DaFee { get; set; } // null for internal operations
 
     [Column(nameof(GasFee))]
-    public long GasFee { get; set; }
+    public long? GasFee { get; set; } // null for internal operations
 
     [Column(nameof(GasRefund))]
-    public long GasRefund { get; set; }
+    public long? GasRefund { get; set; } // null for internal operations
 
     #region binary writer
     public static void Write(NpgsqlConnection conn, IEnumerable<XMichelsonTransactionOperation> ops)
@@ -47,7 +47,7 @@ public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Di
 
             writer.WriteNullable(op.StorageFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.AllocationFee, NpgsqlDbType.Bigint);
-            writer.Write(op.StorageLimit, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.StorageLimit, NpgsqlDbType.Integer);
             writer.Write(op.StorageUsed, NpgsqlDbType.Integer);
             writer.WriteNullable(op.Nonce, NpgsqlDbType.Integer);
             writer.Write(op.Amount, NpgsqlDbType.Bigint);
@@ -56,9 +56,9 @@ public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Di
             writer.WriteNullable(op.TicketTransfers, NpgsqlDbType.Integer);
             writer.WriteNullable(op.AddressRegistryIndex, NpgsqlDbType.Integer);
             writer.WriteNullable(op.ParametersRaw, NpgsqlDbType.Bytea);
-            writer.Write(op.DaFee, NpgsqlDbType.Bigint);
-            writer.Write(op.GasFee, NpgsqlDbType.Bigint);
-            writer.Write(op.GasRefund, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.DaFee, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasFee, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasRefund, NpgsqlDbType.Bigint);
         }
 
         writer.Complete();

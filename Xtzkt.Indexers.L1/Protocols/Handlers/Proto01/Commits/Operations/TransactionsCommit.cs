@@ -70,7 +70,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
 
             #region apply operation
             Db.TryAttach(sender);
-            PayFee(sender, transaction.BakerFee);
+            PayFee(sender, transaction.BakerFee.Value);
             sender.Counter = transaction.Counter;
             sender.TransactionsCount++;
 
@@ -259,7 +259,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             #region revert operation
-            RevertPayFee(sender, transaction.BakerFee);
+            RevertPayFee(sender, transaction.BakerFee!.Value);
 
             sender.TransactionsCount--;
             if (target != sender) target.TransactionsCount--;

@@ -15,10 +15,10 @@ public class XEvmOriginationOperation() : OriginationOperation(Env.XEvm), IParen
     public BigInteger? EffectiveGasPrice { get; set; }
 
     [Column($"{nameof(DaFee)}18")]
-    public BigInteger DaFee { get; set; }
+    public BigInteger? DaFee { get; set; } // null for internal operations
 
     [Column($"{nameof(GasFee)}18")]
-    public BigInteger GasFee { get; set; }
+    public BigInteger? GasFee { get; set; } // null for internal operations
 
     [Column($"{nameof(Balance)}18")]
     public BigInteger Balance { get; set; }

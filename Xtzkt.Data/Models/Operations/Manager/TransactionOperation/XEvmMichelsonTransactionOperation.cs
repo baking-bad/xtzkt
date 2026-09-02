@@ -28,10 +28,10 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
     public BigInteger? EffectiveGasPrice { get; set; }
 
     [Column($"{nameof(DaFee)}18")]
-    public BigInteger DaFee { get; set; }
+    public BigInteger? DaFee { get; set; } // null for internal operations
 
     [Column($"{nameof(GasFee)}18")]
-    public BigInteger GasFee { get; set; }
+    public BigInteger? GasFee { get; set; } // null for internal operations
 
 
     [Column($"{nameof(XEvmTransactionOperation.Amount)}18")]
@@ -120,8 +120,8 @@ public class XEvmMichelsonTransactionOperation() : TransactionOperation(Directio
             writer.WriteNullable(op.MaxFeePerGas, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.MaxPriorityFeePerGas, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.EffectiveGasPrice, NpgsqlDbType.Numeric);
-            writer.Write(op.DaFee, NpgsqlDbType.Numeric);
-            writer.Write(op.GasFee, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.DaFee, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.GasFee, NpgsqlDbType.Numeric);
             writer.Write(op.AmountSent, NpgsqlDbType.Numeric);
             writer.Write(op.RoundingLoss, NpgsqlDbType.Numeric);
             writer.Write(op.AmountReceived, NpgsqlDbType.Bigint);

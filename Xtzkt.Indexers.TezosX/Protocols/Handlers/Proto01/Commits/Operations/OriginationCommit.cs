@@ -50,8 +50,8 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         #region apply operation
         Db.TryAttach(sender);
-        PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee);
+        PayFee(sender, op.DaFee.Value);
+        BurnFee(sender, op.GasFee.Value);
         sender.Counter = op.Counter;
         sender.OriginationsCount++;
         sender.LastLevel = op.Level;
@@ -303,8 +303,8 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #endregion
 
         #region revert operation
-        RevertPayFee(sender, op.DaFee);
-        RevertBurnFee(sender, op.GasFee);
+        RevertPayFee(sender, op.DaFee!.Value);
+        RevertBurnFee(sender, op.GasFee!.Value);
         sender.Counter = op.Counter - 1;
         sender.OriginationsCount--;
         sender.LastLevel = op.Level;

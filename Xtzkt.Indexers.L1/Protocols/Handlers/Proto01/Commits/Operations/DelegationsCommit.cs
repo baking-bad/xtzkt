@@ -53,7 +53,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
 
             #region apply operation
             Db.TryAttach(sender);
-            PayFee(sender, delegation.BakerFee);
+            PayFee(sender, delegation.BakerFee.Value);
             sender.LastLevel = delegation.Level;
             sender.LastTimestamp = delegation.Timestamp;
             sender.Counter = delegation.Counter;
@@ -344,7 +344,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             #region revert operation
-            RevertPayFee(sender, delegation.BakerFee);
+            RevertPayFee(sender, delegation.BakerFee!.Value);
             sender.LastLevel = delegation.Level;
             sender.LastTimestamp = delegation.Timestamp;
             sender.Counter = delegation.Counter - 1;

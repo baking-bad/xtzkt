@@ -13,7 +13,7 @@ namespace Xtzkt.Data.Models
         public long? AllocationFee { get; set; }
 
         [Column(nameof(StorageLimit))]
-        public int StorageLimit { get; set; }
+        public int? StorageLimit { get; set; } // null for internal operations
 
         [Column(nameof(StorageUsed))]
         public int StorageUsed { get; set; }

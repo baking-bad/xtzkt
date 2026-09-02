@@ -6,7 +6,7 @@ namespace Xtzkt.Data.Models
 {
     public class L1TransactionOperation() : MichelsonTransactionOperation(Direction.L1)
     {
-        public long BakerFee { get; set; }
+        public long? BakerFee { get; set; } // null for internal operations
         public int? ResetDeactivation { get; set; }
 
         #region binary writer
@@ -79,12 +79,12 @@ namespace Xtzkt.Data.Models
                 writer.Write(op.Hash, NpgsqlDbType.Bytea);
                 writer.Write(op.SenderId, NpgsqlDbType.Integer);
                 writer.Write(op.Counter, NpgsqlDbType.Integer);
-                writer.Write(op.BakerFee, NpgsqlDbType.Bigint);
+                writer.WriteNullable(op.BakerFee, NpgsqlDbType.Bigint);
                 writer.WriteNullable(op.StorageFee, NpgsqlDbType.Bigint);
                 writer.WriteNullable(op.AllocationFee, NpgsqlDbType.Bigint);
-                writer.Write(op.GasLimit, NpgsqlDbType.Integer);
+                writer.WriteNullable(op.GasLimit, NpgsqlDbType.Integer);
                 writer.Write(op.GasUsed, NpgsqlDbType.Integer);
-                writer.Write(op.StorageLimit, NpgsqlDbType.Integer);
+                writer.WriteNullable(op.StorageLimit, NpgsqlDbType.Integer);
                 writer.Write(op.StorageUsed, NpgsqlDbType.Integer);
                 writer.Write((int)op.Status, NpgsqlDbType.Smallint);
                 writer.WriteNullable(op.Errors, NpgsqlDbType.Text);

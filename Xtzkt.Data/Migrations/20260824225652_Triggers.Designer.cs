@@ -1289,7 +1289,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("Amount")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("BakerFee")
+                    b.Property<long?>("BakerFee")
                         .HasColumnType("bigint");
 
                     b.Property<int?>("BakerId")
@@ -1304,7 +1304,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Errors")
                         .HasColumnType("text");
 
-                    b.Property<int>("GasLimit")
+                    b.Property<int?>("GasLimit")
                         .HasColumnType("integer");
 
                     b.Property<int>("GasUsed")
@@ -1350,7 +1350,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("StorageFee")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("StorageLimit")
+                    b.Property<int?>("StorageLimit")
                         .HasColumnType("integer");
 
                     b.Property<int>("StorageUsed")
@@ -2030,7 +2030,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Errors")
                         .HasColumnType("text");
 
-                    b.Property<int>("GasLimit")
+                    b.Property<int?>("GasLimit")
                         .HasColumnType("integer");
 
                     b.Property<int>("GasUsed")
@@ -2134,9 +2134,9 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<string>("Hash")
                         .IsRequired()
-                        .IsFixedLength()
                         .HasMaxLength(51)
-                        .HasColumnType("character(51)");
+                        .HasColumnType("character(51)")
+                        .IsFixedLength();
 
                     b.Property<int>("InitiatorId")
                         .HasColumnType("integer");
@@ -4087,7 +4087,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Errors")
                         .HasColumnType("text");
 
-                    b.Property<int>("GasLimit")
+                    b.Property<int?>("GasLimit")
                         .HasColumnType("integer");
 
                     b.Property<int>("GasUsed")
@@ -5206,7 +5206,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("StorageId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("StorageLimit")
+                    b.Property<int?>("StorageLimit")
                         .HasColumnType("integer");
 
                     b.Property<int>("StorageUsed")
@@ -5221,14 +5221,14 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("Balance18");
 
-                    b.Property<BigInteger>("DaFee")
+                    b.Property<BigInteger?>("DaFee")
                         .HasColumnType("numeric")
                         .HasColumnName("DaFee18");
 
                     b.Property<BigInteger?>("EffectiveGasPrice")
                         .HasColumnType("numeric");
 
-                    b.Property<BigInteger>("GasFee")
+                    b.Property<BigInteger?>("GasFee")
                         .HasColumnType("numeric")
                         .HasColumnName("GasFee18");
 
@@ -5717,7 +5717,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("StorageId");
 
-                    b.Property<int>("StorageLimit")
+                    b.Property<int?>("StorageLimit")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("StorageLimit");
@@ -5765,7 +5765,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("BigMapUpdates");
 
-                    b.Property<BigInteger>("DaFee")
+                    b.Property<BigInteger?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("numeric")
                         .HasColumnName("DaFee18");
@@ -5780,7 +5780,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Eip7702DelegationCount");
 
-                    b.Property<BigInteger>("GasFee")
+                    b.Property<BigInteger?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("numeric")
                         .HasColumnName("GasFee18");
@@ -5869,7 +5869,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("ClaimDepositId");
 
-                    b.Property<BigInteger>("DaFee")
+                    b.Property<BigInteger?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("numeric")
                         .HasColumnName("DaFee18");
@@ -5884,7 +5884,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Eip7702DelegationCount");
 
-                    b.Property<BigInteger>("GasFee")
+                    b.Property<BigInteger?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("numeric")
                         .HasColumnName("GasFee18");
@@ -5966,17 +5966,17 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("ClaimDepositId");
 
-                    b.Property<long>("DaFee")
+                    b.Property<long?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("DaFee");
 
-                    b.Property<long>("GasFee")
+                    b.Property<long?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("GasFee");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long?>("GasRefund")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("GasRefund");
@@ -6025,7 +6025,7 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("StorageFee");
 
-                    b.Property<int>("StorageLimit")
+                    b.Property<int?>("StorageLimit")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("StorageLimit");
@@ -6293,7 +6293,7 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.MichelsonOriginationOperation");
 
-                    b.Property<long>("BakerFee")
+                    b.Property<long?>("BakerFee")
                         .HasColumnType("bigint");
 
                     b.Property<int?>("BakerId")
@@ -6309,13 +6309,13 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.MichelsonOriginationOperation");
 
-                    b.Property<long>("DaFee")
+                    b.Property<long?>("DaFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasFee")
+                    b.Property<long?>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long?>("GasRefund")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue(2);
@@ -6325,7 +6325,7 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.MichelsonTransactionOperation");
 
-                    b.Property<long>("BakerFee")
+                    b.Property<long?>("BakerFee")
                         .HasColumnType("bigint");
 
                     b.Property<int?>("ResetDeactivation")
@@ -6338,17 +6338,17 @@ namespace Xtzkt.Data.Migrations
                 {
                     b.HasBaseType("Xtzkt.Data.Models.MichelsonTransactionOperation");
 
-                    b.Property<long>("DaFee")
+                    b.Property<long?>("DaFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("DaFee");
 
-                    b.Property<long>("GasFee")
+                    b.Property<long?>("GasFee")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("GasFee");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long?>("GasRefund")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
                         .HasColumnName("GasRefund");

@@ -16,7 +16,7 @@ public abstract class OriginationOperation(Env env) : IExplicitOperation, ISourc
 
     public int SenderId { get; set; }
     public int Counter { get; set; }
-    public int GasLimit { get; set; }
+    public int? GasLimit { get; set; } // null for internal operations
     public int GasUsed { get; set; }
     public OperationStatus Status { get; set; }
     public string? Errors { get; set; }

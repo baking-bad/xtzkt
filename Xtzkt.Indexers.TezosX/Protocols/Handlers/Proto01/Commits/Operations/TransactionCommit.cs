@@ -92,8 +92,8 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #endregion
 
         #region apply operation
-        PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee);
+        PayFee(sender, op.DaFee.Value);
+        BurnFee(sender, op.GasFee.Value);
         sender.TransactionsCount++;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
@@ -281,8 +281,8 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         if (op.Eip7702DelegationCount > 0)
             await new Eip7702DelegationCommit(Proto).Revert(op);
 
-        RevertPayFee(sender, op.DaFee);
-        RevertBurnFee(sender, op.GasFee);
+        RevertPayFee(sender, op.DaFee!.Value);
+        RevertBurnFee(sender, op.GasFee!.Value);
         sender.Counter = op.Counter - 1;
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;

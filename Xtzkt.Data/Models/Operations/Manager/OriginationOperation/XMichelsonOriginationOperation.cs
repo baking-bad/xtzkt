@@ -5,9 +5,9 @@ namespace Xtzkt.Data.Models;
 
 public class XMichelsonOriginationOperation() : MichelsonOriginationOperation(Env.XMichelson), IXManagerOperation
 {
-    public long DaFee { get; set; }
-    public long GasFee { get; set; }
-    public long GasRefund { get; set; }
+    public long? DaFee { get; set; } // null for internal operations
+    public long? GasFee { get; set; } // null for internal operations
+    public long? GasRefund { get; set; } // null for internal operations
 }
 
 public static class XMichelsonOriginationOperationModel

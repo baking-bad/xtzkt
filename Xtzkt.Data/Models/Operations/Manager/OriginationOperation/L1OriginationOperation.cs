@@ -5,7 +5,7 @@ namespace Xtzkt.Data.Models;
 
 public class L1OriginationOperation() : MichelsonOriginationOperation(Env.L1)
 {
-    public long BakerFee { get; set; }
+    public long? BakerFee { get; set; } // null for internal operations
     public int? BakerId { get; set; }
 }
 

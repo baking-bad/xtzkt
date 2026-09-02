@@ -10,13 +10,13 @@ namespace Xtzkt.Data.Models;
 public class XMichelsonEvmTransactionOperation() : TransactionOperation(Direction.XMichelsonEvm), IXManagerOperation
 {
     [Column(nameof(DaFee))]
-    public long DaFee { get; set; }
+    public long? DaFee { get; set; } // null for internal operations
 
     [Column(nameof(GasFee))]
-    public long GasFee { get; set; }
+    public long? GasFee { get; set; } // null for internal operations
 
     [Column(nameof(GasRefund))]
-    public long GasRefund { get; set; }
+    public long? GasRefund { get; set; } // null for internal operations
 
 
     [Column(nameof(StorageFee))]
@@ -26,7 +26,7 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
     public long? AllocationFee { get; set; }
 
     [Column(nameof(StorageLimit))]
-    public int StorageLimit { get; set; }
+    public int? StorageLimit { get; set; } // null for internal operations
 
     [Column(nameof(StorageUsed))]
     public int StorageUsed { get; set; }
@@ -108,12 +108,12 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
         {
             op.WriteBinaryBase(writer);
 
-            writer.Write(op.DaFee, NpgsqlDbType.Bigint);
-            writer.Write(op.GasFee, NpgsqlDbType.Bigint);
-            writer.Write(op.GasRefund, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.DaFee, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasFee, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasRefund, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.StorageFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.AllocationFee, NpgsqlDbType.Bigint);
-            writer.Write(op.StorageLimit, NpgsqlDbType.Integer);
+            writer.WriteNullable(op.StorageLimit, NpgsqlDbType.Integer);
             writer.Write(op.StorageUsed, NpgsqlDbType.Integer);
             writer.WriteNullable(op.Nonce, NpgsqlDbType.Integer);
             writer.Write(op.AmountSent, NpgsqlDbType.Bigint);

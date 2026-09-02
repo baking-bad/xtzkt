@@ -8,7 +8,7 @@ public abstract class MichelsonOriginationOperation(Env env) : OriginationOperat
 {
     public long? StorageFee { get; set; }
     public long? AllocationFee { get; set; }
-    public int StorageLimit { get; set; }
+    public int? StorageLimit { get; set; } // null for internal operations
     public int StorageUsed { get; set; }
     public int? Nonce { get; set; }
     public long? StorageId { get; set; }

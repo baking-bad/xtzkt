@@ -18,7 +18,7 @@ namespace Xtzkt.Data.Models
 
         public int SenderId { get; set; }
         public int Counter { get; set; }
-        public int GasLimit { get; set; }
+        public int? GasLimit { get; set; } // null for internal operations
         public int GasUsed { get; set; }
         public OperationStatus Status { get; set; }
         public string? Errors { get; set; }
@@ -74,7 +74,7 @@ namespace Xtzkt.Data.Models
             writer.Write(Hash, NpgsqlDbType.Bytea);
             writer.Write(SenderId, NpgsqlDbType.Integer);
             writer.Write(Counter, NpgsqlDbType.Integer);
-            writer.Write(GasLimit, NpgsqlDbType.Integer);
+            writer.WriteNullable(GasLimit, NpgsqlDbType.Integer);
             writer.Write(GasUsed, NpgsqlDbType.Integer);
             writer.Write((int)Status, NpgsqlDbType.Smallint);
             writer.WriteNullable(Errors, NpgsqlDbType.Text);

@@ -120,8 +120,8 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
 
         #region apply operation
         Db.TryAttach(sender);
-        PayFee(sender, operation.DaFee);
-        BurnFee(sender, operation.GasFee - operation.GasRefund);
+        PayFee(sender, operation.DaFee.Value);
+        BurnFee(sender, operation.GasFee.Value - operation.GasRefund.Value);
         sender.Counter = operation.Counter;
         sender.OriginationsCount++;
         sender.LastLevel = operation.Level;
@@ -182,11 +182,6 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
             InitiatorId = parent.SenderId,
             Level = parent.Level,
             Timestamp = parent.Timestamp,
-            DaFee = 0,
-            GasFee = 0,
-            GasRefund = 0,
-            GasLimit = 0,
-            StorageLimit = 0,
             Hash = parent.Hash, 
             Counter = parent.Counter,
             Nonce = content.RequiredInt32("nonce"),
@@ -279,8 +274,8 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
         #endregion
 
         #region revert operation
-        RevertPayFee(sender, operation.DaFee);
-        RevertBurnFee(sender, operation.GasFee - operation.GasRefund);
+        RevertPayFee(sender, operation.DaFee!.Value);
+        RevertBurnFee(sender, operation.GasFee!.Value - operation.GasRefund!.Value);
         sender.Counter = operation.Counter - 1;
         sender.Revealed = true;
         sender.OriginationsCount--;
