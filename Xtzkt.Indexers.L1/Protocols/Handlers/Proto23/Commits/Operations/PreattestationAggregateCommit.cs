@@ -5,16 +5,14 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto23
 {
     class PreattestationAggregateCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public IEnumerable<(string, string, long)> ExtractPreattestations(JsonElement op, JsonElement content)
+        public IEnumerable<(string, long)> ExtractPreattestations(JsonElement content)
         {
-            var res = new List<(string, string, long)>();
-
-            var opHash = op.RequiredString("hash");
+            var res = new List<(string, long)>();
             foreach (var c in content.Required("metadata").RequiredArray("committee").EnumerateArray())
             {
                 var baker = Cache.Addresses.GetExistingBaker(c.RequiredString("delegate"));
                 var power = GetPower(c);
-                res.Add((opHash, baker.Hash, power));
+                res.Add((baker.Hash, power));
             }
 
             return res;

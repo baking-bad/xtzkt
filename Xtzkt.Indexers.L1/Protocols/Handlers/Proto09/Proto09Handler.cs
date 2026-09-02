@@ -47,12 +47,13 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 0
             foreach (var operation in operations[0].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "endorsement_with_slot":
-                            await new AttestationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new AttestationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[0]");
@@ -64,15 +65,16 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 1
             foreach (var operation in operations[1].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "proposals":
-                            await new ProposalsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new ProposalsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "ballot":
-                            await new BallotsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new BallotsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[1]");
@@ -84,21 +86,22 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 2
             foreach (var operation in operations[2].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "activate_account":
-                            await new ActivationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new ActivationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "double_baking_evidence":
-                            await new DoubleBakingCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new DoubleBakingCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "double_endorsement_evidence":
-                            await new DoubleConsensusCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new DoubleConsensusCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "seed_nonce_revelation":
-                            await new NonceRevelationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new NonceRevelationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[2]");
@@ -112,26 +115,27 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 3
             foreach (var operation in operations[3].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 Manager.Init(operation);
                 foreach (var content in operation.RequiredArray("contents").EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "reveal":
-                            await new RevealsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new RevealsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "delegation":
-                            await new DelegationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new DelegationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "origination":
                             var orig = new OriginationsCommit(this);
-                            await orig.Apply(blockCommit.Block, operation, content);
+                            await orig.Apply(blockCommit.Block, opHash, content);
                             if (orig.BigMapDiffs != null)
                                 bigMapCommit.Append(orig.Origination, orig.Contract!, orig.BigMapDiffs);
                             break;
                         case "transaction":
                             var parent = new TransactionsCommit(this);
-                            await parent.Apply(blockCommit.Block, operation, content);
+                            await parent.Apply(blockCommit.Block, opHash, content);
                             if (parent.BigMapDiffs != null)
                                 bigMapCommit.Append(parent.Transaction, (parent.Target as L1Contract)!, parent.BigMapDiffs);
 

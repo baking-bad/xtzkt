@@ -8,7 +8,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto11
 {
     class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var sender = (L1User)await Cache.Addresses.GetExistingAsync(content.RequiredString("source"));
@@ -18,7 +18,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto11
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = block.ChainId,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
                 BakerFee = content.RequiredInt64("fee"),

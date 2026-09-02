@@ -9,11 +9,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
     {
         public bool DictatorSeen = false;
 
-        public override async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public override async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             if (content.RequiredString("source") != Context.Protocol.Dictator)
             {
-                await base.Apply(block, op, content);
+                await base.Apply(block, opHash, content);
                 return;
             }
 

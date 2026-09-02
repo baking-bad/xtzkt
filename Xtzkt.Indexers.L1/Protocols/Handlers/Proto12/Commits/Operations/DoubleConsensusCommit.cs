@@ -6,7 +6,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
 {
     class DoubleConsensusCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual void Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual void Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var balanceUpdates = content.Required("metadata").RequiredArray("balance_updates").EnumerateArray();
@@ -38,7 +38,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
 
                 Kind = kind,
 

@@ -19,7 +19,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
         };
         #endregion
 
-        public async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var sender = (await Cache.Addresses.GetExistingAsync(content.RequiredString("source")) as L1User)!;
@@ -31,7 +31,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = block.ChainId,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
                 BakerFee = content.RequiredInt64("fee"),

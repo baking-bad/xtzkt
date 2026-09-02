@@ -9,7 +9,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
 {
     class SmartRollupRefuteCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var refutation = content.Required("refutation");
@@ -35,7 +35,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
                 GasLimit = content.RequiredInt32("gas_limit"),

@@ -7,13 +7,13 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
 {
     class AttestationsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             var metadata = content.Required("metadata");
-            return Apply(block, op.RequiredString("hash"), metadata.RequiredString("delegate"), GetPower(metadata));
+            return Apply(block, opHash, metadata.RequiredString("delegate"), GetPower(metadata));
         }
 
-        public async Task Apply(L1Block block, string opHash, string bakerAddress, long power)
+        public async Task Apply(L1Block block, byte[] opHash, string bakerAddress, long power)
         {
             var baker = Cache.Addresses.GetExistingBaker(bakerAddress);
 
@@ -23,7 +23,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = Hashes.ParseMichelsonOperationHash(opHash),
+                Hash = opHash,
                 Power = power,
                 BakerId = baker.Id
             };

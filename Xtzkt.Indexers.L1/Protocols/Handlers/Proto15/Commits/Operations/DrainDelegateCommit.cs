@@ -6,7 +6,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto15
 {
     class DrainDelegateCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var baker = Cache.Addresses.GetExistingBaker(content.RequiredString("delegate"));
@@ -50,7 +50,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto15
             {
                 Id = Cache.Chain.NextOperationId(),
                 ChainId = block.ChainId,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
                 BakerId = baker.Id,

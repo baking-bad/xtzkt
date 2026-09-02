@@ -6,7 +6,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
 {
     class DoubleConsensusCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public void Apply(L1Block block, JsonElement op, JsonElement content)
+        public void Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var accusedLevel = GetAccusedLevel(content);
@@ -19,7 +19,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
 
                 Kind = GetKind(content),
 

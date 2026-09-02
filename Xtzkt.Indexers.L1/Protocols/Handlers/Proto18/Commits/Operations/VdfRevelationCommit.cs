@@ -9,7 +9,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
     {
         public VdfRevelationCommit(ProtocolHandler protocol) : base(protocol) { }
 
-        public virtual Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var balanceUpdates = content
@@ -26,7 +26,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 BakerId = Context.Proposer.Id,
                 Cycle = block.Cycle,
                 Solution = Hex.Parse(content.RequiredArray("solution", 2)[0].RequiredString()),

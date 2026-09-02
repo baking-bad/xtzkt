@@ -10,7 +10,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto03
     {
         public BallotsCommit(ProtocolHandler protocol) : base(protocol) { }
 
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var period = await Cache.Periods.GetAsync(content.RequiredInt32("period"));
@@ -27,7 +27,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto03
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 SenderId = sender.Id,
                 VotingPower = snapshot.VotingPower,
                 Epoch = period.Epoch,

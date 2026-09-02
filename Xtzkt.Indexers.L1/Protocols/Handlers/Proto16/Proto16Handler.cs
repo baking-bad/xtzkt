@@ -57,15 +57,16 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 0
             foreach (var operation in operations[0].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "endorsement":
-                            await new AttestationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new AttestationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "preendorsement":
-                            new PreattestationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            new PreattestationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[0]");
@@ -78,17 +79,18 @@ namespace Xtzkt.Indexers.L1.Protocols
             var dictatorSeen = false;
             foreach (var operation in operations[1].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "proposals":
                             var proposalsCommit = new ProposalsCommit(this);
-                            await proposalsCommit.Apply(blockCommit.Block, operation, content);
+                            await proposalsCommit.Apply(blockCommit.Block, opHash, content);
                             dictatorSeen = proposalsCommit.DictatorSeen;
                             break;
                         case "ballot":
-                            await new BallotsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new BallotsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[1]");
@@ -101,28 +103,29 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 2
             foreach (var operation in operations[2].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 foreach (var content in operation.RequiredArray("contents", 1).EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "activate_account":
-                            await new ActivationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new ActivationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "double_baking_evidence":
-                            new DoubleBakingCommit(this).Apply(blockCommit.Block, operation, content);
+                            new DoubleBakingCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "double_endorsement_evidence":
                         case "double_preendorsement_evidence":
-                            new DoubleConsensusCommit(this).Apply(blockCommit.Block, operation, content);
+                            new DoubleConsensusCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "seed_nonce_revelation":
-                            await new NonceRevelationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new NonceRevelationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "vdf_revelation":
-                            await new VdfRevelationCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new VdfRevelationCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "drain_delegate":
-                            await new DrainDelegateCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new DrainDelegateCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not allowed in operations[2]");
@@ -137,38 +140,39 @@ namespace Xtzkt.Indexers.L1.Protocols
             #region operations 3
             foreach (var operation in operations[3].EnumerateArray())
             {
+                var opHash = operation.RequiredMichelsonOperationHashBytes("hash");
                 Manager.Init(operation);
                 foreach (var content in operation.RequiredArray("contents").EnumerateArray())
                 {
                     switch (content.RequiredString("kind"))
                     {
                         case "set_deposits_limit":
-                            await new SetDepositsLimitCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SetDepositsLimitCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "increase_paid_storage":
-                            await new IncreasePaidStorageCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new IncreasePaidStorageCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "update_consensus_key":
-                            await new UpdateSecondaryKeyCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new UpdateSecondaryKeyCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "reveal":
-                            await new RevealsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new RevealsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "register_global_constant":
-                            await new RegisterConstantsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new RegisterConstantsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "delegation":
-                            await new DelegationsCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new DelegationsCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "origination":
                             var orig = new OriginationsCommit(this);
-                            await orig.Apply(blockCommit.Block, operation, content);
+                            await orig.Apply(blockCommit.Block, opHash, content);
                             if (orig.BigMapDiffs != null)
                                 bigMapCommit.Append(orig.Origination, orig.Contract!, orig.BigMapDiffs);
                             break;
                         case "transaction":
                             var parent = new TransactionsCommit(this);
-                            await parent.Apply(blockCommit.Block, operation, content);
+                            await parent.Apply(blockCommit.Block, opHash, content);
                             if (parent.BigMapDiffs != null)
                                 bigMapCommit.Append(parent.Transaction, (parent.Target as L1Contract)!, parent.BigMapDiffs);
                             if (parent.TicketUpdates != null)
@@ -208,7 +212,7 @@ namespace Xtzkt.Indexers.L1.Protocols
                             break;
                         case "transfer_ticket":
                             var parent1 = new TransferTicketCommit(this);
-                            await parent1.Apply(blockCommit.Block, operation, content);
+                            await parent1.Apply(blockCommit.Block, opHash, content);
                             if (parent1.TicketUpdates != null)
                                 ticketsCommit.Append(parent1.Operation, parent1.Operation, parent1.TicketUpdates);
                             if (content.Required("metadata").TryGetProperty("internal_operation_results", out var internalResult1))
@@ -235,14 +239,14 @@ namespace Xtzkt.Indexers.L1.Protocols
                             }
                             break;
                         case "smart_rollup_add_messages":
-                            await new SmartRollupAddMessagesCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupAddMessagesCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_cement":
-                            await new SmartRollupCementCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupCementCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_execute_outbox_message":
                             var parent2 = new SmartRollupExecuteCommit(this);
-                            await parent2.Apply(blockCommit.Block, operation, content);
+                            await parent2.Apply(blockCommit.Block, opHash, content);
                             if (parent2.TicketUpdates != null)
                                 ticketsCommit.Append(parent2.Operation, parent2.Operation, parent2.TicketUpdates);
                             if (content.Required("metadata").TryGetProperty("internal_operation_results", out var internalResult2))
@@ -278,19 +282,19 @@ namespace Xtzkt.Indexers.L1.Protocols
                             }
                             break;
                         case "smart_rollup_originate":
-                            await new SmartRollupOriginateCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupOriginateCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_publish":
-                            await new SmartRollupPublishCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupPublishCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_recover_bond":
-                            await new SmartRollupRecoverBondCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupRecoverBondCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_refute":
-                            await new SmartRollupRefuteCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupRefuteCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         case "smart_rollup_timeout":
-                            await new SmartRollupTimeoutCommit(this).Apply(blockCommit.Block, operation, content);
+                            await new SmartRollupTimeoutCommit(this).Apply(blockCommit.Block, opHash, content);
                             break;
                         default:
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not expected in operations[3]");

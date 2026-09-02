@@ -7,7 +7,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
 {
     class NonceRevelationsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var baker = Context.Proposer;
@@ -29,7 +29,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 BakerId = baker.Id,
                 SenderId = sender.Id,
                 RevealedLevel = revealedBlock.Level,

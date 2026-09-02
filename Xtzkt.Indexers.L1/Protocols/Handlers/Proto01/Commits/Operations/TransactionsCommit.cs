@@ -19,7 +19,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
         public IEnumerable<TicketUpdates>? TicketUpdates { get; private set; }
         public L1Address? Target { get; private set; }
 
-        public virtual async Task Apply(L1Block block, JsonElement op, JsonElement content)
+        public virtual async Task Apply(L1Block block, byte[] opHash, JsonElement content)
         {
             #region init
             var sender = await Cache.Addresses.GetExistingAsync(content.RequiredString("source"));
@@ -33,7 +33,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 ChainId = block.ChainId,
                 Level = block.Level,
                 Timestamp = block.Timestamp,
-                Hash = op.RequiredMichelsonOperationHashBytes("hash"),
+                Hash = opHash,
                 Amount = content.RequiredInt64("amount"),
                 BakerFee = content.RequiredInt64("fee"),
                 Counter = content.RequiredInt32("counter"),
