@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class SmartRollupOriginateOperation : IManagerOperation
+    public class SmartRollupOriginateOperation : IL1ManagerOperation
     {
         public required long Id { get; set; }
         public required int ChainId { get; set; }
@@ -28,6 +28,11 @@ namespace Xtzkt.Data.Models
         public byte[]? ParameterType { get; set; }
         public string? GenesisCommitment { get; set; }
         public int? SmartRollupId { get; set; }
+
+        #region IL1ManagerOperation
+        int? IL1ManagerOperation.GasLimit { get => GasLimit; set => GasLimit = value ?? throw new InvalidOperationException($"{nameof(GasLimit)} cannot be null"); }
+        long? IL1ManagerOperation.BakerFee { get => BakerFee; set => BakerFee = value ?? throw new InvalidOperationException($"{nameof(BakerFee)} cannot be null"); }
+        #endregion
     }
 
     public static class SmartRollupOriginateOperationModel

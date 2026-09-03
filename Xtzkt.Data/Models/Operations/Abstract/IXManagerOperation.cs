@@ -5,5 +5,5 @@ public interface IXManagerOperation : IManagerOperation
     int? GasLimit { get; set; }
     long? DaFee { get; set; }
     long? GasFee { get; set; }
-    long? GasRefund { get; set; }
+    long? GasFeeRefunded { get; set; }
 }

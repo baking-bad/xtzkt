@@ -47,7 +47,7 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -56,8 +56,8 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var op = new XRevealOperation
@@ -69,7 +69,7 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Timestamp = block.Timestamp,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Counter = counter,
             GasLimit = gasLimit,
             StorageLimit = storageLimit,
@@ -85,12 +85,13 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee - op.GasRefund);
+        BurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter;
         sender.RevealsCount++;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.Reveal;
 
         Cache.Chain.Get().RevealOpsCount++;
@@ -131,7 +132,7 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         #region revert operation
         RevertPayFee(sender, operation.DaFee);
-        RevertBurnFee(sender, operation.GasFee - operation.GasRefund);
+        RevertBurnFee(sender, operation.GasFee - operation.GasFeeRefunded);
         sender.Counter = operation.Counter - 1;
         sender.RevealsCount--;
         sender.LastLevel = operation.Level;

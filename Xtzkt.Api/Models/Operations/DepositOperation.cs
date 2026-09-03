@@ -40,6 +40,12 @@ public abstract class DepositOperation : IOpgActivity
 
     /// <summary>What was deposited: `xtz` for native tez, `fa` for an FA token.</summary>
     public required string Type { get; set; }
+
+    /// <summary>
+    /// Gas consumed by the deposit. Informational only — the kernel credits deposits for free,
+    /// so this gas is not charged to anyone, but it does count towards the block's gas usage.
+    /// </summary>
+    public int GasUsed { get; set; }
 }
 
 public class XMichelsonDepositOperation : DepositOperation
@@ -81,12 +87,6 @@ public class XEvmDepositOperation : DepositOperation, IBridgeTicketTransfersSour
     /// </summary>
     [JsonConverter(typeof(Int64StringNullableConverter))]
     public long? ClaimTransactionId { get; set; }
-
-    /// <summary>
-    /// Gas consumed by the deposit. Informational only — the kernel credits deposits for free,
-    /// so this gas is not charged to anyone, but it does count towards the block's gas usage.
-    /// </summary>
-    public int GasUsed { get; set; }
 
     /// <summary>Number of logs (events) emitted by the operation, if any.</summary>
     public int? LogsCount { get; set; }

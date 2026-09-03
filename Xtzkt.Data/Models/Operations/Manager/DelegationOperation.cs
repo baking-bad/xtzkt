@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class DelegationOperation : IInternalOperation
+    public class DelegationOperation : IInternalOperation, IL1ManagerOperation
     {
         public required long Id { get; set; }
         public required int ChainId { get; set; }

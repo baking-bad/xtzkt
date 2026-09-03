@@ -51,6 +51,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
             sender.Counter = operation.Counter;
             sender.DalPublishCommitmentOpsCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.DalPublishCommitment;
 
             Cache.Chain.Get().DalPublishCommitmentOpsCount++;
@@ -64,6 +65,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.DalPublishCommitmentOps.Add(operation);
             Context.DalPublishCommitmentOps.Add(operation);
         }

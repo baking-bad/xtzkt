@@ -59,6 +59,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto15
             sender.Counter = operation.Counter;
             sender.UpdateSecondaryKeyCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.UpdateSecondaryKey;
 
             Cache.Chain.Get().UpdateSecondaryKeyOpsCount++;
@@ -72,6 +73,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto15
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.UpdateSecondaryKeyOps.Add(operation);
             Context.UpdateSecondaryKeyOps.Add(operation);
         }

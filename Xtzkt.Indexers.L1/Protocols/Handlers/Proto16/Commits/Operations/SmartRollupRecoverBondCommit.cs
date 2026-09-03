@@ -65,6 +65,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             if (rollup != null) rollup.SmartRollupRecoverBondCount++;
             if (staker != null && staker.Id != sender.Id) staker.SmartRollupRecoverBondCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.SmartRollupRecoverBond;
 
             sender.Counter = operation.Counter;
@@ -89,6 +90,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.SmartRollupRecoverBondOps.Add(operation);
             Context.SmartRollupRecoverBondOps.Add(operation);
         }

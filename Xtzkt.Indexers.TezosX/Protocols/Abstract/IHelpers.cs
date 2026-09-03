@@ -11,6 +11,7 @@ public interface IHelpers
 
     #region fees
     BigInteger GetDaFee(JsonElement tx, bool isDelayedOp);
+    int GetDaGas(BigInteger effectiveGasPrice, BigInteger daFee);
     BigInteger GetGasFee(BigInteger effectiveGasPrice, int gasUsed, BigInteger daFee);
     #endregion
 

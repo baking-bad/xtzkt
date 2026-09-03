@@ -62,6 +62,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             sender.SmartRollupCementCount++;
             if (rollup != null) rollup.SmartRollupCementCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.SmartRollupCement;
 
             sender.Counter = operation.Counter;
@@ -84,6 +85,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.SmartRollupCementOps.Add(operation);
             Context.SmartRollupCementOps.Add(operation);
         }

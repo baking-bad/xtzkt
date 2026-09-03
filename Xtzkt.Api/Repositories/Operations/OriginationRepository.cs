@@ -87,7 +87,8 @@ public class OriginationRepository(
                     case "baker":                  columns.Add(@"""BakerId"""); break;
                     case "daFee":                  columns.Add(@"""DaFee"""); columns.Add(@"""DaFee18"""); columns.Add(@"""Env"""); break;
                     case "gasFee":                 columns.Add(@"""GasFee"""); columns.Add(@"""GasFee18"""); columns.Add(@"""Env"""); break;
-                    case "gasRefund":              columns.Add(@"""GasRefund"""); break;
+                    case "gasFeeRefunded":         columns.Add(@"""GasFeeRefunded"""); break;
+                    case "gasRefunded":            columns.Add(@"""GasRefunded"""); break;
                     case "opType":                 columns.Add(@"""OpType"""); break;
                     case "opCode":                 columns.Add(@"""OpCode"""); break;
                     case "gasPrice":               columns.Add(@"""GasPrice"""); break;
@@ -237,7 +238,7 @@ public class OriginationRepository(
                     Balance = row.Balance,
                     DaFee = row.DaFee,
                     GasFee = row.GasFee,
-                    GasRefund = row.GasRefund,
+                    GasFeeRefunded = row.GasFeeRefunded,
                 },
                 Data.Models.Env.XEvm => new XEvmOriginationOperation
                 {
@@ -262,6 +263,7 @@ public class OriginationRepository(
                     Balance = row.Balance18,
                     DaFee = row.DaFee18,
                     GasFee = row.GasFee18,
+                    GasRefunded = row.GasRefunded,
                     GasPrice = row.GasPrice,
                     MaxFeePerGas = row.MaxFeePerGas,
                     MaxPriorityFeePerGas = row.MaxPriorityFeePerGas,
@@ -443,8 +445,11 @@ public class OriginationRepository(
                         _ => null
                     };
                     break;
-                case "gasRefund":
-                    foreach (var row in rows) result[j++][i] = row.GasRefund;
+                case "gasFeeRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasFeeRefunded;
+                    break;
+                case "gasRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasRefunded;
                     break;
                 case "opType":
                     foreach (var row in rows) result[j++][i] = row.OpType == null ? null : EvmOpTypes.ToString((int)row.OpType);

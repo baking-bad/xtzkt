@@ -78,6 +78,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                 staker.StakingOpsCount++;
             }
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.Staking;
 
             Cache.Chain.Get().StakingOpsCount++;
@@ -128,6 +129,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.StakingOps.Add(operation);
             Context.StakingOps.Add(operation);
         }

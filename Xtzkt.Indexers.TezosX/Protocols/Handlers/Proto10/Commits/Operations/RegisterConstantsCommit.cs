@@ -47,7 +47,7 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -56,8 +56,8 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var storageSize = result.OptionalInt32("storage_size");
@@ -70,7 +70,7 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
             Hash = hash,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Level = block.Level,
             Timestamp = block.Timestamp,
             Counter = counter,
@@ -90,12 +90,13 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee - op.GasRefund);
+        BurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter;
         sender.RegisterConstantsCount++;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.RegisterConstant;
 
         Cache.Chain.Get().RegisterConstantOpsCount++;
@@ -139,7 +140,7 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
 
         #region revert operation
         RevertPayFee(sender, op.DaFee);
-        RevertBurnFee(sender, op.GasFee - op.GasRefund);
+        RevertBurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter - 1;
         sender.Revealed = true;
         sender.RegisterConstantsCount--;

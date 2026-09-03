@@ -160,7 +160,7 @@ namespace Xtzkt.Indexers.L1.Protocols
                             throw new NotImplementedException($"'{content.RequiredString("kind")}' is not expected in operations[3]");
                     }
                 }
-                Manager.Reset();
+                Manager.Apply();
             }
             #endregion
 

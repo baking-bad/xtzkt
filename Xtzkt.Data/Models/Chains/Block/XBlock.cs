@@ -8,7 +8,7 @@ namespace Xtzkt.Data.Models;
 
 public class XBlock() : Block(Layer.TezosX)
 {
-    [Column(nameof(Events), Order = 25)]
+    [Column(nameof(Events), Order = 27)]
     public XBlockEvents Events { get; set; }
 
     [Column(nameof(Operations), Order = 2)]
@@ -20,7 +20,13 @@ public class XBlock() : Block(Layer.TezosX)
     [Column($"{nameof(BurnedFees)}18")]
     public BigInteger BurnedFees { get; set; }
 
-    [Column(nameof(L1Block.ProposerId), Order = 26)]
+    [Column(Order = 16)]
+    public long EvmGasUsed { get; set; }
+
+    [Column(nameof(L1Block.GasUsed), Order = 17)]
+    public int MichelsonGasUsed { get; set; }
+
+    [Column(nameof(L1Block.ProposerId), Order = 28)]
     public int? SequencerPoolId { get; set; }
 
     [Column(nameof(MichelsonHash))]
@@ -36,6 +42,8 @@ public class XBlock() : Block(Layer.TezosX)
                 "{nameof(Operations)}",
                 "{nameof(L1Block.BakerFees)}18",
                 "{nameof(BurnedFees)}18",
+                "{nameof(EvmGasUsed)}",
+                "{nameof(L1Block.GasUsed)}",
                 "{nameof(L1Block.ProposerId)}",
                 "{nameof(MichelsonHash)}"
             )
@@ -50,6 +58,8 @@ public class XBlock() : Block(Layer.TezosX)
             writer.Write((long)block.Operations, NpgsqlDbType.Bigint);
             writer.Write(block.DaFees, NpgsqlDbType.Numeric);
             writer.Write(block.BurnedFees, NpgsqlDbType.Numeric);
+            writer.Write(block.EvmGasUsed, NpgsqlDbType.Bigint);
+            writer.Write(block.MichelsonGasUsed, NpgsqlDbType.Integer);
             writer.WriteNullable(block.SequencerPoolId, NpgsqlDbType.Integer);
             writer.WriteNullable(block.MichelsonHash, NpgsqlDbType.Bytea);
         }

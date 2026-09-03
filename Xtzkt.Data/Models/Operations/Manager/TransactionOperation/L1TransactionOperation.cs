@@ -2,10 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using NpgsqlTypes;
+using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class L1TransactionOperation() : MichelsonTransactionOperation(Direction.L1)
+    public class L1TransactionOperation() : MichelsonTransactionOperation(Direction.L1), IL1ManagerOperation
     {
         [Column(Order = 12)]
         public long? BakerFee { get; set; } // null for internal operations

@@ -150,6 +150,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             sender.SmartRollupOriginateCount++;
             if (rollup != null) rollup.SmartRollupOriginateCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.SmartRollupOriginate;
 
             sender.Counter = operation.Counter;
@@ -169,6 +170,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.SmartRollupOriginateOps.Add(operation);
             Context.SmartRollupOriginateOps.Add(operation);
         }

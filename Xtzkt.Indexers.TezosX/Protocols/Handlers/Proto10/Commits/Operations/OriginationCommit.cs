@@ -27,7 +27,12 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
     public virtual async Task<XEvmOriginationOperation> ApplyInternalEvm(IParentOperation parent, IParentOperation? cracParent, JsonElement trace, OperationStatus traceStatus, OperationStatus parentTraceStatus)
     {
         var op = await ApplyInternalEvm(parent, trace, traceStatus, parentTraceStatus, 0);
-        cracParent?.GasUsed -= MichelsonRuntime.ConvertGas(op.GasUsed);
+        if (cracParent != null)
+        {
+            var cracGas = MichelsonRuntime.ConvertGas(op.GasUsed);
+            cracParent.GasUsed -= cracGas;
+            Context.Block.MichelsonGasUsed -= cracGas;
+        }
         return op;
     }
 
@@ -76,7 +81,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -85,8 +90,8 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var paidStorageSizeDiff = result.OptionalInt32("paid_storage_size_diff");
@@ -101,7 +106,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
             Hash = hash,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Counter = counter,
             GasLimit = gasLimit,
             StorageLimit = storageLimit,
@@ -121,12 +126,13 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, operation.DaFee.Value);
-        BurnFee(sender, operation.GasFee.Value - operation.GasRefund.Value);
+        BurnFee(sender, operation.GasFee.Value - operation.GasFeeRefunded.Value);
         sender.Counter = operation.Counter;
         sender.OriginationsCount++;
         sender.LastLevel = operation.Level;
         sender.LastTimestamp = operation.Timestamp;
 
+        Context.Block.MichelsonGasUsed += operation.GasUsed;
         Context.Block.Operations |= XOperations.Origination;
 
         Cache.Chain.Get().OriginationOpsCount++;
@@ -207,9 +213,15 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
 
         initiator.OriginationsCount++;
 
-        cracParent?.GasUsed -= EvmRuntime.ConvertGas(consumedMilligas);
+        if (cracParent != null)
+        {
+            var cracGas = EvmRuntime.ConvertGas(consumedMilligas);
+            cracParent.GasUsed -= cracGas;
+            Context.Block.EvmGasUsed -= cracGas;
+        }
         parent.InternalOperations = (parent.InternalOperations ?? 0) + 1;
 
+        block.MichelsonGasUsed += operation.GasUsed;
         block.Operations |= XOperations.Origination;
 
         Cache.Chain.Get().OriginationOpsCount++;
@@ -275,7 +287,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
 
         #region revert operation
         RevertPayFee(sender, operation.DaFee!.Value);
-        RevertBurnFee(sender, operation.GasFee!.Value - operation.GasRefund!.Value);
+        RevertBurnFee(sender, operation.GasFee!.Value - operation.GasFeeRefunded!.Value);
         sender.Counter = operation.Counter - 1;
         sender.Revealed = true;
         sender.OriginationsCount--;

@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class SetDelegateParametersOperation : IManagerOperation
+    public class SetDelegateParametersOperation : IL1ManagerOperation
     {
         public required long Id { get; set; }
         public required int ChainId { get; set; }
@@ -25,6 +25,11 @@ namespace Xtzkt.Data.Models
         public long? LimitOfStakingOverBaking { get; set; }
         public long? EdgeOfBakingOverStaking { get; set; }
         public int? ActivationCycle { get; set; }
+
+        #region IL1ManagerOperation
+        int? IL1ManagerOperation.GasLimit { get => GasLimit; set => GasLimit = value ?? throw new InvalidOperationException($"{nameof(GasLimit)} cannot be null"); }
+        long? IL1ManagerOperation.BakerFee { get => BakerFee; set => BakerFee = value ?? throw new InvalidOperationException($"{nameof(BakerFee)} cannot be null"); }
+        #endregion
     }
 
     public static class SetDelegateParametersOperationModel

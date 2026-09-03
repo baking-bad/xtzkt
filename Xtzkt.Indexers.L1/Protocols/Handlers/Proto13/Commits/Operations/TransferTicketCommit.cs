@@ -85,6 +85,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto13
             if (target != sender) target.TransferTicketCount++;
             if (ticketer != sender && ticketer != target) ticketer.TransferTicketCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.TransferTicket;
 
             sender.Counter = operation.Counter;
@@ -104,6 +105,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto13
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.TransferTicketOps.Add(operation);
             Context.TransferTicketOps.Add(operation);
             Operation = operation;

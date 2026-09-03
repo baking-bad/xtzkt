@@ -77,6 +77,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                     newBaker.DelegationsCount++;
             }
 
+            Context.Block.GasUsed += delegation.GasUsed;
             Context.Block.Operations |= L1Operations.Delegation;
 
             Cache.Chain.Get().DelegationOpsCount++;
@@ -149,6 +150,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(delegation);
             Db.DelegationOps.Add(delegation);
             Context.DelegationOps.Add(delegation);
         }
@@ -228,6 +230,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 initiator.DelegationsCount++;
             }
 
+            Context.Block.GasUsed += delegation.GasUsed;
             Context.Block.Operations |= L1Operations.Delegation;
 
             Cache.Chain.Get().DelegationOpsCount++;

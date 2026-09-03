@@ -68,7 +68,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -77,8 +77,8 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var paidStorageSizeDiff = result.OptionalInt32("paid_storage_size_diff");
@@ -93,7 +93,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Hash = hash,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Counter = counter,
             GasLimit = gasLimit,
             StorageLimit = storageLimit,
@@ -127,7 +127,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee - op.GasRefund);
+        BurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter;
         sender.TransferTicketCount++;
         sender.LastLevel = op.Level;
@@ -149,6 +149,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             ticketer.LastTimestamp = op.Timestamp;
         }
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.TransferTicket;
 
         Cache.Chain.Get().TransferTicketOpsCount++;
@@ -189,7 +190,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         #region revert operation
         RevertPayFee(sender, operation.DaFee);
-        RevertBurnFee(sender, operation.GasFee - operation.GasRefund);
+        RevertBurnFee(sender, operation.GasFee - operation.GasFeeRefunded);
         sender.Counter = operation.Counter - 1;
         sender.Revealed = true;
         sender.TransferTicketCount--;

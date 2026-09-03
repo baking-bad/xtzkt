@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class StakingOperation : IManagerOperation
+    public class StakingOperation : IL1ManagerOperation
     {
         public required long Id { get; set; }
         public required int ChainId { get; set; }
@@ -29,6 +29,11 @@ namespace Xtzkt.Data.Models
         public long? Amount { get; set; }
         public int? BakerId { get; set; }
         public int? StakingUpdatesCount { get; set; }
+
+        #region IL1ManagerOperation
+        int? IL1ManagerOperation.GasLimit { get => GasLimit; set => GasLimit = value ?? throw new InvalidOperationException($"{nameof(GasLimit)} cannot be null"); }
+        long? IL1ManagerOperation.BakerFee { get => BakerFee; set => BakerFee = value ?? throw new InvalidOperationException($"{nameof(BakerFee)} cannot be null"); }
+        #endregion
     }
 
     public enum StakingAction

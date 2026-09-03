@@ -35,12 +35,17 @@ partial class TransactionCommit
 
         var result = content.Required("result");
 
-        var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
-        var gasUsed = receipt.RequiredHexInt32("gasUsed");
         var amountSent = tx.RequiredHexBigInteger("value");
         var amountReceived = content.RequiredInt64("amount");
         var roundingloss = amountSent - new BigInteger(amountReceived) * M12;
+
         var status = receipt.RequiredEvmOpStatus("status");
+        var receiptGas = receipt.RequiredHexInt32("gasUsed");
+        var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
+        var daFee = Helpers.GetDaFee(tx, isDelayedOp);
+        var daGas = Helpers.GetDaGas(effectiveGasPrice, daFee);
+        var (gasUsed, gasRefunded) = GetCumulativeGas(receiptGas, trace, daGas);
+        var gasFee = Helpers.GetGasFee(effectiveGasPrice, receiptGas, daFee);
         var input = trace.OptionalHexBytes("input") is byte[] _input && _input.Length > 0 ? _input : null;
 
         // the gateway is a precompile with a known abi, so its parameters are never guessed
@@ -51,9 +56,6 @@ partial class TransactionCommit
         var (entrypoint, paramsRaw, paramsJson, guessed) = target is not XMichelsonUser && content.TryGetProperty("parameters", out var parameters)
             ? await ParseParameters(target, parameters)
             : (null, null, null, null);
-
-        var daFee = Helpers.GetDaFee(tx, isDelayedOp);
-        var gasFee = Helpers.GetGasFee(effectiveGasPrice, gasUsed, daFee);
 
         var op = new XEvmMichelsonTransactionOperation
         {
@@ -88,6 +90,7 @@ partial class TransactionCommit
             Counter = tx.RequiredHexInt32("nonce"),
             GasLimit = GetGasLimit(tx),
             GasUsed = gasUsed,
+            GasRefunded = gasRefunded,
             Status = status,
             Errors = status != OperationStatus.Applied
                 ? trace.OptionalEscapedString("revertReason") ?? trace.OptionalEscapedString("error")
@@ -128,6 +131,7 @@ partial class TransactionCommit
             target.LastTimestamp = op.Timestamp;
         }
 
+        Context.Block.EvmGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;
@@ -208,6 +212,7 @@ partial class TransactionCommit
         var amountSent = trace.RequiredHexBigInteger("value");
         var amountReceived = content.RequiredInt64("amount");
         var roundingloss = amountSent - new BigInteger(amountReceived) * M12;
+
         var status = GetEvmTraceStatus(parent.Status, traceStatus);
         var input = trace.OptionalHexBytes("input") is byte[] _input && _input.Length > 0 ? _input : null;
 
@@ -282,9 +287,15 @@ partial class TransactionCommit
         if (initiator != sender && initiator != target)
             initiator.TransactionsCount++;
 
-        cracParent?.GasUsed -= MichelsonRuntime.ConvertGas(op.GasUsed);
+        if (cracParent != null)
+        {
+            var cracGas = MichelsonRuntime.ConvertGas(op.GasUsed);
+            cracParent.GasUsed -= cracGas;
+            Context.Block.MichelsonGasUsed -= cracGas;
+        }
         parent.InternalOperations = (parent.InternalOperations ?? 0) + 1;
 
+        Context.Block.EvmGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;

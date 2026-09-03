@@ -52,7 +52,7 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -61,8 +61,8 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var (storageFee, _) = GetStorageFees(result, false);
@@ -76,7 +76,7 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
             Hash = hash,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Counter = counter,
             GasLimit = gasLimit,
             StorageLimit = storageLimit,
@@ -96,7 +96,7 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, op.DaFee);
-        BurnFee(sender, op.GasFee - op.GasRefund);
+        BurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter;
         sender.IncreasePaidStorageCount++;
         sender.LastLevel = op.Level;
@@ -110,6 +110,7 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
             contract.LastTimestamp = op.Timestamp;
         }
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.IncreasePaidStorage;
 
         Cache.Chain.Get().IncreasePaidStorageOpsCount++;
@@ -147,7 +148,7 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
 
         #region revert operation
         RevertPayFee(sender, operation.DaFee);
-        RevertBurnFee(sender, operation.GasFee - operation.GasRefund);
+        RevertBurnFee(sender, operation.GasFee - operation.GasFeeRefunded);
         sender.Counter = operation.Counter - 1;
         sender.Revealed = true;
         sender.IncreasePaidStorageCount--;

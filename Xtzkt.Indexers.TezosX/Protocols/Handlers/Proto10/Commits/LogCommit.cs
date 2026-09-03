@@ -87,8 +87,23 @@ class LogCommit(ProtocolHandler protocol) : Proto02.LogCommit(protocol)
         #region apply
         if (parentTx != cracParent)
         {
-            cracParent?.GasUsed -= EvmRuntime.ConvertGas(consumedMilligas);
-            parentTx.GasUsed += consumedGas;
+            if (cracParent != null)
+            {
+                var cracGas = EvmRuntime.ConvertGas(consumedMilligas);
+                cracParent.GasUsed -= cracGas;
+                Context.Block.EvmGasUsed -= cracGas;
+            }
+            if (parentTx is IXManagerOperation)
+            {
+                parentTx.GasUsed += consumedGas;
+                Context.Block.MichelsonGasUsed += consumedGas;
+            }
+            else
+            {
+                var parentGas = EvmRuntime.ConvertGas(consumedMilligas);
+                parentTx.GasUsed += parentGas;
+                Context.Block.EvmGasUsed += parentGas;
+            }
         }
         parentTx.LogsCount = (parentTx.LogsCount ?? 0) + 1;
         contract.LogsCount++;

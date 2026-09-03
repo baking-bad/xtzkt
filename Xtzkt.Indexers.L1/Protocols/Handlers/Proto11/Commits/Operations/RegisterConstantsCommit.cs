@@ -51,6 +51,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto11
             sender.Counter = registerConstant.Counter;
             sender.RegisterConstantsCount++;
 
+            block.GasUsed += registerConstant.GasUsed;
             block.Operations |= L1Operations.RegisterConstant;
 
             Cache.Chain.Get().RegisterConstantOpsCount++;
@@ -72,6 +73,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto11
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(registerConstant);
             Db.RegisterConstantOps.Add(registerConstant);
             Context.RegisterConstantOps.Add(registerConstant);
         }

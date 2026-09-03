@@ -27,8 +27,7 @@ class ProtoHelpers(ProtocolHandler protocol) : Proto07.Helpers.ProtoHelpers(prot
 
         // gasUsed covers the gas reserved for the da fee, rounded up to a whole gas unit,
         // but the remainder of that rounding is not charged to the sender
-        var gasForFees = (daFee + effectiveGasPrice - 1) / effectiveGasPrice;
-        return effectiveGasPrice * (gasUsed - gasForFees);
+        return effectiveGasPrice * (gasUsed - GetDaGas(effectiveGasPrice, daFee));
     }
     #endregion
 }

@@ -47,6 +47,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             sender.Counter = reveal.Counter;
             sender.RevealsCount++;
 
+            block.GasUsed += reveal.GasUsed;
             block.Operations |= L1Operations.Reveal;
 
             Cache.Chain.Get().RevealOpsCount++;
@@ -57,6 +58,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(reveal);
             Db.RevealOps.Add(reveal);
             Context.RevealOps.Add(reveal);
         }

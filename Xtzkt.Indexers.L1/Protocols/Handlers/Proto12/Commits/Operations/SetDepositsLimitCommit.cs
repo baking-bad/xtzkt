@@ -51,6 +51,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
             sender.Counter = operation.Counter;
             sender.SetDepositsLimitsCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.SetDepositsLimits;
 
             Cache.Chain.Get().SetDepositsLimitOpsCount++;
@@ -74,6 +75,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.SetDepositsLimitOps.Add(operation);
             Context.SetDepositsLimitOps.Add(operation);
         }

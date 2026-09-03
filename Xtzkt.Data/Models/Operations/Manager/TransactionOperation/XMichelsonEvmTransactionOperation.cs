@@ -15,8 +15,8 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
     [Column(nameof(GasFee), Order = 14)]
     public long? GasFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasRefund), Order = 15)]
-    public long? GasRefund { get; set; } // null for internal operations
+    [Column(nameof(GasFeeRefunded), Order = 15)]
+    public long? GasFeeRefunded { get; set; } // null for internal operations
 
 
     [Column(nameof(StorageFee), Order = 9)]
@@ -82,7 +82,7 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
                 {BinaryColumns},
                 "{nameof(DaFee)}",
                 "{nameof(GasFee)}",
-                "{nameof(GasRefund)}",
+                "{nameof(GasFeeRefunded)}",
                 "{nameof(StorageFee)}",
                 "{nameof(AllocationFee)}",
                 "{nameof(StorageLimit)}",
@@ -110,7 +110,7 @@ public class XMichelsonEvmTransactionOperation() : TransactionOperation(Directio
 
             writer.WriteNullable(op.DaFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.GasFee, NpgsqlDbType.Bigint);
-            writer.WriteNullable(op.GasRefund, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasFeeRefunded, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.StorageFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.AllocationFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.StorageLimit, NpgsqlDbType.Integer);

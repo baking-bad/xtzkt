@@ -59,6 +59,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
             parentTx.LogsCount = (parentTx.LogsCount ?? 0) + 1;
             contract.LogsCount++;
             Cache.Chain.Get().LogsCount++;
+            block.GasUsed += consumedGas;
             block.Events |= L1BlockEvents.Events;
             #endregion
 

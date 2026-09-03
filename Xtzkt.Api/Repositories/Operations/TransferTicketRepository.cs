@@ -95,7 +95,7 @@ public class TransferTicketRepository(
                     case "bakerFee":           columns.Add(@"""BakerFee"""); break;
                     case "daFee":              columns.Add(@"""DaFee"""); break;
                     case "gasFee":             columns.Add(@"""GasFee"""); break;
-                    case "gasRefund":          columns.Add(@"""GasRefund"""); break;
+                    case "gasFeeRefunded":     columns.Add(@"""GasFeeRefunded"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
                 }
             }
@@ -231,7 +231,7 @@ public class TransferTicketRepository(
                     InternalOperations = row.InternalOperations,
                     DaFee = row.DaFee,
                     GasFee = row.GasFee,
-                    GasRefund = row.GasRefund,
+                    GasFeeRefunded = row.GasFeeRefunded,
                 },
                 _ => throw new InvalidOperationException("Failed to read TransferTicketOperation")
             };
@@ -377,8 +377,8 @@ public class TransferTicketRepository(
                 case "gasFee":
                     foreach (var row in rows) result[j++][i] = row.GasFee;
                     break;
-                case "gasRefund":
-                    foreach (var row in rows) result[j++][i] = row.GasRefund;
+                case "gasFeeRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasFeeRefunded;
                     break;
                 default:
                     if (fields[i].Field == "content")

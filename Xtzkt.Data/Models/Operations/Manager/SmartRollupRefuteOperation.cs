@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models
 {
-    public class SmartRollupRefuteOperation : IManagerOperation
+    public class SmartRollupRefuteOperation : IL1ManagerOperation
     {
         public required long Id { get; set; }
         public required int ChainId { get; set; }
@@ -29,6 +29,11 @@ namespace Xtzkt.Data.Models
         public long? DissectionStart { get; set; }
         public long? DissectionEnd { get; set; }
         public int? DissectionSteps { get; set; }
+
+        #region IL1ManagerOperation
+        int? IL1ManagerOperation.GasLimit { get => GasLimit; set => GasLimit = value ?? throw new InvalidOperationException($"{nameof(GasLimit)} cannot be null"); }
+        long? IL1ManagerOperation.BakerFee { get => BakerFee; set => BakerFee = value ?? throw new InvalidOperationException($"{nameof(BakerFee)} cannot be null"); }
+        #endregion
     }
 
     public enum RefutationMove

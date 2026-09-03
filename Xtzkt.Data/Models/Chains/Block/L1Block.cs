@@ -5,22 +5,22 @@ namespace Xtzkt.Data.Models;
 
 public class L1Block() : Block(Layer.L1)
 {
-    [Column(Order = 19)]
+    [Column(Order = 21)]
     public required int Cycle { get; set; }
 
-    [Column(Order = 22)]
+    [Column(Order = 24)]
     public int? SoftwareId { get; set; }
 
-    [Column(Order = 23)]
+    [Column(Order = 25)]
     public int PayloadRound { get; set; }
-    [Column(Order = 24)]
+    [Column(Order = 26)]
     public int BlockRound { get; set; }
     [Column(Order = 3)]
     public long AttestationPower { get; set; }
     [Column(Order = 4)]
     public long AttestationCommittee { get; set; }
 
-    [Column(nameof(Events), Order = 25)]
+    [Column(nameof(Events), Order = 27)]
     public L1BlockEvents Events { get; set; }
 
     [Column(nameof(Operations), Order = 2)]
@@ -49,20 +49,23 @@ public class L1Block() : Block(Layer.L1)
     [Column(nameof(BurnedFees), Order = 14)]
     public long BurnedFees { get; set; }
 
-    [Column(nameof(ProposerId), Order = 26)]
+    [Column(nameof(GasUsed), Order = 17)]
+    public int GasUsed { get; set; }
+
+    [Column(nameof(ProposerId), Order = 28)]
     public int? ProposerId { get; set; }
-    [Column(Order = 27)]
+    [Column(Order = 29)]
     public int? ProducerId { get; set; }
     [Column(Order = 15)]
     public long? RevelationId { get; set; }
-    [Column(Order = 28)]
+    [Column(Order = 30)]
     public int? ResetBakerDeactivation { get; set; }
-    [Column(Order = 29)]
+    [Column(Order = 31)]
     public int? ResetProposerDeactivation { get; set; }
 
-    [Column(Order = 32)]
+    [Column(Order = 34)]
     public bool? LBToggle { get; set; }
-    [Column(Order = 30)]
+    [Column(Order = 32)]
     public int LBToggleEma { get; set; }
 }
 

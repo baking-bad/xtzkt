@@ -100,7 +100,8 @@ public class TransactionRepository(
                     case "amountReceived":         columns.Add(@"""Amount"""); columns.Add(@"""Amount18"""); columns.Add(@"""Direction"""); break;
                     case "daFee":                  columns.Add(@"""DaFee"""); columns.Add(@"""DaFee18"""); columns.Add(@"""Direction"""); break;
                     case "gasFee":                 columns.Add(@"""GasFee"""); columns.Add(@"""GasFee18"""); columns.Add(@"""Direction"""); break;
-                    case "gasRefund":              columns.Add(@"""GasRefund"""); break;
+                    case "gasFeeRefunded":         columns.Add(@"""GasFeeRefunded"""); break;
+                    case "gasRefunded":            columns.Add(@"""GasRefunded"""); break;
                     case "storageFee":             columns.Add(@"""StorageFee"""); break;
                     case "allocationFee":          columns.Add(@"""AllocationFee"""); break;
                     case "storageLimit":           columns.Add(@"""StorageLimit"""); break;
@@ -300,7 +301,7 @@ public class TransactionRepository(
                     ParametersRaw = Decode.ToMicheline((byte[]?)row.ParametersRaw),
                     DaFee = row.DaFee,
                     GasFee = row.GasFee,
-                    GasRefund = row.GasRefund,
+                    GasFeeRefunded = row.GasFeeRefunded,
                 },
                 Data.Models.Direction.XEvm => new XEvmTransactionOperation
                 {
@@ -330,6 +331,7 @@ public class TransactionRepository(
                     Amount = row.Amount18,
                     DaFee = row.DaFee18,
                     GasFee = row.GasFee18,
+                    GasRefunded = row.GasRefunded,
                     GasPrice = row.GasPrice,
                     MaxFeePerGas = row.MaxFeePerGas,
                     MaxPriorityFeePerGas = row.MaxPriorityFeePerGas,
@@ -371,6 +373,7 @@ public class TransactionRepository(
                     AmountReceived = row.Amount,
                     DaFee = row.DaFee18,
                     GasFee = row.GasFee18,
+                    GasRefunded = row.GasRefunded,
                     GasPrice = row.GasPrice,
                     MaxFeePerGas = row.MaxFeePerGas,
                     MaxPriorityFeePerGas = row.MaxPriorityFeePerGas,
@@ -412,7 +415,7 @@ public class TransactionRepository(
                     AmountReceived = row.Amount18,
                     DaFee = row.DaFee,
                     GasFee = row.GasFee,
-                    GasRefund = row.GasRefund,
+                    GasFeeRefunded = row.GasFeeRefunded,
                     StorageFee = row.StorageFee,
                     AllocationFee = row.AllocationFee,
                     StorageLimit = row.StorageLimit,
@@ -598,8 +601,11 @@ public class TransactionRepository(
                         _ => null
                     };
                     break;
-                case "gasRefund":
-                    foreach (var row in rows) result[j++][i] = row.GasRefund;
+                case "gasFeeRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasFeeRefunded;
+                    break;
+                case "gasRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasRefunded;
                     break;
                 case "storageFee":
                     foreach (var row in rows) result[j++][i] = row.StorageFee;

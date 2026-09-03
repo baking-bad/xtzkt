@@ -21,6 +21,15 @@ partial class ProtoHelpers
         return size * Context.Protocol.DaFeePerByte18;
     }
 
+    public virtual int GetDaGas(BigInteger effectiveGasPrice, BigInteger daFee)
+    {
+        if (daFee.IsZero || effectiveGasPrice.IsZero)
+            return 0;
+
+        // the kernel reserves whole gas units for the da fee: `ceil_div(exec * base + da, base)`
+        return (int)((daFee + effectiveGasPrice - 1) / effectiveGasPrice);
+    }
+
     public virtual BigInteger GetGasFee(BigInteger effectiveGasPrice, int gasUsed, BigInteger daFee)
     {
         // gasUsed already covers the da fee, rounded up to a whole gas unit

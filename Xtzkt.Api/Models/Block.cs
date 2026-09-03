@@ -124,6 +124,13 @@ public class L1Block : Block
     public long BurnedFees { get; set; }
 
     /// <summary>
+    /// Gas consumed by all the operations in the block: the sum of the per-operation figures, each rounded up
+    /// from milligas. Note that `hardBlockGasLimit` caps the declared gas limits, not the consumed gas.
+    /// </summary>
+    public int GasUsed { get; set; }
+
+
+    /// <summary>
     /// Baker who proposed the block payload and got the baking reward.
     /// </summary>
     public AddressInfo? Proposer { get; set; }
@@ -158,6 +165,19 @@ public class XBlock : Block
     /// Total amount burned by the transactions in the block (18 decimals).
     /// </summary>
     public BigInteger BurnedFees { get; set; }
+
+    /// <summary>
+    /// Pre-refund execution gas of the block's EVM-runtime operations. The EVM side has no per-block
+    /// gas cap to compare it with — the `gasLimit` the node reports for a block is a placeholder.
+    /// </summary>
+    public long EvmGasUsed { get; set; }
+
+    /// <summary>
+    /// Gas consumed by the block's Michelson-runtime operations. Note that `hardMichelsonBlockGasLimit`
+    /// caps the declared gas limits, not the consumed gas.
+    /// </summary>
+    public int MichelsonGasUsed { get; set; }
+
 
     /// <summary>
     /// Sequencer pool that produced the block.

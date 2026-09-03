@@ -83,7 +83,7 @@ partial class TransactionCommit
         }
         var gasFee = fee - daFee;
 
-        var gasRefundUpdate = metadata
+        var gasFeeRefundedUpdate = metadata
             .OptionalArray("balance_updates")?
             .EnumerateArray()
             .FirstOrDefault(x =>
@@ -92,8 +92,8 @@ partial class TransactionCommit
                 x.RequiredInt64("change") < 0)
             ?? default;
 
-        var gasRefund = gasRefundUpdate.ValueKind != JsonValueKind.Undefined
-            ? -gasRefundUpdate.RequiredInt64("change")
+        var gasFeeRefunded = gasFeeRefundedUpdate.ValueKind != JsonValueKind.Undefined
+            ? -gasFeeRefundedUpdate.RequiredInt64("change")
             : 0;
 
         var paidStorageSizeDiff = result.OptionalInt32("paid_storage_size_diff");
@@ -110,7 +110,7 @@ partial class TransactionCommit
             AmountReceived = amountReceived,
             DaFee = daFee,
             GasFee = gasFee,
-            GasRefund = gasRefund,
+            GasFeeRefunded = gasFeeRefunded,
             Counter = counter,
             GasLimit = gasLimit,
             StorageLimit = storageLimit,
@@ -142,7 +142,7 @@ partial class TransactionCommit
         #region apply operation
         Db.TryAttach(sender);
         PayFee(sender, op.DaFee.Value);
-        BurnFee(sender, op.GasFee.Value - op.GasRefund.Value);
+        BurnFee(sender, op.GasFee.Value - op.GasFeeRefunded.Value);
         sender.Counter = op.Counter;
         sender.TransactionsCount++;
         sender.LastLevel = op.Level;
@@ -170,6 +170,7 @@ partial class TransactionCommit
             target.LastTimestamp = op.Timestamp;
         }
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;
@@ -320,9 +321,15 @@ partial class TransactionCommit
         if (initiator != sender && initiator != target)
             initiator.TransactionsCount++;
 
-        cracParent?.GasUsed -= EvmRuntime.ConvertGas(consumedMilligas);
+        if (cracParent != null)
+        {
+            var cracGas = EvmRuntime.ConvertGas(consumedMilligas);
+            cracParent.GasUsed -= cracGas;
+            Context.Block.EvmGasUsed -= cracGas;
+        }
         parent.InternalOperations = (parent.InternalOperations ?? 0) + 1;
 
+        block.MichelsonGasUsed += op.GasUsed;
         block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;
@@ -372,7 +379,7 @@ partial class TransactionCommit
 
         #region revert operation
         RevertPayFee(sender, op.DaFee!.Value);
-        RevertBurnFee(sender, op.GasFee!.Value - op.GasRefund!.Value);
+        RevertBurnFee(sender, op.GasFee!.Value - op.GasFeeRefunded!.Value);
         sender.Counter = op.Counter - 1;
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;

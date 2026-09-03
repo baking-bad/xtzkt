@@ -765,7 +765,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int>("ChainId")
                         .HasColumnType("integer")
-                        .HasColumnOrder(16);
+                        .HasColumnOrder(18);
 
                     b.Property<string>("Extras")
                         .HasColumnType("jsonb");
@@ -776,23 +776,23 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<byte>("Layer")
                         .HasColumnType("smallint")
-                        .HasColumnOrder(31);
+                        .HasColumnOrder(33);
 
                     b.Property<int>("Level")
                         .HasColumnType("integer")
-                        .HasColumnOrder(17);
+                        .HasColumnOrder(19);
 
                     b.Property<int?>("OpsCounter")
                         .HasColumnType("integer")
-                        .HasColumnOrder(20);
+                        .HasColumnOrder(22);
 
                     b.Property<int>("ProtocolId")
                         .HasColumnType("integer")
-                        .HasColumnOrder(18);
+                        .HasColumnOrder(20);
 
                     b.Property<int?>("SubsCounter")
                         .HasColumnType("integer")
-                        .HasColumnOrder(21);
+                        .HasColumnOrder(23);
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
@@ -1465,6 +1465,9 @@ namespace Xtzkt.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int>("ChainId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GasUsed")
                         .HasColumnType("integer");
 
                     b.Property<byte[]>("Hash")
@@ -4736,7 +4739,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int>("BlockRound")
                         .HasColumnType("integer")
-                        .HasColumnOrder(24);
+                        .HasColumnOrder(26);
 
                     b.Property<long>("BonusDelegated")
                         .HasColumnType("bigint")
@@ -4761,21 +4764,27 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int>("Cycle")
                         .HasColumnType("integer")
-                        .HasColumnOrder(19);
+                        .HasColumnOrder(21);
 
                     b.Property<int>("Events")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("Events")
-                        .HasColumnOrder(25);
+                        .HasColumnOrder(27);
+
+                    b.Property<int>("GasUsed")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("GasUsed")
+                        .HasColumnOrder(17);
 
                     b.Property<bool?>("LBToggle")
                         .HasColumnType("boolean")
-                        .HasColumnOrder(32);
+                        .HasColumnOrder(34);
 
                     b.Property<int>("LBToggleEma")
                         .HasColumnType("integer")
-                        .HasColumnOrder(30);
+                        .HasColumnOrder(32);
 
                     b.Property<long>("Operations")
                         .ValueGeneratedOnUpdateSometimes()
@@ -4785,25 +4794,25 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int>("PayloadRound")
                         .HasColumnType("integer")
-                        .HasColumnOrder(23);
+                        .HasColumnOrder(25);
 
                     b.Property<int?>("ProducerId")
                         .HasColumnType("integer")
-                        .HasColumnOrder(27);
+                        .HasColumnOrder(29);
 
                     b.Property<int?>("ProposerId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("ProposerId")
-                        .HasColumnOrder(26);
+                        .HasColumnOrder(28);
 
                     b.Property<int?>("ResetBakerDeactivation")
                         .HasColumnType("integer")
-                        .HasColumnOrder(28);
+                        .HasColumnOrder(30);
 
                     b.Property<int?>("ResetProposerDeactivation")
                         .HasColumnType("integer")
-                        .HasColumnOrder(29);
+                        .HasColumnOrder(31);
 
                     b.Property<long?>("RevelationId")
                         .HasColumnType("bigint")
@@ -4827,7 +4836,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int?>("SoftwareId")
                         .HasColumnType("integer")
-                        .HasColumnOrder(22);
+                        .HasColumnOrder(24);
 
                     b.HasDiscriminator().HasValue((byte)0);
                 });
@@ -4848,7 +4857,17 @@ namespace Xtzkt.Data.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("Events")
-                        .HasColumnOrder(25);
+                        .HasColumnOrder(27);
+
+                    b.Property<long>("EvmGasUsed")
+                        .HasColumnType("bigint")
+                        .HasColumnOrder(16);
+
+                    b.Property<int>("MichelsonGasUsed")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("GasUsed")
+                        .HasColumnOrder(17);
 
                     b.Property<byte[]>("MichelsonHash")
                         .HasColumnType("bytea")
@@ -4864,7 +4883,7 @@ namespace Xtzkt.Data.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("ProposerId")
-                        .HasColumnOrder(26);
+                        .HasColumnOrder(28);
 
                     b.HasDiscriminator().HasValue((byte)1);
                 });
@@ -5121,9 +5140,6 @@ namespace Xtzkt.Data.Migrations
                     b.Property<BigInteger?>("DepositId")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("GasUsed")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("LogsCount")
                         .HasColumnType("integer");
 
@@ -5173,7 +5189,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long>("GasFeeRefunded")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue((byte)1);
@@ -5323,6 +5339,10 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<BigInteger?>("GasPrice")
                         .HasColumnType("numeric");
+
+                    b.Property<int?>("GasRefunded")
+                        .HasColumnType("integer")
+                        .HasColumnName("GasRefunded");
 
                     b.Property<int?>("InternalOperations")
                         .HasColumnType("integer");
@@ -5588,7 +5608,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long>("GasFeeRefunded")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue((byte)1);
@@ -5614,7 +5634,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long>("GasFeeRefunded")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue((byte)1);
@@ -5894,6 +5914,11 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("GasPrice");
 
+                    b.Property<int?>("GasRefunded")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("GasRefunded");
+
                     b.Property<string>("GatewayEntrypoint")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("text")
@@ -6006,6 +6031,11 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("GasPrice");
 
+                    b.Property<int?>("GasRefunded")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("integer")
+                        .HasColumnName("GasRefunded");
+
                     b.Property<byte[]>("Input")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bytea")
@@ -6097,10 +6127,10 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnName("GasFee")
                         .HasColumnOrder(14);
 
-                    b.Property<long?>("GasRefund")
+                    b.Property<long?>("GasFeeRefunded")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasRefund")
+                        .HasColumnName("GasFeeRefunded")
                         .HasColumnOrder(15);
 
                     b.Property<string>("GatewayEntrypoint")
@@ -6185,7 +6215,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GasRefund")
+                    b.Property<long>("GasFeeRefunded")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue((byte)1);
@@ -6442,7 +6472,7 @@ namespace Xtzkt.Data.Migrations
                     b.Property<long?>("GasFee")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("GasRefund")
+                    b.Property<long?>("GasFeeRefunded")
                         .HasColumnType("bigint");
 
                     b.HasDiscriminator().HasValue(2);
@@ -6479,10 +6509,10 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnName("GasFee")
                         .HasColumnOrder(14);
 
-                    b.Property<long?>("GasRefund")
+                    b.Property<long?>("GasFeeRefunded")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint")
-                        .HasColumnName("GasRefund")
+                        .HasColumnName("GasFeeRefunded")
                         .HasColumnOrder(15);
 
                     b.HasDiscriminator().HasValue((byte)2);

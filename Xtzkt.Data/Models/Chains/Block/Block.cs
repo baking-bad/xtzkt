@@ -9,24 +9,24 @@ namespace Xtzkt.Data.Models;
 
 public abstract class Block(Layer layer) : ISourceOperation
 {
-    [Column(Order = 31)]
+    [Column(Order = 33)]
     public Layer Layer { get; private set; } = layer;
 
     [Column(Order = 0)]
     public required long Id { get; set; }
-    [Column(Order = 16)]
+    [Column(Order = 18)]
     public required int ChainId { get; set; }
-    [Column(Order = 17)]
+    [Column(Order = 19)]
     public required int Level { get; set; }
     public required byte[] Hash { get; set; }
     [Column(Order = 1)]
     public required DateTime Timestamp { get; set; }
-    [Column(Order = 18)]
+    [Column(Order = 20)]
     public required int ProtocolId { get; set; }
 
-    [Column(Order = 20)]
+    [Column(Order = 22)]
     public int? OpsCounter { get; set; }
-    [Column(Order = 21)]
+    [Column(Order = 23)]
     public int? SubsCounter { get; set; }
 
     #region binary writer

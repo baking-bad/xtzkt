@@ -75,5 +75,5 @@ public class XIncreasePaidStorageOperation : IncreasePaidStorageOperation
     public long GasFee { get; set; }
 
     /// <summary>Part of the gas fee returned to the sender for the gas that wasn't consumed (mutez).</summary>
-    public long GasRefund { get; set; }
+    public long GasFeeRefunded { get; set; }
 }

@@ -50,26 +50,26 @@ public class RevealRepository(
             {
                 switch (field.Field)
                 {
-                    case "layer":         columns.Add(@"""Layer"""); break;
-                    case "id":            columns.Add(@"""Id"""); break;
-                    case "chain":         columns.Add(@"""ChainId"""); break;
-                    case "level":         columns.Add(@"""Level"""); break;
-                    case "timestamp":     columns.Add(@"""Timestamp"""); break;
-                    case "hash":          columns.Add(@"""Hash"""); break;
-                    case "sender":        columns.Add(@"""SenderId"""); break;
-                    case "counter":       columns.Add(@"""Counter"""); break;
-                    case "gasLimit":      columns.Add(@"""GasLimit"""); break;
-                    case "gasUsed":       columns.Add(@"""GasUsed"""); break;
-                    case "storageLimit":  columns.Add(@"""StorageLimit"""); break;
-                    case "storageUsed":   columns.Add(@"""StorageUsed"""); break;
-                    case "storageFee":    columns.Add(@"""StorageFee"""); break;
-                    case "allocationFee": columns.Add(@"""AllocationFee"""); break;
-                    case "status":        columns.Add(@"""Status"""); break;
-                    case "errors":        columns.Add(@"""Errors"""); break;
-                    case "bakerFee":      columns.Add(@"""BakerFee"""); break;
-                    case "daFee":         columns.Add(@"""DaFee"""); break;
-                    case "gasFee":        columns.Add(@"""GasFee"""); break;
-                    case "gasRefund":     columns.Add(@"""GasRefund"""); break;
+                    case "layer":           columns.Add(@"""Layer"""); break;
+                    case "id":              columns.Add(@"""Id"""); break;
+                    case "chain":           columns.Add(@"""ChainId"""); break;
+                    case "level":           columns.Add(@"""Level"""); break;
+                    case "timestamp":       columns.Add(@"""Timestamp"""); break;
+                    case "hash":            columns.Add(@"""Hash"""); break;
+                    case "sender":          columns.Add(@"""SenderId"""); break;
+                    case "counter":         columns.Add(@"""Counter"""); break;
+                    case "gasLimit":        columns.Add(@"""GasLimit"""); break;
+                    case "gasUsed":         columns.Add(@"""GasUsed"""); break;
+                    case "storageLimit":    columns.Add(@"""StorageLimit"""); break;
+                    case "storageUsed":     columns.Add(@"""StorageUsed"""); break;
+                    case "storageFee":      columns.Add(@"""StorageFee"""); break;
+                    case "allocationFee":   columns.Add(@"""AllocationFee"""); break;
+                    case "status":          columns.Add(@"""Status"""); break;
+                    case "errors":          columns.Add(@"""Errors"""); break;
+                    case "bakerFee":        columns.Add(@"""BakerFee"""); break;
+                    case "daFee":           columns.Add(@"""DaFee"""); break;
+                    case "gasFee":          columns.Add(@"""GasFee"""); break;
+                    case "gasFeeRefunded":  columns.Add(@"""GasFeeRefunded"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
                 }
             }
@@ -166,7 +166,7 @@ public class RevealRepository(
                     Errors = row.Errors,
                     DaFee = row.DaFee,
                     GasFee = row.GasFee,
-                    GasRefund = row.GasRefund,
+                    GasFeeRefunded = row.GasFeeRefunded,
                 },
                 _ => throw new InvalidOperationException("Failed to read RevealOperation")
             };
@@ -264,8 +264,8 @@ public class RevealRepository(
                 case "gasFee":
                     foreach (var row in rows) result[j++][i] = row.GasFee;
                     break;
-                case "gasRefund":
-                    foreach (var row in rows) result[j++][i] = row.GasRefund;
+                case "gasFeeRefunded":
+                    foreach (var row in rows) result[j++][i] = row.GasFeeRefunded;
                     break;
             }
         }

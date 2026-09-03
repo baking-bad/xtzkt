@@ -7,7 +7,7 @@ public class XMichelsonOriginationOperation() : MichelsonOriginationOperation(En
 {
     public long? DaFee { get; set; } // null for internal operations
     public long? GasFee { get; set; } // null for internal operations
-    public long? GasRefund { get; set; } // null for internal operations
+    public long? GasFeeRefunded { get; set; } // null for internal operations
 }
 
 public static class XMichelsonOriginationOperationModel

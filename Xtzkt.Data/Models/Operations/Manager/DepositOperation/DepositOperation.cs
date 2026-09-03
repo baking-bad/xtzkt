@@ -15,6 +15,7 @@ public abstract class DepositOperation(Runtime runtime) : IOperation
     public required byte[] Hash { get; set; }
 
     public OperationStatus Status { get; set; }
+    public int GasUsed { get; set; }
 
     public required int InboxLevel { get; set; }
     public required int InboxMessageId { get; set; }

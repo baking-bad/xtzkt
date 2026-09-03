@@ -63,6 +63,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
             sender.IncreasePaidStorageCount++;
             if (contract != sender) contract.IncreasePaidStorageCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.IncreasePaidStorage;
 
             sender.Counter = operation.Counter;
@@ -80,6 +81,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.IncreasePaidStorageOps.Add(operation);
             Context.IncreasePaidStorageOps.Add(operation);
         }

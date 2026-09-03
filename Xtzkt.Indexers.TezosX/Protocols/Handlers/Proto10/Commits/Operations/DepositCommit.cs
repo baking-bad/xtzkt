@@ -45,6 +45,7 @@ class DepositCommit(ProtocolHandler protocol) : Proto01.DepositCommit(protocol)
         var metadata = feederContent.Required("metadata");
         var result = metadata.Required("operation_result");
         var status = result.RequiredOpStatus("status");
+        var consumedMilligas = result.OptionalInt64("consumed_milligas") ?? 0;
 
         var op = new XMichelsonDepositOperation
         {
@@ -54,6 +55,7 @@ class DepositCommit(ProtocolHandler protocol) : Proto01.DepositCommit(protocol)
             Timestamp = block.Timestamp,
             Hash = hash,
             Status = status,
+            GasUsed = (int)((consumedMilligas + 999) / 1000),
             Amount = (long)(amount / M12), // TODO: make sure rounding loss is impossible
             ReceiverId = receiver.Id,
             InboxLevel = inboxLevel,
@@ -69,6 +71,7 @@ class DepositCommit(ProtocolHandler protocol) : Proto01.DepositCommit(protocol)
         receiver.LastLevel = op.Level;
         receiver.LastTimestamp = op.Timestamp;
 
+        Context.Block.MichelsonGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Deposit;
 
         Cache.Chain.Get().DepositOpsCount++;

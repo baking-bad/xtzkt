@@ -14,8 +14,8 @@ public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Di
     [Column(nameof(GasFee), Order = 14)]
     public long? GasFee { get; set; } // null for internal operations
 
-    [Column(nameof(GasRefund), Order = 15)]
-    public long? GasRefund { get; set; } // null for internal operations
+    [Column(nameof(GasFeeRefunded), Order = 15)]
+    public long? GasFeeRefunded { get; set; } // null for internal operations
 
     #region binary writer
     public static void Write(NpgsqlConnection conn, IEnumerable<XMichelsonTransactionOperation> ops)
@@ -36,7 +36,7 @@ public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Di
                 "{nameof(ParametersRaw)}",
                 "{nameof(DaFee)}",
                 "{nameof(GasFee)}",
-                "{nameof(GasRefund)}"
+                "{nameof(GasFeeRefunded)}"
             )
             FROM STDIN (FORMAT BINARY)
             """);
@@ -58,7 +58,7 @@ public class XMichelsonTransactionOperation() : MichelsonTransactionOperation(Di
             writer.WriteNullable(op.ParametersRaw, NpgsqlDbType.Bytea);
             writer.WriteNullable(op.DaFee, NpgsqlDbType.Bigint);
             writer.WriteNullable(op.GasFee, NpgsqlDbType.Bigint);
-            writer.WriteNullable(op.GasRefund, NpgsqlDbType.Bigint);
+            writer.WriteNullable(op.GasFeeRefunded, NpgsqlDbType.Bigint);
         }
 
         writer.Complete();

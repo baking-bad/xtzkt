@@ -20,6 +20,9 @@ public class XEvmOriginationOperation() : OriginationOperation(Env.XEvm), IParen
     [Column($"{nameof(GasFee)}18")]
     public BigInteger? GasFee { get; set; } // null for internal operations
 
+    [Column(nameof(GasRefunded))]
+    public int? GasRefunded { get; set; } // null unless the transaction earned a gas refund
+
     [Column($"{nameof(Balance)}18")]
     public BigInteger Balance { get; set; }
 

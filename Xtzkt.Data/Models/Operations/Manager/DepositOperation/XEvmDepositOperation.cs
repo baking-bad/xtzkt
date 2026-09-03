@@ -20,8 +20,6 @@ public class XEvmDepositOperation() : DepositOperation(Runtime.Evm), IParentOper
     public int? LogsCount { get; set; }
     public int? BridgeTicketTransfers { get; set; }
 
-    public int GasUsed { get; set; }
-
     #region crutch for nested proxy calls in old etherlink
     [NotMapped]
     public int SenderId { get; set; }

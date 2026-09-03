@@ -14,7 +14,12 @@ partial class TransactionCommit
     public virtual async Task<XEvmTransactionOperation> ApplyInternalEvm(IParentOperation parent, IParentOperation? cracParent, JsonElement trace, OperationStatus traceStatus)
     {
         var op = await ApplyInternalEvm(parent, trace, traceStatus, 0);
-        cracParent?.GasUsed -= MichelsonRuntime.ConvertGas(op.GasUsed);
+        if (cracParent != null)
+        {
+            var cracGas = MichelsonRuntime.ConvertGas(op.GasUsed);
+            cracParent.GasUsed -= cracGas;
+            Context.Block.MichelsonGasUsed -= cracGas;
+        }
         return op;
     }
 

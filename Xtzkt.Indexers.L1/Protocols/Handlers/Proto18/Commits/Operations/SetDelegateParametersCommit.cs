@@ -82,6 +82,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             sender.Counter = operation.Counter;
             sender.SetDelegateParametersOpsCount++;
 
+            block.GasUsed += operation.GasUsed;
             block.Operations |= L1Operations.SetDelegateParameters;
 
             Cache.Chain.Get().SetDelegateParametersOpsCount++;
@@ -95,6 +96,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(operation);
             Db.SetDelegateParametersOps.Add(operation);
             Context.SetDelegateParametersOps.Add(operation);
         }

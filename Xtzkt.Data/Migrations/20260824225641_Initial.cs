@@ -453,6 +453,8 @@ namespace Xtzkt.Data.Migrations
                     BakerFees = table.Column<long>(type: "bigint", nullable: true),
                     BurnedFees = table.Column<long>(type: "bigint", nullable: true),
                     RevelationId = table.Column<long>(type: "bigint", nullable: true),
+                    EvmGasUsed = table.Column<long>(type: "bigint", nullable: true),
+                    GasUsed = table.Column<int>(type: "integer", nullable: true),
                     ChainId = table.Column<int>(type: "integer", nullable: false),
                     Level = table.Column<int>(type: "integer", nullable: false),
                     ProtocolId = table.Column<int>(type: "integer", nullable: false),
@@ -859,6 +861,7 @@ namespace Xtzkt.Data.Migrations
                     Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Hash = table.Column<byte[]>(type: "bytea", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
+                    GasUsed = table.Column<int>(type: "integer", nullable: false),
                     InboxLevel = table.Column<int>(type: "integer", nullable: false),
                     InboxMessageId = table.Column<int>(type: "integer", nullable: false),
                     ReceiverId = table.Column<int>(type: "integer", nullable: false),
@@ -871,7 +874,6 @@ namespace Xtzkt.Data.Migrations
                     SubsCounter = table.Column<int>(type: "integer", nullable: true),
                     LogsCount = table.Column<int>(type: "integer", nullable: true),
                     BridgeTicketTransfers = table.Column<int>(type: "integer", nullable: true),
-                    GasUsed = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
@@ -1041,7 +1043,7 @@ namespace Xtzkt.Data.Migrations
                     BakerFee = table.Column<long>(type: "bigint", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true)
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1167,7 +1169,7 @@ namespace Xtzkt.Data.Migrations
                     BakerId = table.Column<int>(type: "integer", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true),
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true),
                     OpType = table.Column<byte>(type: "smallint", nullable: true),
                     OpCode = table.Column<byte>(type: "smallint", nullable: true),
                     GasPrice = table.Column<BigInteger>(type: "numeric", nullable: true),
@@ -1176,6 +1178,7 @@ namespace Xtzkt.Data.Migrations
                     EffectiveGasPrice = table.Column<BigInteger>(type: "numeric", nullable: true),
                     DaFee18 = table.Column<BigInteger>(type: "numeric", nullable: true),
                     GasFee18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    GasRefunded = table.Column<int>(type: "integer", nullable: true),
                     Balance18 = table.Column<BigInteger>(type: "numeric", nullable: true),
                     InternalOperations = table.Column<int>(type: "integer", nullable: true),
                     LogsCount = table.Column<int>(type: "integer", nullable: true),
@@ -1397,7 +1400,7 @@ namespace Xtzkt.Data.Migrations
                     BakerFee = table.Column<long>(type: "bigint", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true)
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1428,7 +1431,7 @@ namespace Xtzkt.Data.Migrations
                     BakerFee = table.Column<long>(type: "bigint", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true)
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2166,7 +2169,7 @@ namespace Xtzkt.Data.Migrations
                     BakerFee = table.Column<long>(type: "bigint", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true),
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true),
                     ClaimDepositId = table.Column<long>(type: "bigint", nullable: true),
                     InitiatorId = table.Column<int>(type: "integer", nullable: true),
                     Nonce = table.Column<int>(type: "integer", nullable: true),
@@ -2203,6 +2206,7 @@ namespace Xtzkt.Data.Migrations
                     EffectiveGasPrice = table.Column<BigInteger>(type: "numeric", nullable: true),
                     DaFee18 = table.Column<BigInteger>(type: "numeric", nullable: true),
                     GasFee18 = table.Column<BigInteger>(type: "numeric", nullable: true),
+                    GasRefunded = table.Column<int>(type: "integer", nullable: true),
                     Amount18 = table.Column<BigInteger>(type: "numeric", nullable: true),
                     RoundingLoss = table.Column<BigInteger>(type: "numeric", nullable: true),
                     GatewayEntrypoint = table.Column<string>(type: "text", nullable: true),
@@ -2251,7 +2255,7 @@ namespace Xtzkt.Data.Migrations
                     BakerFee = table.Column<long>(type: "bigint", nullable: true),
                     DaFee = table.Column<long>(type: "bigint", nullable: true),
                     GasFee = table.Column<long>(type: "bigint", nullable: true),
-                    GasRefund = table.Column<long>(type: "bigint", nullable: true)
+                    GasFeeRefunded = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {

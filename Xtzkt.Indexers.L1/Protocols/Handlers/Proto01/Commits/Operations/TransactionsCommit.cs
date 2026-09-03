@@ -78,6 +78,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             if (target != sender)
                 target.TransactionsCount++;
 
+            block.GasUsed += transaction.GasUsed;
             block.Operations |= L1Operations.Transaction;
 
             Cache.Chain.Get().TransactionOpsCount++;
@@ -112,6 +113,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(transaction);
             //Db.TransactionOps.Add(transaction);
             Context.TransactionOps.Add(transaction);
             Transaction = transaction;
@@ -180,6 +182,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             if (parentSender != sender && parentSender != target)
                 parentSender.TransactionsCount++;
 
+            block.GasUsed += transaction.GasUsed;
             block.Operations |= L1Operations.Transaction;
 
             Cache.Chain.Get().TransactionOpsCount++;

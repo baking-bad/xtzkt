@@ -79,6 +79,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                     contractBaker.OriginationsCount++;
             }
 
+            Context.Block.GasUsed += origination.GasUsed;
             Context.Block.Operations |= L1Operations.Origination;
 
             Cache.Chain.Get().OriginationOpsCount++;
@@ -154,6 +155,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             #endregion
 
             Proto.Manager.Set(sender);
+            Proto.Manager.Add(origination);
             Db.OriginationOps.Add(origination);
             Context.OriginationOps.Add(origination);
             Origination = origination;
@@ -226,6 +228,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 initiator.OriginationsCount++;
             }
 
+            block.GasUsed += origination.GasUsed;
             block.Operations |= L1Operations.Origination;
 
             Cache.Chain.Get().OriginationOpsCount++;

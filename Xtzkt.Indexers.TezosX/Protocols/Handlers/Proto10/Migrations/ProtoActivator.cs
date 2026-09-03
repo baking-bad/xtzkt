@@ -49,8 +49,8 @@ class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
         Context.Protocol.MichelsonHash = state.MichelsonProtocol;
         Context.Protocol.OriginationSize = constants.OptionalInt32("origination_size") ?? 257;
         Context.Protocol.ByteCost = constants.OptionalInt32("cost_per_byte") ?? 1;
-        Context.Protocol.HardMichelsonBlockGasLimit = constants.OptionalInt32("hard_gas_limit_per_block") ?? 3_000_000;
-        Context.Protocol.HardMichelsonOperationGasLimit = constants.OptionalInt32("hard_gas_limit_per_operation") ?? 3_000_000;
+        Context.Protocol.HardMichelsonBlockGasLimit = constants.OptionalInt32("hard_gas_limit_per_block") ?? 660_000;
+        Context.Protocol.HardMichelsonOperationGasLimit = constants.OptionalInt32("hard_gas_limit_per_operation") ?? 660_000;
         Context.Protocol.HardMichelsonOperationStorageLimit = constants.OptionalInt32("hard_storage_limit_per_operation") ?? 60_000;
         #endregion
 

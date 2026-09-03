@@ -3,7 +3,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Data.Models;
 
-public class L1OriginationOperation() : MichelsonOriginationOperation(Env.L1)
+public class L1OriginationOperation() : MichelsonOriginationOperation(Env.L1), IL1ManagerOperation
 {
     public long? BakerFee { get; set; } // null for internal operations
     public int? BakerId { get; set; }

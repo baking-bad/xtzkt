@@ -72,8 +72,11 @@ public class BlockRepository(
                     case "producer":             columns.Add(@"""ProducerId"""); break;
                     case "lBToggle":             columns.Add(@"""LBToggle"""); break;
                     case "lBToggleEma":          columns.Add(@"""LBToggleEma"""); break;
+                    case "gasUsed":              columns.Add(@"""GasUsed"""); break;
                     // XBlock
                     case "daFees":               columns.Add(@"""BakerFees18"""); break;
+                    case "evmGasUsed":           columns.Add(@"""EvmGasUsed"""); break;
+                    case "michelsonGasUsed":     columns.Add(@"""GasUsed"""); break;
                     case "sequencerPool":        columns.Add(@"""ProposerId"""); break;
                     case "michelsonHash":        columns.Add(@"""MichelsonHash"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
@@ -177,6 +180,7 @@ public class BlockRepository(
                     BonusStakedShared = row.BonusStakedShared,
                     BakerFees = row.BakerFees,
                     BurnedFees = row.BurnedFees,
+                    GasUsed = row.GasUsed,
                     Proposer = _addressCache.GetInfo((int?)row.ProposerId),
                     Producer = _addressCache.GetInfo((int?)row.ProducerId),
                     LBToggle = row.LBToggle,
@@ -194,6 +198,8 @@ public class BlockRepository(
                     Protocol = _protocolCache.GetInfo((int)row.ProtocolId),
                     DaFees = (BigInteger)row.BakerFees18,
                     BurnedFees = (BigInteger)row.BurnedFees18,
+                    EvmGasUsed = row.EvmGasUsed,
+                    MichelsonGasUsed = row.GasUsed,
                     SequencerPool = _addressCache.GetInfo((int?)row.ProposerId),
                     MichelsonHash = row.MichelsonHash is byte[] mh ? Hashes.FormatMichelsonBlockHash(mh) : null,
                 };
@@ -346,9 +352,18 @@ public class BlockRepository(
                 case "lBToggleEma":
                     foreach (var row in rows) result[j++][i] = row.LBToggleEma;
                     break;
+                case "gasUsed":
+                    foreach (var row in rows) result[j++][i] = row.GasUsed;
+                    break;
                 // XBlock
                 case "daFees":
                     foreach (var row in rows) result[j++][i] = (object?)row.BakerFees18;
+                    break;
+                case "evmGasUsed":
+                    foreach (var row in rows) result[j++][i] = row.EvmGasUsed;
+                    break;
+                case "michelsonGasUsed":
+                    foreach (var row in rows) result[j++][i] = row.GasUsed;
                     break;
                 case "sequencerPool":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ProposerId);

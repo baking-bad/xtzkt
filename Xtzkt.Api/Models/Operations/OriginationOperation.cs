@@ -42,7 +42,12 @@ public abstract class OriginationOperation : IOpgActivity, ITokenTransfersSource
     /// <summary>Maximum gas the sender allowed the operation to consume, if it is an external one.</summary>
     public int? GasLimit { get; set; }
 
-    /// <summary>Gas the operation actually consumed.</summary>
+    /// <summary>
+    /// Gas charged as used by the operation, excluding the gas reserved to cover the `daFee`. For EVM
+    /// operations this is before the end-of-transaction gas refund, and it can exceed what the operation
+    /// actually spent: an exceptional halt is charged its whole allowance, and a transaction below the
+    /// EIP-7623 calldata floor is charged that floor.
+    /// </summary>
     public int GasUsed { get; set; }
 
     /// <summary>Operation status (`applied`, `failed`, `backtracked`, `skipped`).</summary>
@@ -103,7 +108,7 @@ public class XMichelsonOriginationOperation : MichelsonOriginationOperation
     public long? GasFee { get; set; }
 
     /// <summary>Part of the gas fee returned to the sender for the gas that wasn't consumed (mutez), if it is an external one.</summary>
-    public long? GasRefund { get; set; }
+    public long? GasFeeRefunded { get; set; }
 }
 
 public class XEvmOriginationOperation : OriginationOperation
@@ -125,6 +130,13 @@ public class XEvmOriginationOperation : OriginationOperation
 
     /// <summary>Fee paid for the gas the operation consumed (18 decimals), if it is an external one.</summary>
     public BigInteger? GasFee { get; set; }
+
+    /// <summary>
+    /// Gas refunded at the end of the transaction (EIP-3529), if any. Already accounted for in `gasFee`,
+    /// whereas `gasUsed` is the pre-refund figure, so the two reconcile as
+    /// `gasFee = effectiveGasPrice * (sum of gasUsed over the operation tree - gasRefunded)`.
+    /// </summary>
+    public int? GasRefunded { get; set; }
 
     /// <summary>Gas price the sender offered, for `legacy` and `access_list` transactions (18 decimals).</summary>
     public BigInteger? GasPrice { get; set; }

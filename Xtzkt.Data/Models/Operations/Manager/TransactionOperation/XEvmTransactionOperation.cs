@@ -33,6 +33,8 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
     [Column($"{nameof(GasFee)}18")]
     public BigInteger? GasFee { get; set; } // null for internal operations
 
+    [Column(nameof(GasRefunded))]
+    public int? GasRefunded { get; set; } // null unless the transaction earned a gas refund
 
     [Column($"{nameof(Amount)}18")]
     public BigInteger Amount { get; set; }
@@ -72,6 +74,7 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
                 "{nameof(EffectiveGasPrice)}",
                 "{nameof(DaFee)}18",
                 "{nameof(GasFee)}18",
+                "{nameof(GasRefunded)}",
                 "{nameof(Amount)}18",
                 "{nameof(Input)}",
                 "{nameof(Output)}",
@@ -95,6 +98,7 @@ public class XEvmTransactionOperation() : TransactionOperation(Direction.XEvm), 
             writer.WriteNullable(op.EffectiveGasPrice, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.DaFee, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.GasFee, NpgsqlDbType.Numeric);
+            writer.WriteNullable(op.GasRefunded, NpgsqlDbType.Integer);
             writer.Write(op.Amount, NpgsqlDbType.Numeric);
             writer.WriteNullable(op.Input, NpgsqlDbType.Bytea);
             writer.WriteNullable(op.Output, NpgsqlDbType.Bytea);

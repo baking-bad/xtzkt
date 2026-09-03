@@ -25,14 +25,16 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var targetAddress = tx.RequiredString("to");
         var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
 
-        var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
-        var (gasUsed, ownGasUsed) = GetRootGasUsed(receipt, trace, frameGasOffset);
         var status = receipt.RequiredEvmOpStatus("status");
+        var receiptGas = receipt.RequiredHexInt32("gasUsed");
+        var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
+        var daFee = Helpers.GetDaFee(tx, isDelayedOp);
+        var daGas = Helpers.GetDaGas(effectiveGasPrice, daFee);
+        var (gasUsed, gasRefunded) = GetCumulativeGas(receiptGas, trace, daGas);
+        var ownGasUsed = GetRootOwnGasUsed(gasUsed, trace, frameGasOffset);
+        var gasFee = Helpers.GetGasFee(effectiveGasPrice, receiptGas, daFee);
         var input = GetInput(tx, trace);
         var output = GetOutput(trace);
-
-        var daFee = Helpers.GetDaFee(tx, isDelayedOp);
-        var gasFee = Helpers.GetGasFee(effectiveGasPrice, gasUsed, daFee);
 
         var op = new XEvmTransactionOperation
         {
@@ -62,6 +64,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             Counter = tx.RequiredHexInt32("nonce"),
             GasLimit = GetGasLimit(tx),
             GasUsed = ownGasUsed,
+            GasRefunded = gasRefunded,
             Status = status,
             Errors = status != OperationStatus.Applied ? GetError(trace) : null,
         };
@@ -106,6 +109,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             target.LastTimestamp = op.Timestamp;
         }
 
+        Context.Block.EvmGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;
@@ -214,6 +218,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         parent.InternalOperations = (parent.InternalOperations ?? 0) + 1;
 
+        Context.Block.EvmGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Transaction;
 
         Cache.Chain.Get().TransactionOpsCount++;
@@ -435,10 +440,9 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         return paramsGuessed.Value && resultGuessed.Value;
     }
 
-    protected virtual (int GasUsed, int OwnGasUsed) GetRootGasUsed(JsonElement receipt, JsonElement trace, int frameGasOffset)
+    protected virtual int GetRootOwnGasUsed(int gasUsed, JsonElement trace, int frameGasOffset)
     {
-        var gasUsed = receipt.RequiredHexInt32("gasUsed");
-        return (gasUsed, gasUsed);
+        return gasUsed;
     }
 
     protected virtual EvmOpCode GetOpCode(JsonElement trace)

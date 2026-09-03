@@ -190,6 +190,29 @@ namespace Xtzkt.Indexers.TezosX.Protocols
             return res;
         }
 
+        protected (int GasUsed, int? GasRefunded) GetCumulativeGas(int receiptGas, JsonElement trace, int daGas)
+        {
+            // early kernels ran without the tracer and left a null placeholder in its place
+            if (trace.ValueKind != JsonValueKind.Object)
+                return (receiptGas - daGas, null);
+
+            var traceGas = trace.RequiredHexInt32("gasUsed");
+            var chargedGas = receiptGas - daGas;
+
+            // the receipt reports `max(spent - refund, EIP-7623 calldata floor)`, and the whole gas limit on an exceptional halt,
+            // so it can exceed what the trace shows as actually spent
+            var gasUsed = Math.Max(traceGas, chargedGas);
+            var gasRefunded = gasUsed - chargedGas;
+
+            #region debug
+            // EIP-3529 caps the refund at a fifth of what was spent, so exceeding it means the da fee we computed came out too large
+            if (gasRefunded > traceGas / 5)
+                throw new Exception($"Refunded gas above the EIP-3529 cap: trace {traceGas}, refunded {gasRefunded}");
+            #endregion
+
+            return (gasUsed, gasRefunded != 0 ? gasRefunded : null);
+        }
+
         protected int GetGasLimit(JsonElement tx)
         {
             var gasLimit = tx.RequiredHexUInt64("gas");

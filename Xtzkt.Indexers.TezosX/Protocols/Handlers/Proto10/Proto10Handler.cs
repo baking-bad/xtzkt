@@ -46,10 +46,14 @@ class Proto10Handler(
             var isFirstOp = true;
             IParentOperation? parentOp = null;
             Dictionary<MetaContent, IParentOperation> cracOps = [];
-            List<IXManagerOperation> managerOps = new(batch.Operations.Count);
+            List<(IXManagerOperation Op, long GasUsed)> managerOps = new(batch.Operations.Count);
 
             foreach (var operation in batch.Operations)
             {
+                var evmGas0 = Context.Block.EvmGasUsed;
+                var michelsonGas0 = Context.Block.MichelsonGasUsed;
+                IXManagerOperation? managerOp = null;
+
                 switch (operation)
                 {
                     case MichelsonOperation mop:
@@ -58,19 +62,19 @@ class Proto10Handler(
                             case "increase_paid_storage":
                                 {
                                     var op = await new IncreasePaidStorageCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
-                                    managerOps.Add(op);
+                                    managerOp = op;
                                     break;
                                 }
                             case "reveal":
                                 {
                                     var op = await new RevealsCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
-                                    managerOps.Add(op);
+                                    managerOp = op;
                                     break;
                                 }
                             case "register_global_constant":
                                 {
                                     var op = await new RegisterConstantsCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
-                                    managerOps.Add(op);
+                                    managerOp = op;
                                     break;
                                 }
                             case "origination":
@@ -81,7 +85,7 @@ class Proto10Handler(
                                     if (commit.BigMapDiffs != null)
                                         bigMapCommit.Append(commit.Origination, commit.Contract!, commit.BigMapDiffs);
 
-                                    managerOps.Add(commit.Origination);
+                                    managerOp = commit.Origination;
                                     break;
                                 }
                             case "transaction":
@@ -96,7 +100,7 @@ class Proto10Handler(
                                         ticketsCommit.Append(op, op, ticketUpdates);
 
                                     parentOp = op;
-                                    managerOps.Add(op);
+                                    managerOp = op;
                                     break;
                                 }
                             case "transfer_ticket":
@@ -108,7 +112,7 @@ class Proto10Handler(
                                         ticketsCommit.Append(commit.Operation, commit.Operation, commit.TicketUpdates);
 
                                     parentOp = commit.Operation;
-                                    managerOps.Add(commit.Operation);
+                                    managerOp = commit.Operation;
                                     break;
                                 }
                             default:
@@ -161,8 +165,8 @@ class Proto10Handler(
                         {
                             var op = await new TransactionCommit(this).ApplyMichelsonEvm(batch.Hash, mop.Content, batch.Delayed, isFirstOp, eiop.Trace);
                             await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
-                            managerOps.Add(op);
                             parentOp = op;
+                            managerOp = op;
                             cracOps.Add(operation, parentOp);
                             break;
                         }
@@ -202,7 +206,7 @@ class Proto10Handler(
 
                                         if (commit.BigMapDiffs != null)
                                             bigMapCommit.Append(commit.Origination, commit.Contract!, commit.BigMapDiffs);
-                                        
+
                                         break;
                                     }
                                 case "transaction":
@@ -282,37 +286,78 @@ class Proto10Handler(
                 }
 
                 isFirstOp = false;
+                if (managerOp != null)
+                {
+                    var evmGas = Context.Block.EvmGasUsed - evmGas0;
+                    var michelsonGas = Context.Block.MichelsonGasUsed - michelsonGas0;
+
+                    // note: gasUsed can be underestimated due to evm gas conversion rounding
+                    var gasUsed = michelsonGas + MichelsonRuntime.ConvertGas((int)evmGas);
+                    // and/or overestimated due to milligas rounding
+                    gasUsed = Math.Min(gasUsed, managerOp.GasLimit!.Value);
+
+                    #region debug
+                    if (gasUsed < 0)
+                        throw new Exception("Gas used cannot be negative");
+                    #endregion
+
+                    managerOps.Add((managerOp, gasUsed));
+                }
             }
 
             #region normalize michelson fees
             if (managerOps.Count > 1)
             {
                 var totalGasFee = 0L;
-                var totalGasRefund = 0L;
+                var totalGasFeeRefunded = 0L;
                 var totalGasLimit = 0L;
-                foreach (var op in managerOps)
+                var totalGasUsed = 0L;
+                foreach (var (op, gasUsed) in managerOps)
                 {
                     totalGasFee += op.GasFee!.Value;
-                    totalGasRefund += op.GasRefund!.Value;
+                    totalGasFeeRefunded += op.GasFeeRefunded!.Value;
                     totalGasLimit += op.GasLimit!.Value;
+                    totalGasUsed += gasUsed;
                 }
+                var actualFee = totalGasFee - totalGasFeeRefunded;
 
                 if (totalGasLimit != 0)
                 {
                     var sumFee = 0L;
-                    var sumRefund = 0L;
-                    foreach (var op in managerOps)
+                    foreach (var (op, _) in managerOps)
                     {
                         op.GasFee = totalGasFee * op.GasLimit!.Value / totalGasLimit;
                         sumFee += op.GasFee.Value;
-
-                        // TODO: when GasUsed is fixed, distribute GasRefund by GasUsed instead
-                        op.GasRefund = totalGasRefund * op.GasLimit.Value / totalGasLimit;
-                        sumRefund += op.GasRefund.Value;
                     }
+                    managerOps[0].Op.GasFee += totalGasFee - sumFee;
+                }
 
-                    managerOps[0].GasFee += totalGasFee - sumFee;
-                    managerOps[0].GasRefund += totalGasRefund - sumRefund;
+                if (totalGasUsed != 0)
+                {
+                    var sumRefund = 0L;
+                    foreach (var (op, gasUsed) in managerOps)
+                    {
+                        op.GasFeeRefunded = Math.Max(0, op.GasFee!.Value - actualFee * gasUsed / totalGasUsed);
+                        sumRefund += op.GasFeeRefunded.Value;
+                    }
+                    var refundRem = totalGasFeeRefunded - sumRefund;
+                    if (refundRem >= 0)
+                    {
+                        managerOps[0].Op.GasFeeRefunded += refundRem;
+                    }
+                    else // rounding can hand out more than the batch was refunded
+                    {
+                        foreach (var (op, _) in managerOps)
+                        {
+                            var take = Math.Min(-refundRem, op.GasFeeRefunded!.Value);
+                            op.GasFeeRefunded -= take;
+                            refundRem += take;
+                            if (refundRem == 0) break;
+                        }
+
+                        if (refundRem != 0)
+                            throw new Exception("Refund distribution math is broken");
+                    }
                 }
             }
             #endregion

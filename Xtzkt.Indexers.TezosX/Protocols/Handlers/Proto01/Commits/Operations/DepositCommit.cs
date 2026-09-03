@@ -25,6 +25,8 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var proxy = proxyAddress == null ? null : await Helpers.GetOrCreateXEvmAddress(proxyAddress);
 
         var status = feederReceipt.RequiredEvmOpStatus("status");
+        // deposits are crafted by the kernel, so no da fee and no gas refund
+        var gasUsed = feederReceipt.RequiredHexInt32("gasUsed");
 
         var op = new XEvmDepositOperation
         {
@@ -42,7 +44,7 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             TicketHash = ticketHash,
             ProxyId = proxy?.Id,
             DepositId = GetDepositId(feederReceipt),
-            GasUsed = feederReceipt.RequiredHexInt32("gasUsed"),
+            GasUsed = gasUsed,
 
             #region crutch for nested proxy calls in old etherlink
             SenderId = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress)).Id,
@@ -66,6 +68,7 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             proxy.LastTimestamp = op.Timestamp;
         }
 
+        Context.Block.EvmGasUsed += op.GasUsed;
         Context.Block.Operations |= XOperations.Deposit;
 
         Cache.Chain.Get().DepositOpsCount++;
