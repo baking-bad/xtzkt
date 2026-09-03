@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Dynamic.Json;
 using Netezos.Encoding;
 using Npgsql;

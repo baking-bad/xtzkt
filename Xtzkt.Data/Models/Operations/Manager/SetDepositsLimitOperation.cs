@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models.Operations.Abstract;
 

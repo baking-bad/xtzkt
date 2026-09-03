@@ -1,4 +1,4 @@
-﻿using Netezos.Encoding;
+using Netezos.Encoding;
 using Netezos.Utils;
 
 namespace Xtzkt.Indexers.L1.Protocols

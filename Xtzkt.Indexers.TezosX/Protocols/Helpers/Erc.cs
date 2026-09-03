@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;

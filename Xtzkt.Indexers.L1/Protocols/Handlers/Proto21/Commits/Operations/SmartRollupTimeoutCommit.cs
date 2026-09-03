@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto21
+namespace Xtzkt.Indexers.L1.Protocols.Proto21
 {
     class SmartRollupTimeoutCommit : Proto16.SmartRollupTimeoutCommit
     {

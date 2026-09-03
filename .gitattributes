@@ -1,0 +1,6 @@
+* text=auto
+
+# Read by tooling that needs LF on any platform, so pin these even on a CRLF checkout.
+*.sh text eol=lf
+*.pgsql text eol=lf
+Dockerfile text eol=lf

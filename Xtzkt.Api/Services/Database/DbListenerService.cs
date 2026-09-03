@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Npgsql;
 using System.Data;
 using Xtzkt.Api.Services.Cache;

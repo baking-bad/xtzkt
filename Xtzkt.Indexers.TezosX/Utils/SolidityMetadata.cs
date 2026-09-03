@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Formats.Cbor;
 using System.Numerics;
 using Xtzkt.Utils.Encoding;

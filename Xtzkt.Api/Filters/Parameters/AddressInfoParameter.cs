@@ -1,4 +1,4 @@
-﻿using Xtzkt.Api.Filters.Base;
+using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
 using Xtzkt.Api.Services.ResponseCache;
 using Microsoft.AspNetCore.Mvc;

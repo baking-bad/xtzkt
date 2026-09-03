@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Repositories;

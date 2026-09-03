@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Services.Domains
+namespace Xtzkt.Indexers.L1.Services.Domains
 {
     public class DomainsConfig
     {

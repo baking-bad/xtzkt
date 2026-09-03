@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.TezosX.Utils
+namespace Xtzkt.Indexers.TezosX.Utils
 {
     static class HexNumber
     {

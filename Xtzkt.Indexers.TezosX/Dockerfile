@@ -17,8 +17,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 
 # curl for health checks
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends curl \
-	&& rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # non-root uid defined by the .NET base images
 USER $APP_UID
@@ -30,7 +30,7 @@ EXPOSE 8080
 
 # every service maps GET /health, which answers 200 while the host is serving
 HEALTHCHECK --interval=15s --start-interval=2s --timeout=6s --start-period=300s --retries=5 \
-	CMD curl -fsS --max-time 5 "http://localhost:${ASPNETCORE_HTTP_PORTS:-8080}/health" || exit 1
+    CMD curl -fsS --max-time 5 "http://localhost:${ASPNETCORE_HTTP_PORTS:-8080}/health" || exit 1
 
 # ------------------------------------------------------------------------------------------
 # restore — NuGet layer, invalidated only by changes to the project files
@@ -66,12 +66,12 @@ COPY . .
 # --arch must match the restore above; it also drops the native assets of every other RID,
 # which for this project is ~34 MB of publish output down to ~20 MB
 RUN dotnet publish "Xtzkt.Indexers.TezosX/Xtzkt.Indexers.TezosX.csproj" \
-	--configuration $BUILD_CONFIGURATION \
-	--arch $TARGETARCH \
-	--no-restore \
-	--output /app/publish \
-	-p:UseAppHost=false \
-	-p:ContinuousIntegrationBuild=true
+    --configuration $BUILD_CONFIGURATION \
+    --arch $TARGETARCH \
+    --no-restore \
+    --output /app/publish \
+    -p:UseAppHost=false \
+    -p:ContinuousIntegrationBuild=true
 
 # ------------------------------------------------------------------------------------------
 # final

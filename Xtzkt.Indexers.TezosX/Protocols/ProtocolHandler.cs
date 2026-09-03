@@ -1,4 +1,4 @@
-﻿using App.Metrics;
+using App.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;

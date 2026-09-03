@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto20
+namespace Xtzkt.Indexers.L1.Protocols.Proto20
 {
     class SmartRollupRecoverBondCommit : Proto16.SmartRollupRecoverBondCommit
     {

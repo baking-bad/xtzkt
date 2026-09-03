@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Services.Metadata.Resolvers.Evm;
+namespace Xtzkt.Services.Metadata.Resolvers.Evm;
 
 public sealed class EvmResolverConfig
 {

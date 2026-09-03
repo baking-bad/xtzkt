@@ -1,4 +1,4 @@
-﻿using Xtzkt.Indexers.L1.Protocols;
+using Xtzkt.Indexers.L1.Protocols;
 
 namespace Xtzkt.Indexers.L1
 {

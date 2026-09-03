@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Utils.Extensions;
+namespace Xtzkt.Utils.Extensions;
 public static class DateTimeExtension
 {
     public static DateTime TrimMilliseconds(this DateTime value)

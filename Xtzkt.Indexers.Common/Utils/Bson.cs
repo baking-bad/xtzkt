@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
 using Netezos.Encoding;
 

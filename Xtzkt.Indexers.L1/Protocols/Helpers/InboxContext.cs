@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols
+namespace Xtzkt.Indexers.L1.Protocols
 {
     public class InboxContext
     {

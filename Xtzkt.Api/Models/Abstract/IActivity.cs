@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Models.Operations;
 

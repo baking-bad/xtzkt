@@ -1,4 +1,4 @@
-﻿using Xtzkt.Indexers.TezosX.Services;
+using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 

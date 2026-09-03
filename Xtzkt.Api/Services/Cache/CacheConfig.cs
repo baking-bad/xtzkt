@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Api.Services.Cache
+namespace Xtzkt.Api.Services.Cache
 {
     public class CacheConfig
     {

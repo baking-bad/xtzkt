@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Npgsql.Internal;
 using Npgsql.Internal.Postgres;
 

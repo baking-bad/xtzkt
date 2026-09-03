@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Xtzkt.Api.Extensions;
 using Xtzkt.Api.Filters.Parameters;
 

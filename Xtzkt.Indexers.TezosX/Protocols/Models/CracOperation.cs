@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.TezosX.Protocols.Models;
+namespace Xtzkt.Indexers.TezosX.Protocols.Models;
 
 public sealed class CracOperation : MetaOperation
 {

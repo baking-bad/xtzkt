@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Api.Exceptions
+namespace Xtzkt.Api.Exceptions
 {
     public class BadRequestException(string field, string message) : Exception(message)
     {

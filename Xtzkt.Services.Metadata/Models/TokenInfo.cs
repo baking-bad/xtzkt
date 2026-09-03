@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Xtzkt.Data.Models;
 
 namespace Xtzkt.Services.Metadata.Models;

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;

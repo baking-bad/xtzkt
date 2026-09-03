@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto06
+namespace Xtzkt.Indexers.L1.Protocols.Proto06
 {
     class DelegationsCommit : Proto01.DelegationsCommit
     {

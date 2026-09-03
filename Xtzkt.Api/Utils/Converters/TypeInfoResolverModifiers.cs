@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text.Json.Serialization.Metadata;
 
 namespace Xtzkt.Api.Utils.Converters;

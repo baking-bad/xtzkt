@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.Common.Exceptions;
+namespace Xtzkt.Indexers.Common.Exceptions;
 
 public class BaseException(string message, bool rebase = false) : Exception(message)
 {

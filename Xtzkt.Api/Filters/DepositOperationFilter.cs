@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Services.ResponseCache;
 

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto05
+namespace Xtzkt.Indexers.L1.Protocols.Proto05
 {
     class ProposalsCommit : Proto03.ProposalsCommit
     {

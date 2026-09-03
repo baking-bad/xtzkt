@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto03
+namespace Xtzkt.Indexers.L1.Protocols.Proto03
 {
     class DoubleBakingCommit : Proto02.DoubleBakingCommit
     {

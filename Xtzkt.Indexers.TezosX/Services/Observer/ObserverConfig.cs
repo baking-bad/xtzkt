@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.TezosX.Services
+namespace Xtzkt.Indexers.TezosX.Services
 {
     public class ObserverConfig
     {

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data;

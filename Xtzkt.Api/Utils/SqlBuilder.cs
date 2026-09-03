@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using System.Numerics;
 using Netezos.Encoding;
 using Xtzkt.Api.Exceptions;

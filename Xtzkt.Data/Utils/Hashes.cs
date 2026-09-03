@@ -1,4 +1,4 @@
-﻿using Netezos;
+using Netezos;
 using Xtzkt.Data.Models;
 using Xtzkt.Utils.Encoding;
 

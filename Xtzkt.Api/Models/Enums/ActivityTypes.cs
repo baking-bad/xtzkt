@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Api.Models.Enums;
+namespace Xtzkt.Api.Models.Enums;
 
 public class ActivityTypes
 {

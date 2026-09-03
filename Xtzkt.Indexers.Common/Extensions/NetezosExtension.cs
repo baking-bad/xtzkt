@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Netezos.Contracts;
 using Netezos.Encoding;
 using Base58 = Xtzkt.Utils.Encoding.Base58;

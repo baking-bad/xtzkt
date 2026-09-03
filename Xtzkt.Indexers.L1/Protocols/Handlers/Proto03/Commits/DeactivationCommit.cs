@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto03
+namespace Xtzkt.Indexers.L1.Protocols.Proto03
 {
     class DeactivationCommit : Proto02.DeactivationCommit
     {

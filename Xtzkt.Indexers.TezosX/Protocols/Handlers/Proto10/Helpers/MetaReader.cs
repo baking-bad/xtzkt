@@ -1,4 +1,4 @@
-﻿using Xtzkt.Data.Utils;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 

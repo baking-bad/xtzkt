@@ -1,4 +1,4 @@
-﻿using Xtzkt.Data;
+using Xtzkt.Data;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.Common.Utils;
 

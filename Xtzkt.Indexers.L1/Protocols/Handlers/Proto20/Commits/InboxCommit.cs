@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto20
+namespace Xtzkt.Indexers.L1.Protocols.Proto20
 {
     public class InboxCommit : Proto17.InboxCommit
     {

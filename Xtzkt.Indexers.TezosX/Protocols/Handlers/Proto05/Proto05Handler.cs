@@ -1,4 +1,4 @@
-﻿using App.Metrics;
+using App.Metrics;
 using Xtzkt.Data;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Proto05;

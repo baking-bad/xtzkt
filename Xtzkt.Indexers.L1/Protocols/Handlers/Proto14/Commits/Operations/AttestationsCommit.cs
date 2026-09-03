@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto14
+namespace Xtzkt.Indexers.L1.Protocols.Proto14
 {
     class AttestationsCommit : Proto12.AttestationsCommit
     {

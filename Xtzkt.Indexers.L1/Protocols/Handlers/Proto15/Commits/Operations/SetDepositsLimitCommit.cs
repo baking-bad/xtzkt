@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto15
+namespace Xtzkt.Indexers.L1.Protocols.Proto15
 {
     class SetDepositsLimitCommit : Proto12.SetDepositsLimitCommit
     {

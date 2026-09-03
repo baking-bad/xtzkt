@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using App.Metrics;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;

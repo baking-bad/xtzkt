@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AspNetCore.Mvc;
+namespace Microsoft.AspNetCore.Mvc;
 
 static class ControllerBaseExtension
 {

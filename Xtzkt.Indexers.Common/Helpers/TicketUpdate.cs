@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Netezos.Encoding;
 using Netezos.Forging;
 using Xtzkt.Indexers.Common.Extensions;

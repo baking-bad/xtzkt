@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Xtzkt.Data.Models.Operations.Abstract;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Models;

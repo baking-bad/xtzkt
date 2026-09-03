@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Services
+namespace Xtzkt.Indexers.L1.Services
 {
     public class CoingeckoProviderConfig
     {

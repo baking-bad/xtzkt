@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto11
+namespace Xtzkt.Indexers.L1.Protocols.Proto11
 {
     class VotingCommit : Proto08.VotingCommit
     {

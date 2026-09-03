@@ -1,4 +1,4 @@
-﻿using Blake2Fast;
+using Blake2Fast;
 using Netezos.Encoding;
 using Xtzkt.Indexers.Common.Extensions;
 

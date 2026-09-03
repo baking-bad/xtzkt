@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto13
+namespace Xtzkt.Indexers.L1.Protocols.Proto13
 {
     class BigMapCommit : Proto01.BigMapCommit
     {

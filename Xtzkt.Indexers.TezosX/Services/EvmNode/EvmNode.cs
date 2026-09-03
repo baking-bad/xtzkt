@@ -1,4 +1,4 @@
-﻿using Netezos;
+using Netezos;
 using Netezos.Encoding;
 using System.Text.Json;
 using System.Text.Json.Serialization;

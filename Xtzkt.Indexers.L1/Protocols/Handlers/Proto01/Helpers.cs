@@ -1,4 +1,4 @@
-﻿using Xtzkt.Data.Models;
+using Xtzkt.Data.Models;
 using Xtzkt.Indexers.L1.Services;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto01

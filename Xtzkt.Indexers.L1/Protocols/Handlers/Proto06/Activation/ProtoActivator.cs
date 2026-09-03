@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using Xtzkt.Data.Models;
 

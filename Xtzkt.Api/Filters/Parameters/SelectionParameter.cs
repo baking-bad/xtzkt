@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;

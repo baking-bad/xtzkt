@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;

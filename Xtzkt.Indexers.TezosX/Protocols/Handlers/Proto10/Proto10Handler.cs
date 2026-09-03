@@ -1,4 +1,4 @@
-﻿using App.Metrics;
+using App.Metrics;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto14
+namespace Xtzkt.Indexers.L1.Protocols.Proto14
 {
     class BlockCommit : Proto13.BlockCommit
     {

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using Xtzkt.Data.Models;
 
 namespace Xtzkt.Indexers.L1.Protocols.Proto03

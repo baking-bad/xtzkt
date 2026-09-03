@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;

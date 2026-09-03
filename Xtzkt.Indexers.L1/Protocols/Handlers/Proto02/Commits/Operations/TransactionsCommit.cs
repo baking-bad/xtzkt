@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;

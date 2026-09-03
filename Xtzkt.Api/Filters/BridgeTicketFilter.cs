@@ -1,4 +1,4 @@
-﻿using Xtzkt.Api.Filters.Base;
+using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Services.ResponseCache;
 

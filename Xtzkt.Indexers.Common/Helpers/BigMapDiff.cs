@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Netezos.Encoding;
 using Xtzkt.Indexers.Common.Exceptions;
 using Xtzkt.Indexers.Common.Extensions;

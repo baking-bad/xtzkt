@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02;

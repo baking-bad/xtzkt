@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Xtzkt.Api.Filters.Base;
 
 namespace Xtzkt.Api.Filters.Parameters

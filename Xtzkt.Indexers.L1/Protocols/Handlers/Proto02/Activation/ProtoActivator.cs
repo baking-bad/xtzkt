@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto02
+namespace Xtzkt.Indexers.L1.Protocols.Proto02
 {
     class StatisticsCommit : Proto01.StatisticsCommit
     {

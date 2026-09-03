@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.Common.Utils;
+namespace Xtzkt.Indexers.Common.Utils;
 
 public sealed class BytesComparer : IComparer<byte[]>
 {

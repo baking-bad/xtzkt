@@ -1,4 +1,4 @@
-﻿using Xtzkt.Indexers.Common.Cache;
+using Xtzkt.Indexers.Common.Cache;
 
 namespace Xtzkt.Indexers.TezosX.Services
 {

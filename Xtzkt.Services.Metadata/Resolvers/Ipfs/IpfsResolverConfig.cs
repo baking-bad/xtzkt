@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Services.Metadata.Resolvers.Ipfs;
+namespace Xtzkt.Services.Metadata.Resolvers.Ipfs;
 
 public sealed class IpfsResolverConfig
 {

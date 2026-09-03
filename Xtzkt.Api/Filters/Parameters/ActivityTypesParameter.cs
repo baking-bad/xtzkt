@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;

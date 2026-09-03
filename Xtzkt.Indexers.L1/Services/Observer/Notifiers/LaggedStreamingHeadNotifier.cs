@@ -1,4 +1,4 @@
-﻿using Xtzkt.Indexers.Common.Services;
+using Xtzkt.Indexers.Common.Services;
 
 namespace Xtzkt.Indexers.L1.Services.Observer.Notifiers
 {

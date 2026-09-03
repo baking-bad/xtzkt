@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto08
+namespace Xtzkt.Indexers.L1.Protocols.Proto08
 {
     class OriginationsCommit : Proto05.OriginationsCommit
     {

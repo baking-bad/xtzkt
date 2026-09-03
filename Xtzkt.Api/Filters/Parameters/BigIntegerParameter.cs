@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;

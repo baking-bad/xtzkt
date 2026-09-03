@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.TezosX.Services.Observer.Notifiers;
+namespace Xtzkt.Indexers.TezosX.Services.Observer.Notifiers;
 
 class StreamingHeadNotifier(EvmNode _node, ILogger _logger) : HeadNotifier(_logger)
 {

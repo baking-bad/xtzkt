@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Xtzkt.Indexers.Common.Services;
 using Xtzkt.Indexers.L1.Services.Observer.Notifiers;
 

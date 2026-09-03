@@ -1,4 +1,4 @@
-﻿using Dynamic.Json;
+using Dynamic.Json;
 using Netezos.Keys;
 using Xtzkt.Indexers.Common.Extensions;
 

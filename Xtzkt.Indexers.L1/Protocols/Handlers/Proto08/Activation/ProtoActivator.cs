@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 

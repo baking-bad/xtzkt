@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;

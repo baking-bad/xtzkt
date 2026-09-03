@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;

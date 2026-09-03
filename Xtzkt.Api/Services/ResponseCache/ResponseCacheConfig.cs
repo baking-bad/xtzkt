@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Api.Services.ResponseCache;
+namespace Xtzkt.Api.Services.ResponseCache;
 
 public class ResponseCacheConfig
 {

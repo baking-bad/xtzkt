@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Netezos.Contracts;

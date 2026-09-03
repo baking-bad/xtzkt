@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.Common.Cache;
+namespace Xtzkt.Indexers.Common.Cache;
 
 public class CacheSize
 {

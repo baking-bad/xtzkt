@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+using System.Buffers;
 using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Data.Models;

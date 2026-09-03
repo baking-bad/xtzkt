@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers

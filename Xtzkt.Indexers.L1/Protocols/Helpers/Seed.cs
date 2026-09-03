@@ -1,4 +1,4 @@
-﻿using Blake2Fast;
+using Blake2Fast;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.L1.Protocols

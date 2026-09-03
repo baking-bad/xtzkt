@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto19
+namespace Xtzkt.Indexers.L1.Protocols.Proto19
 {
     class UpdateSecondaryKeyCommit : Proto15.UpdateSecondaryKeyCommit
     {

@@ -1,4 +1,4 @@
-﻿using Xtzkt.Api.Models.Abstract;
+using Xtzkt.Api.Models.Abstract;
 
 namespace Xtzkt.Api.Models.Enums;
 

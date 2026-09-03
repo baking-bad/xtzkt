@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto09
+namespace Xtzkt.Indexers.L1.Protocols.Proto09
 {
     class Diagnostics : Proto05.Diagnostics
     {

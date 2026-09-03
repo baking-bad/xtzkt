@@ -1,4 +1,4 @@
-﻿using Netezos;
+using Netezos;
 using System.Numerics;
 using Xtzkt.Indexers.Common.Cache;
 using Xtzkt.Indexers.TezosX.Protocols.Models;

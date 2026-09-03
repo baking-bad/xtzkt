@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using NpgsqlTypes;
 using System.ComponentModel.DataAnnotations.Schema;

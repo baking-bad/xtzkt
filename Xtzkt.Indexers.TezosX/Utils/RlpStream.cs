@@ -1,4 +1,4 @@
-﻿using Xtzkt.Utils.Encoding;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Utils;
 

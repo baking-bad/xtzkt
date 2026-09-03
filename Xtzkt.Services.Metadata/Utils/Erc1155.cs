@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Services.Metadata.Utils

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto18
+namespace Xtzkt.Indexers.L1.Protocols.Proto18
 {
     class SmartRollupRefuteCommit : Proto16.SmartRollupRefuteCommit
     {

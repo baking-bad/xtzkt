@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
 using System.Diagnostics.Contracts;
 using System.Text.Json;

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Json;
 using Secp256k1Net;
 using Xtzkt.Indexers.Common.Extensions;

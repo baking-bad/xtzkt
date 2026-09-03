@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto24
+namespace Xtzkt.Indexers.L1.Protocols.Proto24
 {
     class DoubleBakingCommit(ProtocolHandler protocol) : Proto19.DoubleBakingCommit(protocol) { }
 }

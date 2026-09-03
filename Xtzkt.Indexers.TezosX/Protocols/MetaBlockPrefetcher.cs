@@ -1,4 +1,4 @@
-﻿using Xtzkt.Indexers.TezosX.Protocols.Abstract;
+using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;

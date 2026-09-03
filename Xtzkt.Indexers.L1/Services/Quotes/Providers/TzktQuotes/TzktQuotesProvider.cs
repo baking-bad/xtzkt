@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Utils.Network;

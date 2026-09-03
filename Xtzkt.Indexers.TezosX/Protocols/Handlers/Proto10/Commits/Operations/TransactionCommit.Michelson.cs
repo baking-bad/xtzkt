@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Json;
 using Netezos.Forging;
 using Xtzkt.Data.Models;

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Api.Models;
+namespace Xtzkt.Api.Models;
 
 public class Account
 {

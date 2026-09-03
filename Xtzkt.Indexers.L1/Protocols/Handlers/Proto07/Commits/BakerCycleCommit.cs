@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.L1.Protocols.Proto07
+namespace Xtzkt.Indexers.L1.Protocols.Proto07
 {
     class BakerCycleCommit : Proto06.BakerCycleCommit
     {

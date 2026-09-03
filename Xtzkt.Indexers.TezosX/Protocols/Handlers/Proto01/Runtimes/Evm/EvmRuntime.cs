@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Utils.Crypto;
 using Xtzkt.Utils.Encoding;

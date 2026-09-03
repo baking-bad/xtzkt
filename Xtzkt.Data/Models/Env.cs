@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Data.Models;
+namespace Xtzkt.Data.Models;
 
 public enum Env
 {

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Data.Models.Operations.Abstract;
+namespace Xtzkt.Data.Models.Operations.Abstract;
 
 public interface IOperation
 {

@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Indexers.Common.Extensions;
+namespace Xtzkt.Indexers.Common.Extensions;
 
 public static class Int64Extension
 {

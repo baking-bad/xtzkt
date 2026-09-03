@@ -1,4 +1,4 @@
-﻿using Xtzkt.Data;
+using Xtzkt.Data;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Services;
 

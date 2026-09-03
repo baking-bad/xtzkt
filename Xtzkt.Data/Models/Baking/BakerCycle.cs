@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Xtzkt.Data.Models

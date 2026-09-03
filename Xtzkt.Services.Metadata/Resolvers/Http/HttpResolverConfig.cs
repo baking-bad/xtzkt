@@ -1,4 +1,4 @@
-﻿namespace Xtzkt.Services.Metadata.Resolvers.Http;
+namespace Xtzkt.Services.Metadata.Resolvers.Http;
 
 public sealed class HttpResolverConfig
 {

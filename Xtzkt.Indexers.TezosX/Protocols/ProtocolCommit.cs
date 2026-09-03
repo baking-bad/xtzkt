@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
