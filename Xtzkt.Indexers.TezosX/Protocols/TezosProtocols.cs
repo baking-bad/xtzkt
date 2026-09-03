@@ -39,7 +39,7 @@ namespace Xtzkt.Indexers.TezosX
             {
                 #region etherlink
                 // Genesis 0.0
-                "0x00213a23a7a34cfbb7c1aba008d2fcad9d6e060882ffeb9745f6e3f039ece5e166" => services.GetRequiredService<Proto01Handler>(),
+                "0x0021b5a05595104efcbf3d86346ce900040111959087ab4e5a2d222a614dc175ad" => services.GetRequiredService<Proto01Handler>(),
                 // Genesis 0.1
                 "0x00d84727b4afdae430cb694115a672bebfe6cd8c6ccc358298bd29f496c3626519" => services.GetRequiredService<Proto01Handler>(),
                 // Etherlink 1.0

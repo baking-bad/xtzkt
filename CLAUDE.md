@@ -70,7 +70,7 @@ This is an aggregated Tezos blockchain indexer, combining data from multiple cha
 
 ### Data models
 
-All data models live in `Xtzkt.Data/Models`. Every model is configured via `ModelBuilder` extension, placed in the same file. For complex models, for example `Address`, a TPH hierarchy is used.
+All data models live in `Xtzkt.Data/Models`. Every model is configured via `ModelBuilder` extension, placed in the same file. For complex models, for example `Address`, a TPH hierarchy is used. When two TPH siblings share a column, the explicit `[Column(name)]` must be on **both** — otherwise EF silently emits two columns and the build still passes; only `dotnet ef dbcontext script` shows it.
 
 ### DB Migrations
 
@@ -85,6 +85,8 @@ dotnet ef migrations add <Name> --project Xtzkt.Data --startup-project Xtzkt.Ind
 # Apply pending migrations manually
 dotnet ef database update --project Xtzkt.Data --startup-project Xtzkt.Indexers.L1
 ```
+
+`dotnet ef` writes generated sources with a UTF-8 BOM, which the root `.editorconfig` forbids — strip it after regenerating.
 
 ### Index ownership
 
@@ -148,6 +150,12 @@ Accepted asymmetries — these are **intentional**, do not "fix" them:
 - `LastLevel = block.Level` in `Revert` (Tickets/Tokens commits) instead of restoring the previous value — known systemic cosmetic issue.
 - `contract.Tags` / `bigmap.Tags` ledger discovery is not reverted (`TokensCommit`) — architectural limitation.
 - `SoftwareCommit.Revert` doesn't restore `baker.SoftwareId` / remove zero-count `Software` rows (explicit TODO, cosmetic).
+
+#### Gas accounting
+
+- Every `GasUsed` is in its own runtime's units, and so are the block's `EvmGasUsed` / `MichelsonGasUsed`. Cross-runtime children are converted into the parent's units, lossily in both directions — that is what the `GasLimit` clamp in `Proto10Handler` absorbs.
+- `GasUsed` is what was **charged**, not what the trace spent: `max(traceGas, receiptGas - daGas)`, with `GasRefunded` as the difference. The receipt legitimately exceeds the trace on an exceptional halt (the whole allowance burns), under the EIP-7623 calldata floor, and on kernel-crafted deposits, whose synthetic frame only carries the log.
+- Block gas is stamped by each operation's own commit, duplicated across 24 sites in L1 and 27 in TezosX. Do not hoist it into an aggregating commit.
 
 ### Known intentional patterns in `Xtzkt.Indexers.TezosX` (do NOT flag as bugs)
 
