@@ -7,7 +7,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
 
 public interface IHelpers
 {
-    Task<MetaBlock> GetMetaBlock(int level);
+    Task<JsonElement> GetRawBlueprint(int level);
+    Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> getBlueprintTask);
 
     #region fees
     BigInteger GetDaFee(JsonElement tx, bool isDelayedOp);

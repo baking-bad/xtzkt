@@ -11,9 +11,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
 partial class ProtoHelpers
 {
-    protected async Task<Blueprint> GetBlueprint(int level)
+    public Task<JsonElement> GetRawBlueprint(int level)
     {
-        var json = await EvmRpc.GetBlueprint(level);
+        return EvmRpc.GetBlueprint(level);
+    }
+
+    protected async Task<Blueprint> GetBlueprint(int level, Task<JsonElement> rawBlueprintTask)
+    {
+        var json = await rawBlueprintTask;
 
         CacheDelayedTransactions(json, level);
 
@@ -62,22 +67,22 @@ partial class ProtoHelpers
         foreach (var hash in delayedTransactionsHashes)
             delayedTransactions.Add(await ResolveDelayedTransaction(hash, level));
 
-        string? kernelUpgrade = null;
-        DateTime? kernelUpgradeTime = null;
-        if (json.TryGetProperty("kernel_upgrade", out var _kernelUpgrade) && _kernelUpgrade.ValueKind != JsonValueKind.Null)
-        {
-            // the node returns the kernel root hash as raw hex, we store it normalized (`0x` prefixed, lowercase)
-            kernelUpgrade = Hex.GetString(_kernelUpgrade[0].RequiredHexBytes());
-            kernelUpgradeTime = _kernelUpgrade[1].RequiredDateTime();
-        }
+        //string? kernelUpgrade = null;
+        //DateTime? kernelUpgradeTime = null;
+        //if (json.TryGetProperty("kernel_upgrade", out var _kernelUpgrade) && _kernelUpgrade.ValueKind != JsonValueKind.Null)
+        //{
+        //    // the node returns the kernel root hash as raw hex, we store it normalized (`0x` prefixed, lowercase)
+        //    kernelUpgrade = Hex.GetString(_kernelUpgrade[0].RequiredHexBytes());
+        //    kernelUpgradeTime = _kernelUpgrade[1].RequiredDateTime();
+        //}
 
-        string? sequencerUpgrade = null;
-        DateTime? sequencerUpgradeTime = null;
-        if (json.TryGetProperty("sequencer_upgrade", out var _sequencerUpgrade) && _sequencerUpgrade.ValueKind != JsonValueKind.Null)
-        {
-            sequencerUpgrade = _sequencerUpgrade[1].RequiredString();
-            sequencerUpgradeTime = _sequencerUpgrade[2].RequiredDateTime();
-        }
+        //string? sequencerUpgrade = null;
+        //DateTime? sequencerUpgradeTime = null;
+        //if (json.TryGetProperty("sequencer_upgrade", out var _sequencerUpgrade) && _sequencerUpgrade.ValueKind != JsonValueKind.Null)
+        //{
+        //    sequencerUpgrade = _sequencerUpgrade[1].RequiredString();
+        //    sequencerUpgradeTime = _sequencerUpgrade[2].RequiredDateTime();
+        //}
 
         return new Blueprint
         {
@@ -90,11 +95,11 @@ partial class ProtoHelpers
             DelayedTransactions = delayedTransactions,
             Transactions = transactionsHashes,
 
-            KernelUpgrade = kernelUpgrade,
-            KernelUpgradeTime = kernelUpgradeTime,
+            //KernelUpgrade = kernelUpgrade,
+            //KernelUpgradeTime = kernelUpgradeTime,
 
-            SequencerUpgrade = sequencerUpgrade,
-            SequencerUpgradeTime = sequencerUpgradeTime,
+            //SequencerUpgrade = sequencerUpgrade,
+            //SequencerUpgradeTime = sequencerUpgradeTime,
         };
     }
 

@@ -12,8 +12,8 @@ public sealed class MetaBlock
     public JsonElement EvmBlock { get; init; }
     public JsonElement? MichelsonBlock { get; init; }
 
-    public string? KernelUpgrade { get; init; }
-    public DateTime? KernelUpgradeTime { get; init; }
+    //public string? KernelUpgrade { get; init; }
+    //public DateTime? KernelUpgradeTime { get; init; }
 }
 
 public class MetaBatch

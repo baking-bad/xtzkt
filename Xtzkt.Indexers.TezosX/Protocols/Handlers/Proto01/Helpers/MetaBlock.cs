@@ -6,9 +6,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
 partial class ProtoHelpers
 {
-    public virtual async Task<MetaBlock> GetMetaBlock(int level)
+    public virtual async Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> rawBlueprintTask)
     {
-        var t1 = GetBlueprint(level);
+        var t1 = GetBlueprint(level, rawBlueprintTask);
         var t2 = EvmRpc.GetBlockData(level);
 
         await Task.WhenAll(t1, t2);
@@ -89,8 +89,8 @@ partial class ProtoHelpers
             Batches = batches,
             EvmBlock = evmBlock,
             MichelsonBlock = null,
-            KernelUpgrade = blueprint.KernelUpgrade,
-            KernelUpgradeTime = blueprint.KernelUpgradeTime,
+            //KernelUpgrade = blueprint.KernelUpgrade,
+            //KernelUpgradeTime = blueprint.KernelUpgradeTime,
         };
     }
 

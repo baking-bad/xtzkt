@@ -1,5 +1,6 @@
-using App.Metrics;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using App.Metrics;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
@@ -10,6 +11,7 @@ using Xtzkt.Indexers.TezosX.Protocols;
 using Xtzkt.Indexers.TezosX.Protocols.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Services;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX
 {
@@ -64,12 +66,21 @@ namespace Xtzkt.Indexers.TezosX
             {
                 while (state.Level < targetLevel)
                 {
-                    if (state.KernelUpgrade != null && !migrating)
+                    var blueprint = await prefetcher.GetBlueprint(state.Level + 1);
+
+                    if (!migrating)
                     {
-                        Logger.LogDebug("Check for upgrade at {level}", state.Level + 1);
-                        var nextProtocol = Services.GetProtocolHandler(state.KernelUpgrade);
-                        if (await nextProtocol.HasUpgraded())
+                        if (blueprint.TryGetProperty("kernel_upgrade", out var kernelUpgrade) && kernelUpgrade.ValueKind != JsonValueKind.Null)
                         {
+                            state.KernelUpgrade = Hex.GetString(kernelUpgrade[0].RequiredHexBytes());
+                            state.KernelUpgradeTime = kernelUpgrade[1].RequiredDateTime();
+                            Logger.LogDebug("Kernel upgrade to {version} scheduled at {timestamp}", state.KernelUpgrade, state.KernelUpgradeTime);
+                        }
+
+                        if (state.KernelUpgrade != null && state.KernelUpgradeTime <= blueprint.Required("blueprint").RequiredDateTime("timestamp"))
+                        {
+                            Logger.LogDebug("Kernel upgraded at {level}", state.Level + 1);
+
                             Logger.LogDebug("Save changes");
                             using (Metrics.Measure.Timer.Time(MetricsRegistry.SaveChangesTime))
                             {
@@ -82,6 +93,8 @@ namespace Xtzkt.Indexers.TezosX
                             await prefetcher.DrainAsync();
                             txClosed = true;
 
+                            Logger.LogDebug("Switch protocol handler");
+                            var nextProtocol = Services.GetProtocolHandler(state.KernelUpgrade);
                             return await nextProtocol.ApplyNextBlock(head, true);
                         }
                     }
@@ -107,13 +120,6 @@ namespace Xtzkt.Indexers.TezosX
                         migrating = false;
                         state.KernelUpgrade = null;
                         state.KernelUpgradeTime = null;
-                    }
-
-                    if (block.KernelUpgrade != null)
-                    {
-                        Logger.LogDebug("Kernel upgrade to {version} scheduled at {timestamp}", state.KernelUpgrade, state.KernelUpgradeTime);
-                        state.KernelUpgrade = block.KernelUpgrade;
-                        state.KernelUpgradeTime = block.KernelUpgradeTime;
                     }
 
                     if (state.BlocksCount == 0)
@@ -211,14 +217,6 @@ namespace Xtzkt.Indexers.TezosX
 
             Cache.Trim();
             return Cache.Chain.Get();
-        }
-
-        public virtual async Task<bool> HasUpgraded()
-        {
-            var state = Cache.Chain.Get();
-            var blueprint = await EvmRpc.GetBlueprint(state.Level + 1);
-            var timestamp = blueprint.Required("blueprint").RequiredDateTime("timestamp");
-            return state.KernelUpgradeTime <= timestamp;
         }
 
         public bool CanSkip(OperationStatus? staticRootStatus)

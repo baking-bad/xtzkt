@@ -10,9 +10,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
 partial class ProtoHelpers
 {
-    public override async Task<MetaBlock> GetMetaBlock(int level)
+    public override async Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> rawBlueprintTask)
     {
-        var t1 = GetBlueprint(level);
+        var t1 = GetBlueprint(level, rawBlueprintTask);
         var t2 = EvmRpc.GetBlockData(level);
         var t3 = level >= Cache.Chain.Get().MichelsonActivationLevel
             ? MichelsonRpc.GetBlockAsync(level)
@@ -144,8 +144,8 @@ partial class ProtoHelpers
             Batches = batches,
             EvmBlock = evmBlock,
             MichelsonBlock = michelsonBlock,
-            KernelUpgrade = blueprint.KernelUpgrade,
-            KernelUpgradeTime = blueprint.KernelUpgradeTime,
+            //KernelUpgrade = blueprint.KernelUpgrade,
+            //KernelUpgradeTime = blueprint.KernelUpgradeTime,
         };
     }
 

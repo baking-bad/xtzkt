@@ -10,10 +10,10 @@ public sealed class Blueprint
     public required string Predecessor { get; init; }
     public required List<string> Transactions { get; init; }
     public required List<DelayedOperation> DelayedTransactions { get; init; }
-    public string? KernelUpgrade { get; init; }
-    public DateTime? KernelUpgradeTime { get; init; }
-    public string? SequencerUpgrade { get; init; }
-    public DateTime? SequencerUpgradeTime { get; init; }
+    //public string? KernelUpgrade { get; init; }
+    //public DateTime? KernelUpgradeTime { get; init; }
+    //public string? SequencerUpgrade { get; init; }
+    //public DateTime? SequencerUpgradeTime { get; init; }
 }
 
 public sealed class DelayedXtzDeposit : DelayedOperation
