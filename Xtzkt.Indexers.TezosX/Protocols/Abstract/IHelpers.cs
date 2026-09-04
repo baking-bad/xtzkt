@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Data.Models;
+using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Abstract;
@@ -14,6 +15,7 @@ public interface IHelpers
     BigInteger GetDaFee(JsonElement tx, bool isDelayedOp);
     int GetDaGas(BigInteger effectiveGasPrice, BigInteger daFee);
     BigInteger GetGasFee(BigInteger effectiveGasPrice, int gasUsed, BigInteger daFee);
+    int GetBilledGas(int receiptGas, int gasLimit, OperationStatus status, JsonElement trace);
     #endregion
 
     #region addresses

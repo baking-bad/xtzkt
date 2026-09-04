@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text.Json;
+using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
@@ -34,5 +35,17 @@ partial class ProtoHelpers
     {
         // gasUsed already covers the da fee, rounded up to a whole gas unit
         return effectiveGasPrice * gasUsed - daFee;
+    }
+
+    public virtual int GetBilledGas(int receiptGas, int gasLimit, OperationStatus status, JsonElement trace)
+    {
+        // early kernels ran without the tracer
+        if (trace.ValueKind != JsonValueKind.Object)
+            return receiptGas;
+
+        // before revm receipt gas didn't show the correct value on specific failures, when the whole gas limit was actually billed
+        return status != OperationStatus.Applied && !trace.TryGetProperty("output", out _) && trace.OptionalString("error") != "OutOfTicks"
+            ? gasLimit
+            : receiptGas;
     }
 }

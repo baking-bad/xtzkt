@@ -26,13 +26,14 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
 
         var status = receipt.RequiredEvmOpStatus("status");
-        var receiptGas = receipt.RequiredHexInt32("gasUsed");
+        var gasLimit = GetGasLimit(tx);
+        var billedGas = Helpers.GetBilledGas(receipt.RequiredHexInt32("gasUsed"), gasLimit, status, trace);
         var effectiveGasPrice = receipt.RequiredHexBigInteger("effectiveGasPrice");
         var daFee = Helpers.GetDaFee(tx, isDelayedOp);
         var daGas = Helpers.GetDaGas(effectiveGasPrice, daFee);
-        var (gasUsed, gasRefunded) = GetCumulativeGas(receiptGas, trace, daGas);
+        var (gasUsed, gasRefunded) = GetCumulativeGas(billedGas, trace, daGas);
         var ownGasUsed = GetRootOwnGasUsed(gasUsed, trace, frameGasOffset);
-        var gasFee = Helpers.GetGasFee(effectiveGasPrice, receiptGas, daFee);
+        var gasFee = Helpers.GetGasFee(effectiveGasPrice, billedGas, daFee);
         var input = GetInput(tx, trace);
         var output = GetOutput(trace);
 
@@ -62,7 +63,7 @@ class TransactionCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             GasFee = gasFee,
             Amount = tx.RequiredHexBigInteger("value"),
             Counter = tx.RequiredHexInt32("nonce"),
-            GasLimit = GetGasLimit(tx),
+            GasLimit = gasLimit,
             GasUsed = ownGasUsed,
             GasRefunded = gasRefunded,
             Status = status,

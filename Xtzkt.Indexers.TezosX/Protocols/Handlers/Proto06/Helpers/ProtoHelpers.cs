@@ -9,6 +9,14 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto06.Helpers;
 
 class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(protocol)
 {
+    #region fees
+    public override int GetBilledGas(int receiptGas, int gasLimit, OperationStatus status, JsonElement trace)
+    {
+        // since revm receipt gas shows correct value for calculating fees
+        return receiptGas;
+    }
+    #endregion
+
     protected override EvmOperation GetEvmOperation(EvmBatch batch, JsonElement tx, JsonElement receipt, JsonElement trace)
     {
         var from = trace.RequiredString("from");
