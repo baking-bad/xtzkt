@@ -305,8 +305,7 @@ public class DepositRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? receiverIds = null;
-        List<int>? proxyIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -319,27 +318,17 @@ public class DepositRepository(
                 continue;
 
             if ((roles & ActivityRole.Target) != 0)
-            {
-                receiverIds ??= new(addresses.Count);
-                receiverIds.Add(address.Id);
-            }
+                or.Add(@"""ReceiverId""", address.Id, count);
 
             if ((roles & ActivityRole.Mention) != 0 && address is Data.Models.XEvmAddress)
-            {
-                proxyIds ??= new(addresses.Count);
-                proxyIds.Add(address.Id);
-            }
+                or.Add(@"""ProxyId""", address.Id, count);
         }
 
-        if (receiverIds == null && proxyIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"""ReceiverId""", receiverIds),
-            (@"""ProxyId""", proxyIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

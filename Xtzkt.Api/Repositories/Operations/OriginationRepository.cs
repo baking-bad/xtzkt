@@ -491,10 +491,7 @@ public class OriginationRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? senderIds = null;
-        List<int>? contractIds = null;
-        List<int>? initiatorIds = null;
-        List<int>? bakerIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -502,48 +499,30 @@ public class OriginationRepository(
                 continue;
 
             if ((roles & ActivityRole.Sender) != 0)
-            {
-                senderIds ??= new(addresses.Count);
-                senderIds.Add(address.Id);
-            }
+                or.Add(@"""SenderId""", address.Id, address.OriginationsCount);
 
             if ((roles & ActivityRole.Target) != 0 && address is
                 Data.Models.L1Contract or
                 Data.Models.XEvmContract or
                 Data.Models.XMichelsonContract)
-            {
-                contractIds ??= new(addresses.Count);
-                contractIds.Add(address.Id);
-            }
+                or.Add(@"""ContractId""", address.Id, address.OriginationsCount);
 
             if ((roles & ActivityRole.Initiator) != 0 && address is
                 Data.Models.L1User or
                 Data.Models.XEvmUser or
                 Data.Models.XMichelsonUser)
-            {
-                initiatorIds ??= new(addresses.Count);
-                initiatorIds.Add(address.Id);
-            }
+                or.Add(@"""InitiatorId""", address.Id, address.OriginationsCount);
 
             if ((roles & ActivityRole.Mention) != 0 && address is
                 Data.Models.L1Baker)
-            {
-                bakerIds ??= new(addresses.Count);
-                bakerIds.Add(address.Id);
-            }
+                or.Add(@"""BakerId""", address.Id, address.OriginationsCount);
         }
 
-        if (senderIds == null && contractIds == null && initiatorIds == null && bakerIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"""SenderId""", senderIds),
-            (@"""ContractId""", contractIds),
-            (@"""InitiatorId""", initiatorIds),
-            (@"""BakerId""", bakerIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

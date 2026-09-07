@@ -306,8 +306,7 @@ public class IncreasePaidStorageRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? senderIds = null;
-        List<int>? contractIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -323,31 +322,21 @@ public class IncreasePaidStorageRepository(
             if ((roles & ActivityRole.Sender) != 0 && address is
                 Data.Models.L1User or
                 Data.Models.XMichelsonUser)
-            {
-                senderIds ??= new(addresses.Count);
-                senderIds.Add(address.Id);
-            }
+                or.Add(@"""SenderId""", address.Id, count);
 
             if ((roles & ActivityRole.Target) != 0 && address is
                 Data.Models.L1Contract or
                 Data.Models.L1Ghost or
                 Data.Models.XMichelsonContract or
                 Data.Models.XMichelsonGhost)
-            {
-                contractIds ??= new(addresses.Count);
-                contractIds.Add(address.Id);
-            }
+                or.Add(@"""ContractId""", address.Id, count);
         }
 
-        if (senderIds == null && contractIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"""SenderId""", senderIds),
-            (@"""ContractId""", contractIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

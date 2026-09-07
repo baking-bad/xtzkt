@@ -12,7 +12,7 @@ public class ActivityRolesBinder : IModelBinder
     {
         var hasValue = false;
 
-        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var value))
+        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var value, unbounded: true))
             return Task.CompletedTask;
 
         if (!hasValue)

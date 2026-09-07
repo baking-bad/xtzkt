@@ -10,6 +10,11 @@ namespace Xtzkt.Api.Filters.Parameters;
 public class SelectionParameter : INormalizable
 {
     /// <summary>
+    /// Abuse guard.
+    /// </summary>
+    public const int MaxFields = 100;
+
+    /// <summary>
     /// **Fields** selection mode (optional, i.e. `select.fields=balance` is the same as `select=balance`).
     /// Specify a comma-separated list of fields to include into response.
     ///

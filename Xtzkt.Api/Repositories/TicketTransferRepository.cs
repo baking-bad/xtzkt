@@ -369,8 +369,7 @@ public class TicketTransferRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? fromIds = null;
-        List<int>? toIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -378,27 +377,17 @@ public class TicketTransferRepository(
                 continue;
 
             if ((roles & ActivityRole.Sender) != 0)
-            {
-                fromIds ??= new(addresses.Count);
-                fromIds.Add(address.Id);
-            }
+                or.Add(@"tt.""FromId""", address.Id, address.TicketTransfersCount);
 
             if ((roles & ActivityRole.Target) != 0)
-            {
-                toIds ??= new(addresses.Count);
-                toIds.Add(address.Id);
-            }
+                or.Add(@"tt.""ToId""", address.Id, address.TicketTransfersCount);
         }
 
-        if (fromIds == null && toIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"tt.""FromId""", fromIds),
-            (@"tt.""ToId""", toIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

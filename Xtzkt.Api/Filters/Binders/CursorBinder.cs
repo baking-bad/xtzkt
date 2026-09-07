@@ -9,7 +9,7 @@ public class CursorBinder : IModelBinder
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
         var hasValue = false;
-        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var list))
+        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var list, unbounded: true))
             return Task.CompletedTask;
 
         if (!hasValue)

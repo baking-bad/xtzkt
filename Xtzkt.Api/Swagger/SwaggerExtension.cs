@@ -137,7 +137,8 @@ static class SwaggerExtension
                     Email = "hello@bakingbad.dev",
                     Url = new("https://bakingbad.dev"),
                 };
-                doc.Info.Description = LoadText("Xtzkt.Api.Swagger.description.md");
+                doc.Info.Description = LoadText("Xtzkt.Api.Swagger.description.md")
+                    .Replace("{MaxBatchSize}", ApiConfig.MaxBatchSize.ToString());
                 doc.Info.Extensions ??= new Dictionary<string, IOpenApiExtension>();
                 doc.Info.Extensions["x-logo"] = new JsonNodeExtension(new JsonObject
                 {

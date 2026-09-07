@@ -16,6 +16,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
     readonly List<string> _cols = [];
     readonly List<string> _joins = [];
     readonly List<string> _filters = [];
+    readonly List<string> _orFilters = [];
     readonly List<(string field, string column, bool asc)> _sorting = [];
     int _offset = 0;
     int _limit = 0;
@@ -77,19 +78,15 @@ public class SqlBuilder(SqlBuilder? _root = null)
     {
         if (or == null) return this;
 
-        var expressions = new List<string>(or.ColsAndVals.Length);
         foreach (var (column, values) in or.ColsAndVals)
         {
             if (values == null || values.Count == 0)
                 continue;
 
-            expressions.Add(values.Count == 1
+            _orFilters.Add(values.Count == 1
                 ? $"{column} = {Param(values[0])}"
                 : $"{column} = ANY ({Param(values)})");
         }
-
-        if (expressions.Count != 0)
-            _filters.Add($"({string.Join(" OR ", expressions)})");
 
         return this;
     }
@@ -1058,8 +1055,8 @@ public class SqlBuilder(SqlBuilder? _root = null)
                 _sorting.Add((field, item.column, asc));
             }
 
-            if (sort.Cols[^1].field != spec.PrimaryKey)
-                _sorting.Add((spec.PrimaryKey, spec[spec.PrimaryKey].column, sort.Cols[^1].asc));
+            if (!_sorting.Any(x => x.field == spec.PrimaryKey))
+                _sorting.Add((spec.PrimaryKey, spec[spec.PrimaryKey].column, _sorting[^1].asc));
         }
         else
         {
@@ -1132,7 +1129,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
 
     public (string, DynamicParameters) Build()
     {
-        return (Build(0), _params);
+        return (_orFilters.Count > 1 && _sorting.Count != 0 ? BuildFlat(0) : Build(0), _params);
     }
 
     string Build(int padding)
@@ -1145,7 +1142,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
         {
             SqlBuilder[] subqueries => $"""
                 (
-                {string.Join($"\n\n{Pad(padding + 4)}UNION ALL\n\n", subqueries.Select(x => x.Build(padding + 4)))}
+                {string.Join($"\n\n{Pad(padding + 4)}UNION ALL\n\n", subqueries.Select(x => $"{Pad(padding + 4)}({x.Build(padding + 4).TrimStart()})"))}
                 {Pad(padding)})
                 """,
             SqlBuilder subquery => $"""
@@ -1168,11 +1165,77 @@ public class SqlBuilder(SqlBuilder? _root = null)
         if (_joins.Count != 0)
             sql += $"\n{string.Join('\n', _joins.Select(x => $"{Pad(padding)}{x}"))}";
 
-        if (_filters.Count != 0)
-            sql += $"\n{Pad(padding)}WHERE {string.Join($"\n{Pad(padding)}AND ", _filters)}";
+        var filters = _orFilters.Count switch
+        {
+            0 => _filters,
+            1 => _filters.Append(_orFilters[0]),
+            _ => _filters.Append($"({string.Join(" OR ", _orFilters)})")
+        };
+
+        if (filters.Any())
+            sql += $"\n{Pad(padding)}WHERE {string.Join($"\n{Pad(padding)}AND ", filters)}";
 
         if (_sorting.Count != 0)
             sql += $"\n{Pad(padding)}ORDER BY {string.Join(", ", _sorting.Select(x => x.column + (x.asc ? " ASC" : " DESC")))}";
+
+        if (_offset != 0)
+            sql += $"\n{Pad(padding)}OFFSET {_offset}";
+
+        if (_limit != 0)
+            sql += $"\n{Pad(padding)}LIMIT {_limit}";
+
+        return sql;
+    }
+
+    string BuildFlat(int padding)
+    {
+        var sortCols = _sorting.Select(x => (alias: $@"""__{x.field}""", x.column, x.asc)).ToList();
+
+        var select = string.Join(", ", (_cols.Count != 0 ? _cols : ["*"])
+            .Concat(sortCols.Select(x => $"{x.column} AS {x.alias}")));
+
+        var from = _from switch
+        {
+            SqlBuilder[] subqueries => $"""
+                (
+                {string.Join($"\n\n{Pad(padding + 8)}UNION ALL\n\n", subqueries.Select(x => $"{Pad(padding + 8)}({x.Build(padding + 8).TrimStart()})"))}
+                {Pad(padding + 4)})
+                """,
+            SqlBuilder subquery => $"""
+                (
+                {subquery.Build(padding + 8)}
+                {Pad(padding + 4)})
+                """,
+            string table => table,
+            _ => throw new InvalidOperationException()
+        };
+
+        if (_fromAlias != null)
+            from += $" AS {_fromAlias}";
+
+        var baseQuery = $"""
+            {Pad(padding + 4)}(SELECT {select}
+            {Pad(padding + 4)}FROM {from}
+            """;
+
+        if (_joins.Count != 0)
+            baseQuery += $"\n{string.Join('\n', _joins.Select(x => $"{Pad(padding + 4)}{x}"))}";
+
+        var basePagination = $"\n{Pad(padding + 4)}ORDER BY {string.Join(", ", sortCols.Select(x => x.column + (x.asc ? " ASC" : " DESC")))}";
+
+        if (_limit != 0)
+            basePagination += $"\n{Pad(padding + 4)}LIMIT {_offset + _limit}";
+
+        var branches = _orFilters.Select(orFilter =>
+            $"{baseQuery}\n{Pad(padding + 4)}WHERE {string.Join($"\n{Pad(padding + 4)}AND ", _filters.Prepend(orFilter))}{basePagination})");
+
+        var sql = $"""
+            {Pad(padding)}SELECT DISTINCT ON ({string.Join(", ", sortCols.Select(x => x.alias))}) *
+            {Pad(padding)}FROM (
+            {string.Join($"\n\n{Pad(padding + 4)}UNION ALL\n\n", branches)}
+            {Pad(padding)}) AS __u
+            {Pad(padding)}ORDER BY {string.Join(", ", sortCols.Select(x => x.alias + (x.asc ? " ASC" : " DESC")))}
+            """;
 
         if (_offset != 0)
             sql += $"\n{Pad(padding)}OFFSET {_offset}";

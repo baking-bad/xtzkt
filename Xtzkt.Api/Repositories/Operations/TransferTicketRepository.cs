@@ -398,9 +398,7 @@ public class TransferTicketRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? senderIds = null;
-        List<int>? targetIds = null;
-        List<int>? ticketerIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -416,34 +414,20 @@ public class TransferTicketRepository(
             if ((roles & ActivityRole.Sender) != 0 && address is
                 Data.Models.L1User or
                 Data.Models.XMichelsonUser)
-            {
-                senderIds ??= new(addresses.Count);
-                senderIds.Add(address.Id);
-            }
+                or.Add(@"""SenderId""", address.Id, count);
 
             if ((roles & ActivityRole.Target) != 0)
-            {
-                targetIds ??= new(addresses.Count);
-                targetIds.Add(address.Id);
-            }
+                or.Add(@"""TargetId""", address.Id, count);
 
             if ((roles & ActivityRole.Mention) != 0)
-            {
-                ticketerIds ??= new(addresses.Count);
-                ticketerIds.Add(address.Id);
-            }
+                or.Add(@"""TicketerId""", address.Id, count);
         }
 
-        if (senderIds == null && targetIds == null && ticketerIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"""SenderId""", senderIds),
-            (@"""TargetId""", targetIds),
-            (@"""TicketerId""", ticketerIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

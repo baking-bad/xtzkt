@@ -32,7 +32,7 @@ internal static class ModelBindingContextExtension
     public static bool TryGetEnumList<T>(this ModelBindingContext bindingContext, Dictionary<string, T> map, string name, ref bool hasValue, out List<T>? result) where T : struct
     {
         result = null;
-        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues, unbounded: true))
         {
             var list = new List<T>(rawValues.Length);
             foreach (var rawValue in rawValues)
@@ -771,10 +771,10 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
-    public static bool TryGetStringList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<string>? result)
+    public static bool TryGetStringList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<string>? result, bool unbounded = false)
     {
         result = null;
-        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues, unbounded))
         {
             hasValue = true;
             result = [.. rawValues.Select(x => Regexes.RestrictedUnicode().Replace(x, Regexes.NullEscapeString))];
@@ -852,7 +852,7 @@ internal static class ModelBindingContextExtension
                             return json;
                         })];
                 }
-                return true;
+                return bindingContext.CheckBatchSize(name, result.Length);
             }
             catch (JsonException) { }
         }
@@ -879,8 +879,14 @@ internal static class ModelBindingContextExtension
     public static bool TryGetSelectionFields(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<SelectionField>? result)
     {
         result = null;
-        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues, unbounded: true))
         {
+            if (rawValues.Length > SelectionParameter.MaxFields)
+            {
+                bindingContext.ModelState.TryAddModelError(name, $"Too many fields, at most {SelectionParameter.MaxFields} allowed.");
+                return false;
+            }
+
             var list = new List<SelectionField>(rawValues.Length);
             foreach (var rawValue in rawValues)
             {
@@ -984,10 +990,28 @@ internal static class ModelBindingContextExtension
         return !string.IsNullOrEmpty(value);
     }
 
-    static bool TryGetQueryParameterList(this ModelBindingContext bindingContext, string name, [NotNullWhen(true)] out string[]? values)
+    static bool TryGetQueryParameterList(this ModelBindingContext bindingContext, string name, [NotNullWhen(true)] out string[]? values, bool unbounded = false)
     {
         values = bindingContext.ActionContext.HttpContext.Request.Query[name]
             .FirstOrDefault()?.Split(',', StringSplitOptions.RemoveEmptyEntries);
-        return values != null && values.Length != 0;
+
+        if (values == null || values.Length == 0 || !unbounded && !bindingContext.CheckBatchSize(name, values.Length))
+        {
+            values = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool CheckBatchSize(this ModelBindingContext bindingContext, string name, int count)
+    {
+        if (count > ApiConfig.MaxBatchSize)
+        {
+            bindingContext.ModelState.TryAddModelError(name, $"Too many values, at most {ApiConfig.MaxBatchSize} allowed.");
+            return false;
+        }
+
+        return true;
     }
 }

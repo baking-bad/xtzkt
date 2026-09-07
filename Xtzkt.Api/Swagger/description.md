@@ -67,3 +67,17 @@ GET /v1/tokens/balances?sort=balance.desc,id&limit=100&cursor=1000,1234
   a single request would occupy the database for seconds.
 - The cap is roughly 1000 pages of 100 items, which no interactive listing ever reaches. If you do
   hit it, you're bulk-reading — which is exactly what `cursor` is for, and it's faster anyway.
+
+## Filtering
+
+### Lists
+
+Most filters take a list: `?level.in=100,200,300` matches any of the values, `?sender.ni=tz1...,tz1...`
+excludes all of them. This is also how to fetch a batch of items by known keys, `?hash.in=...` or
+`?id.in=1,2,3`, instead of one request per item.
+
+- A list holds at most **{MaxBatchSize}** values. The cap is configured per instance, so treat it as
+  this instance's value rather than the API's.
+- Duplicates count. Dedupe on your side, it's your quota.
+- Only lists of values are capped. Enum lists like `?status.in=applied,failed`, flags like `types` and
+  `roles`, `sort`, `cursor` and `select` are not batches and have no such limit.

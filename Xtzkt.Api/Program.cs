@@ -26,6 +26,7 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddEnvironmentVariables("XTZKT_API_");
 builder.Configuration.AddEnvironmentVariables("ASPNETCORE_");
 builder.Configuration.AddCommandLine(args);
+ApiConfig.Init(builder.Configuration);
 #endregion
 
 #region logging

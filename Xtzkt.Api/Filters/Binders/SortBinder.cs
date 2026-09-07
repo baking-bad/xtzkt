@@ -9,7 +9,7 @@ public class SortBinder : IModelBinder
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
         var hasValue = false;
-        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var list))
+        if (!bindingContext.TryGetStringList(bindingContext.ModelName, ref hasValue, out var list, unbounded: true))
             return Task.CompletedTask;
 
         if (!hasValue)
@@ -20,7 +20,9 @@ public class SortBinder : IModelBinder
 
         bindingContext.Result = ModelBindingResult.Success(new SortParameter
         {
-            Cols = [..list!.Select(x => x.EndsWith(".desc") ? (x[..^5], false) : x.EndsWith(".asc") ? (x[..^4], true) : (x, true))],
+            Cols = [..list!
+                .Select(x => x.EndsWith(".desc") ? (x[..^5], false) : x.EndsWith(".asc") ? (x[..^4], true) : (x, true))
+                .DistinctBy(x => x.Item1)],
         });
 
         return Task.CompletedTask;

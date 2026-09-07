@@ -733,11 +733,7 @@ public class TransactionRepository(
         DateTimeParameter? timestamp,
         CursorPagination pagination)
     {
-        List<int>? senderIds = null;
-        List<int>? targetIds = null;
-        List<int>? initiatorIds = null;
-        List<int>? aliasIds = null;
-        List<int>? gatewayIds = null;
+        var or = new OrParameterBuilder(pagination.Limit);
 
         foreach (var address in addresses)
         {
@@ -746,28 +742,20 @@ public class TransactionRepository(
 
             if ((roles & ActivityRole.Sender) != 0)
             {
-                senderIds ??= new(addresses.Count);
-                senderIds.Add(address.Id);
+                or.Add(@"""SenderId""", address.Id, address.TransactionsCount);
 
                 if (address is Data.Models.XEvmAlias ||
                     address is Data.Models.XMichelsonAlias)
-                {
-                    aliasIds ??= new(addresses.Count);
-                    aliasIds.Add(address.Id);
-                }
+                    or.Add(@"""AliasId""", address.Id, address.TransactionsCount);
             }
 
             if ((roles & ActivityRole.Target) != 0)
             {
-                targetIds ??= new(addresses.Count);
-                targetIds.Add(address.Id);
+                or.Add(@"""TargetId""", address.Id, address.TransactionsCount);
 
                 if (address.OriginationsCount == 0 &&
                     (address is Data.Models.XEvmContract || address is Data.Models.XMichelsonContract))
-                {
-                    gatewayIds ??= new(addresses.Count);
-                    gatewayIds.Add(address.Id);
-                }
+                    or.Add(@"""GatewayId""", address.Id, address.TransactionsCount);
             }
 
             if ((roles & ActivityRole.Initiator) != 0)
@@ -775,25 +763,15 @@ public class TransactionRepository(
                 if (address is Data.Models.L1User ||
                     address is Data.Models.XEvmUser ||
                     address is Data.Models.XMichelsonUser)
-                {
-                    initiatorIds ??= new(addresses.Count);
-                    initiatorIds.Add(address.Id);
-                }
+                    or.Add(@"""InitiatorId""", address.Id, address.TransactionsCount);
             }
         }
 
-        if (senderIds == null && targetIds == null && initiatorIds == null && aliasIds == null && gatewayIds == null)
+        if (or.IsEmpty)
             return [];
 
-        var or = new OrParameter(
-            (@"""SenderId""", senderIds),
-            (@"""TargetId""", targetIds),
-            (@"""InitiatorId""", initiatorIds),
-            (@"""AliasId""", aliasIds),
-            (@"""GatewayId""", gatewayIds));
-
         return await Get(
-            new() { Or = or, Chain = chain, Timestamp = timestamp },
+            new() { Or = or.Build(), Chain = chain, Timestamp = timestamp },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
