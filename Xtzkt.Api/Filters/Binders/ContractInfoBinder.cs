@@ -12,7 +12,6 @@ public class ContractInfoBinder(IModelMetadataProvider _metadata, IModelBinderFa
 
         var id = await bindingContext.BindChild<Int32Parameter>(_metadata, _factory, $"{param}.{nameof(ContractInfoParameter.Id)}");
         var hash = await bindingContext.BindChild<AddressHashParameter>(_metadata, _factory, $"{param}.{nameof(ContractInfoParameter.Hash)}");
-        var typeHash = await bindingContext.BindChild<Int32Parameter>(_metadata, _factory, $"{param}.{nameof(ContractInfoParameter.TypeHash)}");
         var codeHash = await bindingContext.BindChild<Int32Parameter>(_metadata, _factory, $"{param}.{nameof(ContractInfoParameter.CodeHash)}");
         var creator = await bindingContext.BindChild<AddressInfoParameter>(_metadata, _factory, $"{param}.{nameof(ContractInfoParameter.Creator)}");
 
@@ -22,8 +21,8 @@ public class ContractInfoBinder(IModelMetadataProvider _metadata, IModelBinderFa
             return;
 
         bindingContext.Result = ModelBindingResult.Success(
-            id == null && hash == null && typeHash == null && codeHash == null && creator == null
+            id == null && hash == null && codeHash == null && creator == null
                 ? null
-                : new ContractInfoParameter { Id = id, Hash = hash, TypeHash = typeHash, CodeHash = codeHash, Creator = creator });
+                : new ContractInfoParameter { Id = id, Hash = hash, CodeHash = codeHash, Creator = creator });
     }
 }

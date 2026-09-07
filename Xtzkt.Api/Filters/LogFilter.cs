@@ -61,16 +61,6 @@ public class LogFilter : INormalizable
     public AddressInfoParameter? Address { get; set; }
 
     /// <summary>
-    /// Filters by 32-bit hash of the parameter and storage types of the contract,
-    /// whose code was executed when the log was emitted.
-    ///
-    /// Click on the parameter to expand more details.
-    ///
-    /// Example: `?contractTypeHash=123456`.
-    /// </summary>
-    public Int32Parameter? ContractTypeHash { get; set; }
-
-    /// <summary>
     /// Filters by 32-bit hash of the code of the contract,
     /// whose code was executed when the log was emitted.
     ///
@@ -178,7 +168,6 @@ public class LogFilter : INormalizable
         Level == null &&
         Timestamp == null &&
         Address == null &&
-        ContractTypeHash == null &&
         ContractCodeHash == null &&
         Name == null &&
         Payload == null &&
@@ -198,7 +187,6 @@ public class LogFilter : INormalizable
         ($"{name}.level", Level),
         ($"{name}.timestamp", Timestamp),
         ($"{name}.address", Address),
-        ($"{name}.contractTypeHash", ContractTypeHash),
         ($"{name}.contractCodeHash", ContractCodeHash),
         ($"{name}.name", Name),
         ($"{name}.payload", Payload),

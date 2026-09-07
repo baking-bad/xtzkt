@@ -11,6 +11,7 @@ namespace Xtzkt.Data.Models
         public long? OriginationId { get; set; }
         public long? TransactionId { get; set; }
         public long? MigrationId { get; set; }
+        public long? SubsidyId { get; set; }
         public bool Current { get; set; }
 
         public required byte[] RawValue { get; set; }

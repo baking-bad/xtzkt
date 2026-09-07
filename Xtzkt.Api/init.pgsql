@@ -39,10 +39,6 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_CodeHash"
     ON "Addresses" ("CodeHash")
     WHERE "CodeHash" IS NOT NULL;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_TypeHash"
-    ON "Addresses" ("TypeHash")
-    WHERE "TypeHash" IS NOT NULL;
-
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_CreatorId"
     ON "Addresses" ("CreatorId")
     WHERE "CreatorId" IS NOT NULL;
@@ -314,6 +310,10 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Storages_OriginationId"
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Storages_MigrationId"
     ON "Storages" ("MigrationId")
     WHERE "MigrationId" IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Storages_SubsidyId"
+    ON "Storages" ("SubsidyId")
+    WHERE "SubsidyId" IS NOT NULL;
 
 -- Tickets
 

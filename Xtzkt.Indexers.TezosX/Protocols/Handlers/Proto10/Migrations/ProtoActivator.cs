@@ -119,9 +119,7 @@ class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
             .SelectMany(x => x)
             .ToArray()
             ?? [];
-        var typeSchema = script.ParameterSchema.Concat(script.StorageSchema).Concat(viewsBytes);
-        var fullSchema = typeSchema.Concat(script.CodeSchema);
-        gateway.TypeHash = script.TypeHash = MichelsonScript.GetHash(typeSchema);
+        var fullSchema = script.ParameterSchema.Concat(script.StorageSchema).Concat(viewsBytes).Concat(script.CodeSchema);
         gateway.CodeHash = script.CodeHash = MichelsonScript.GetHash(fullSchema);
 
         Db.Scripts.Add(script);

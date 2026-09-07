@@ -21,12 +21,6 @@ public class ContractInfoParameter : INormalizable
     public AddressHashParameter? Hash { get; set; }
 
     /// <summary>
-    /// Filters by 32-bit hash of the contract parameter and storage types.
-    /// Click on the parameter to expand more details.
-    /// </summary>
-    public Int32Parameter? TypeHash { get; set; }
-
-    /// <summary>
     /// Filters by 32-bit hash of the contract code.
     /// Click on the parameter to expand more details.
     /// </summary>
@@ -41,14 +35,12 @@ public class ContractInfoParameter : INormalizable
     public virtual bool IsEmpty() =>
         Id == null &&
         Hash == null &&
-        TypeHash == null &&
         CodeHash == null &&
         Creator == null;
 
     public virtual string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
         ($"{name}.hash", Hash),
-        ($"{name}.typeHash", TypeHash),
         ($"{name}.codeHash", CodeHash),
         ($"{name}.creator", Creator));
 }

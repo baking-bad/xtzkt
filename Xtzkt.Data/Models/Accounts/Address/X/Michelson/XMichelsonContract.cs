@@ -8,9 +8,6 @@ public class XMichelsonContract() : XMichelsonAddress(AddressType.XMichelsonCont
     [Column(nameof(Kind))]
     public required XContractKind Kind { get; set; }
 
-    [Column(nameof(TypeHash))]
-    public int TypeHash { get; set; }
-
     [Column(nameof(CodeHash))]
     public int CodeHash { get; set; }
 

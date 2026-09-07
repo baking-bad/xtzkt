@@ -38,4 +38,8 @@ public class Storage
     /// <summary>Id of the migration, set the storage (if any).</summary>
     [JsonConverter(typeof(Int64StringNullableConverter))]
     public long? MigrationId { get; set; }
+
+    /// <summary>Id of the subsidy operation, set the storage (if any).</summary>
+    [JsonConverter(typeof(Int64StringNullableConverter))]
+    public long? SubsidyId { get; set; }
 }

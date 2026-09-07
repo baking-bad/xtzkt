@@ -8,9 +8,6 @@ namespace Xtzkt.Data.Models
         [Column(nameof(Kind))]
         public required L1ContractKind Kind { get; set; }
 
-        [Column(nameof(TypeHash))]
-        public int TypeHash { get; set; }
-
         [Column(nameof(CodeHash))]
         public int CodeHash { get; set; }
 

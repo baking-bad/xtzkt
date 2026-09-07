@@ -59,6 +59,7 @@ public class StorageRepository(
                     case "transactionId": columns.Add(@"s.""TransactionId"""); break;
                     case "originationId": columns.Add(@"s.""OriginationId"""); break;
                     case "migrationId":   columns.Add(@"s.""MigrationId"""); break;
+                    case "subsidyId":     columns.Add(@"s.""SubsidyId"""); break;
                     case "value":
                         if (field.Path == null)
                         {
@@ -83,14 +84,13 @@ public class StorageRepository(
             .Select(columns)
             .From(@"""Storages""", "s");
 
-        if (filter.Contract?.TypeHash != null || filter.Contract?.CodeHash != null || filter.Contract?.Creator != null)
+        if (filter.Contract?.CodeHash != null || filter.Contract?.Creator != null)
             sql.InnerJoin(@"""Addresses""", "c", @"""Id""", @"s.""ContractId""");
 
         var (query, parameters) = sql
             .Where(@"s.""Id""", filter.Id)
             .Where(@"s.""ChainId""", filter.Chain?.Id)
             .Where(@"s.""ContractId""", filter.Contract?.Id)
-            .Where(@"c.""TypeHash""", filter.Contract?.TypeHash)
             .Where(@"c.""CodeHash""", filter.Contract?.CodeHash)
             .Where(@"c.""CreatorId""", filter.Contract?.Creator?.Id)
             .Where(@"s.""Level""", filter.Level)
@@ -100,6 +100,7 @@ public class StorageRepository(
             .Where(@"s.""TransactionId""", filter.TransactionId)
             .Where(@"s.""OriginationId""", filter.OriginationId)
             .Where(@"s.""MigrationId""", filter.MigrationId)
+            .Where(@"s.""SubsidyId""", filter.SubsidyId)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -122,14 +123,13 @@ public class StorageRepository(
             .Select("COUNT(*)")
             .From(@"""Storages""", "s");
 
-        if (filter.Contract?.TypeHash != null || filter.Contract?.CodeHash != null || filter.Contract?.Creator != null)
+        if (filter.Contract?.CodeHash != null || filter.Contract?.Creator != null)
             sql.InnerJoin(@"""Addresses""", "c", @"""Id""", @"s.""ContractId""");
 
         var (query, parameters) = sql
             .Where(@"s.""Id""", filter.Id)
             .Where(@"s.""ChainId""", filter.Chain?.Id)
             .Where(@"s.""ContractId""", filter.Contract?.Id)
-            .Where(@"c.""TypeHash""", filter.Contract?.TypeHash)
             .Where(@"c.""CodeHash""", filter.Contract?.CodeHash)
             .Where(@"c.""CreatorId""", filter.Contract?.Creator?.Id)
             .Where(@"s.""Level""", filter.Level)
@@ -139,6 +139,7 @@ public class StorageRepository(
             .Where(@"s.""TransactionId""", filter.TransactionId)
             .Where(@"s.""OriginationId""", filter.OriginationId)
             .Where(@"s.""MigrationId""", filter.MigrationId)
+            .Where(@"s.""SubsidyId""", filter.SubsidyId)
             .Build();
 
         await using var db = await _dataSource.OpenConnectionAsync();
@@ -160,6 +161,7 @@ public class StorageRepository(
             TransactionId = row.TransactionId,
             OriginationId = row.OriginationId,
             MigrationId = row.MigrationId,
+            SubsidyId = row.SubsidyId,
         });
     }
 
@@ -206,9 +208,6 @@ public class StorageRepository(
                 case "contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
                     break;
-                case "contract.typeHash":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).TypeHash;
-                    break;
                 case "contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).CodeHash;
                     break;
@@ -247,6 +246,9 @@ public class StorageRepository(
                     break;
                 case "migrationId":
                     foreach (var row in rows) result[j++][i] = row.MigrationId?.ToString();
+                    break;
+                case "subsidyId":
+                    foreach (var row in rows) result[j++][i] = row.SubsidyId?.ToString();
                     break;
                 default:
                     if (fields[i].Field == "value")

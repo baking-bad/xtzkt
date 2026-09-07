@@ -198,7 +198,6 @@ partial class ProtoHelpers
             CreatorId = creator.Id,
             Counter = 0, // contract nonce starts at 1 (EIP161)
             CodeHash = 0,
-            TypeHash = 0,
             TokensCount = 0,
         };
         Cache.Addresses.Add(contract);
@@ -363,7 +362,6 @@ partial class ProtoHelpers
             CreatorId = creator?.Id ?? id,
             Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
             CodeHash = codeHash,
-            TypeHash = codeHash,
         };
 
         if (creator != null)
@@ -391,7 +389,6 @@ partial class ProtoHelpers
             Level = Context.Block.Level,
             Code = code,
             CodeHash = codeHash,
-            TypeHash = codeHash,
             SolidityMetadataBzzr0 = metadata?.Bzzr0,
             SolidityMetadataBzzr1 = metadata?.Bzzr1,
             SolidityMetadataExperimental = metadata?.Experimental,
@@ -481,7 +478,6 @@ partial class ProtoHelpers
             Level = Context.Block.Level,
             Code = code,
             CodeHash = codeHash,
-            TypeHash = codeHash,
             SolidityMetadataBzzr0 = metadata?.Bzzr0,
             SolidityMetadataBzzr1 = metadata?.Bzzr1,
             SolidityMetadataExperimental = metadata?.Experimental,
@@ -509,7 +505,6 @@ partial class ProtoHelpers
 
         Db.TryAttach(contract);
         contract.CodeHash = codeHash;
-        contract.TypeHash = codeHash;
         contract.MigrationsCount++;
         contract.LastLevel = Context.Block.Level;
         contract.LastTimestamp = Context.Block.Timestamp;
@@ -542,7 +537,6 @@ partial class ProtoHelpers
 
         Db.TryAttach(contract);
         contract.CodeHash = oldScript.CodeHash;
-        contract.TypeHash = oldScript.TypeHash;
         contract.MigrationsCount--;
         contract.LastLevel = Context.Block.Level;
         contract.LastTimestamp = Context.Block.Timestamp;
@@ -648,7 +642,6 @@ partial class ProtoHelpers
             Level = Context.Block.Level,
             Code = code,
             CodeHash = codeHash,
-            TypeHash = codeHash,
             Current = true,
             SolidityMetadataBzzr0 = metadata?.Bzzr0,
             SolidityMetadataBzzr1 = metadata?.Bzzr1,
@@ -673,7 +666,6 @@ partial class ProtoHelpers
         script.MigrationId = migration.Id;
 
         contract.CodeHash = codeHash;
-        contract.TypeHash = codeHash;
         contract.MigrationsCount++;
         contract.LastLevel = migration.Level;
         contract.LastTimestamp = migration.Timestamp;

@@ -86,7 +86,6 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
                     {
                         var contract = Helpers.UpgradeToXEvmContract(user, nullAddress);
                         contract.CodeHash = EvmScript.GetHash(code);
-                        contract.TypeHash = EvmScript.GetHash(code);
                         contract.Counter = nonce - 1;
 
                         SolidityMetadata.TryRead(code, out var metadata);
@@ -99,7 +98,6 @@ class ProtoMigrator(ProtocolHandler proto) : Proto01.ProtoMigrator(proto)
                             Level = Context.Block.Level,
                             Code = code,
                             CodeHash = contract.CodeHash,
-                            TypeHash = contract.TypeHash,
                             Current = true,
                             MigrationId = migration.Id,
                             SolidityMetadataBzzr0 = metadata?.Bzzr0,

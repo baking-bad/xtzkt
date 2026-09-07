@@ -94,6 +94,15 @@ public class StorageFilter : INormalizable
     /// </summary>
     public Int64NullParameter? MigrationId { get; set; }
 
+    /// <summary>
+    /// Filters by the subsidy operation that set the storage.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?subsidyId=123`.
+    /// </summary>
+    public Int64NullParameter? SubsidyId { get; set; }
+
     public bool IsEmpty() =>
         Id == null &&
         Chain == null &&
@@ -104,7 +113,8 @@ public class StorageFilter : INormalizable
         Value == null &&
         TransactionId == null &&
         OriginationId == null &&
-        MigrationId == null;
+        MigrationId == null &&
+        SubsidyId == null;
 
     public string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
@@ -116,5 +126,6 @@ public class StorageFilter : INormalizable
         ($"{name}.value", Value),
         ($"{name}.transactionId", TransactionId),
         ($"{name}.originationId", OriginationId),
-        ($"{name}.migrationId", MigrationId));
+        ($"{name}.migrationId", MigrationId),
+        ($"{name}.subsidyId", SubsidyId));
 }

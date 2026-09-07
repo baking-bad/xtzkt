@@ -37,13 +37,6 @@ public abstract class Log
     public required AddressInfo Address { get; set; }
 
     /// <summary>
-    /// 32-bit hash of the parameter and storage types of the contract, whose code was executed
-    /// when the log was emitted. For an address with an EIP-7702 delegation that's the delegate,
-    /// not the address itself.
-    /// </summary>
-    public int ContractTypeHash { get; set; }
-
-    /// <summary>
     /// 32-bit hash of the code of the contract, whose code was executed when the log was emitted.
     /// For an address with an EIP-7702 delegation that's the delegate, not the address itself.
     /// </summary>

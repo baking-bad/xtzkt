@@ -103,7 +103,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 Level = Context.Block.Level,
                 Code = code,
                 CodeHash = EvmScript.GetHash(code),
-                TypeHash = EvmScript.GetHash(code),
                 Current = true,
                 OriginationId = op.Id,
                 SolidityMetadataBzzr0 = metadata?.Bzzr0,
@@ -117,7 +116,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
             Receive(contract, op.Balance);
             contract.CodeHash = script.CodeHash;
-            contract.TypeHash = script.TypeHash;
             contract.OriginationsCount++;
             contract.LastLevel = op.Level;
             contract.LastTimestamp = op.Timestamp;
@@ -228,7 +226,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 Level = Context.Block.Level,
                 Code = code,
                 CodeHash = EvmScript.GetHash(code),
-                TypeHash = EvmScript.GetHash(code),
                 Current = true,
                 OriginationId = op.Id,
                 SolidityMetadataBzzr0 = metadata?.Bzzr0,
@@ -242,7 +239,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
             Receive(contract, op.Balance);
             contract.CodeHash = script.CodeHash;
-            contract.TypeHash = script.TypeHash;
             contract.OriginationsCount++;
             contract.LastLevel = op.Level;
             contract.LastTimestamp = op.Timestamp;
@@ -297,7 +293,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 prevScript.Current = true;
 
                 contract.CodeHash = prevScript.CodeHash;
-                contract.TypeHash = prevScript.TypeHash;
             }
             else
             {
@@ -364,7 +359,6 @@ class OriginationCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 prevScript.Current = true;
 
                 contract.CodeHash = prevScript.CodeHash;
-                contract.TypeHash = prevScript.TypeHash;
             }
             else
             {

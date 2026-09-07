@@ -614,9 +614,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 .SelectMany(x => x)
                 .ToArray()
                 ?? [];
-            var typeSchema = script.ParameterSchema.Concat(script.StorageSchema).Concat(viewsBytes);
-            var fullSchema = typeSchema.Concat(script.CodeSchema);
-            contract.TypeHash = script.TypeHash = MichelsonScript.GetHash(typeSchema);
+            var fullSchema = script.ParameterSchema.Concat(script.StorageSchema).Concat(viewsBytes).Concat(script.CodeSchema);
             origination.ContractCodeHash = contract.CodeHash = script.CodeHash = MichelsonScript.GetHash(fullSchema);
 
             if ((storageValue.Type == MichelineType.String || storageValue.Type == MichelineType.Bytes) &&

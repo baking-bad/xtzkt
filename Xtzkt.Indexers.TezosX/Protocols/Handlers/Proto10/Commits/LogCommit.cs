@@ -62,7 +62,6 @@ class LogCommit(ProtocolHandler protocol) : Proto02.LogCommit(protocol)
             Timestamp = block.Timestamp,
             AddressId = contract.Id,
             ContractCodeHash = contract.CodeHash,
-            ContractTypeHash = contract.TypeHash,
             TransactionId = parentTx.Id,
             Name = content.OptionalString("tag")
         };

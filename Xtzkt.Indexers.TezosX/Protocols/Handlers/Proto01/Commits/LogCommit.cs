@@ -75,7 +75,6 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 Timestamp = Context.Block.Timestamp,
                 AddressId = address.Id,
                 ContractCodeHash = contract.CodeHash,
-                ContractTypeHash = contract.TypeHash,
                 Topic0 = topics.Length > 0 ? topics[0] : null,
                 Topic1 = topics.Length > 1 ? topics[1] : null,
                 Topic2 = topics.Length > 2 ? topics[2] : null,

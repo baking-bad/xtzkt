@@ -57,7 +57,6 @@ public class LogRepository(
                     case "level":         columns.Add(@"l.""Level"""); break;
                     case "timestamp":     columns.Add(@"l.""Timestamp"""); break;
                     case "address":          columns.Add(@"l.""AddressId"""); break;
-                    case "contractTypeHash": columns.Add(@"l.""ContractTypeHash"""); break;
                     case "contractCodeHash": columns.Add(@"l.""ContractCodeHash"""); break;
                     case "name":          columns.Add(@"l.""Name"""); break;
                     case "payload":
@@ -121,7 +120,6 @@ public class LogRepository(
             .Where(@"l.""Level""",            filter.Level)
             .Where(@"l.""Timestamp""",        filter.Timestamp)
             .Where(@"l.""AddressId""",        filter.Address?.Id)
-            .Where(@"l.""ContractTypeHash""", filter.ContractTypeHash)
             .Where(@"l.""ContractCodeHash""", filter.ContractCodeHash)
             .Where(@"l.""Name""",             filter.Name)
             .Where(@"l.""Payload""",          filter.Payload)
@@ -162,7 +160,6 @@ public class LogRepository(
             .Where(@"l.""Level""",            filter.Level)
             .Where(@"l.""Timestamp""",        filter.Timestamp)
             .Where(@"l.""AddressId""",        filter.Address?.Id)
-            .Where(@"l.""ContractTypeHash""", filter.ContractTypeHash)
             .Where(@"l.""ContractCodeHash""", filter.ContractCodeHash)
             .Where(@"l.""Name""",             filter.Name)
             .Where(@"l.""Payload""",          filter.Payload)
@@ -193,7 +190,6 @@ public class LogRepository(
                     Level = row.Level,
                     Timestamp = row.Timestamp,
                     Address = _addressCache.GetInfo((int)row.AddressId),
-                    ContractTypeHash = row.ContractTypeHash,
                     ContractCodeHash = row.ContractCodeHash,
                     Name = row.Name,
                     Payload = row.Payload,
@@ -213,7 +209,6 @@ public class LogRepository(
                     Level = row.Level,
                     Timestamp = row.Timestamp,
                     Address = _addressCache.GetInfo((int)row.AddressId),
-                    ContractTypeHash = row.ContractTypeHash,
                     ContractCodeHash = row.ContractCodeHash,
                     Name = row.Name,
                     Payload = row.Payload,
@@ -279,9 +274,6 @@ public class LogRepository(
                     break;
                 case "address.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
-                    break;
-                case "contractTypeHash":
-                    foreach (var row in rows) result[j++][i] = row.ContractTypeHash;
                     break;
                 case "contractCodeHash":
                     foreach (var row in rows) result[j++][i] = row.ContractCodeHash;

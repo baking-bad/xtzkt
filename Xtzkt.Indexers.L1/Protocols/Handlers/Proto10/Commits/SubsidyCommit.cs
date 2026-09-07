@@ -49,7 +49,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 ChainId = contract.ChainId,
                 Level = op.Level,
                 ContractId = contract.Id,
-                MigrationId = op.Id,
+                SubsidyId = op.Id,
                 RawValue = newStorageBytes,
                 JsonValue = Regexes.RestrictedUnicode().Replace(schema.HumanizeStorage(newStorageMicheline), Regexes.NullEscapeString),
                 Current = true,
@@ -75,7 +75,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto10
                 Cache.Chain.ReleaseOperationId();
 
                 var storage = await Cache.Storages.GetAsync(contract);
-                if (storage.MigrationId == op.Id)
+                if (storage.SubsidyId == op.Id)
                 {
                     var prevStorage = await Db.Storages
                         .Where(x => x.ContractId == contract.Id && x.Id < storage.Id)

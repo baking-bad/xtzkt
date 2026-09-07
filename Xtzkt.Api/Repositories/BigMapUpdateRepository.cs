@@ -157,7 +157,7 @@ public class BigMapUpdateRepository(
             .InnerJoin(@"""BigMaps""", "b", @"""Id""", @"bu.""BigMapId""")
             .LeftJoin(@"""BigMapKeys""", "bk", @"""Id""", @"bu.""BigMapKeyId""");
 
-        if (filter.BigMap?.Contract?.TypeHash != null || filter.BigMap?.Contract?.CodeHash != null || filter.BigMap?.Contract?.Creator != null)
+        if (filter.BigMap?.Contract?.CodeHash != null || filter.BigMap?.Contract?.Creator != null)
             sql.InnerJoin(@"""Addresses""", "c", @"""Id""", @"b.""ContractId""");
 
         var (query, parameters) = sql
@@ -166,7 +166,6 @@ public class BigMapUpdateRepository(
             .Where(@"bu.""BigMapId""",      filter.BigMap?.Id)
             .Where(@"b.""Ptr""",            filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",     filter.BigMap?.Contract?.Id)
-            .Where(@"c.""TypeHash""",       filter.BigMap?.Contract?.TypeHash)
             .Where(@"c.""CodeHash""",       filter.BigMap?.Contract?.CodeHash)
             .Where(@"c.""CreatorId""",      filter.BigMap?.Contract?.Creator?.Id)
             .Where(@"b.""StoragePath""",    filter.BigMap?.StoragePath)
@@ -210,7 +209,7 @@ public class BigMapUpdateRepository(
         if (filter.BigMapKey?.KeyHash != null || filter.BigMapKey?.RawKey != null || filter.BigMapKey?.Key != null)
             sql.LeftJoin(@"""BigMapKeys""", "bk", @"""Id""", @"bu.""BigMapKeyId""");
 
-        if (filter.BigMap?.Contract?.TypeHash != null || filter.BigMap?.Contract?.CodeHash != null || filter.BigMap?.Contract?.Creator != null)
+        if (filter.BigMap?.Contract?.CodeHash != null || filter.BigMap?.Contract?.Creator != null)
             sql.InnerJoin(@"""Addresses""", "c", @"""Id""", @"b.""ContractId""");
 
         var (query, parameters) = sql
@@ -219,7 +218,6 @@ public class BigMapUpdateRepository(
             .Where(@"bu.""BigMapId""",      filter.BigMap?.Id)
             .Where(@"b.""Ptr""",            filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",     filter.BigMap?.Contract?.Id)
-            .Where(@"c.""TypeHash""",       filter.BigMap?.Contract?.TypeHash)
             .Where(@"c.""CodeHash""",       filter.BigMap?.Contract?.CodeHash)
             .Where(@"c.""CreatorId""",      filter.BigMap?.Contract?.Creator?.Id)
             .Where(@"b.""StoragePath""",    filter.BigMap?.StoragePath)
@@ -330,9 +328,6 @@ public class BigMapUpdateRepository(
                     break;
                 case "bigMap.contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Alias;
-                    break;
-                case "bigMap.contract.typeHash":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).TypeHash;
                     break;
                 case "bigMap.contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).CodeHash;

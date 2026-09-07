@@ -313,9 +313,6 @@ public class L1Contract : L1AddressBase
     /// <summary>Contract kind (`smart_contract`, `delegator_contract` or `asset`).</summary>
     public required string Kind { get; set; }
 
-    /// <summary>32-bit hash of the contract parameter and storage types (helps to find similar contracts).</summary>
-    public int TypeHash { get; set; }
-
     /// <summary>32-bit hash of the contract code (helps to find identical contracts).</summary>
     public int CodeHash { get; set; }
 
@@ -438,9 +435,6 @@ public class XEvmContract : XEvmAddressBase
     /// <summary>Contract kind (`smart_contract` or `asset`).</summary>
     public required string Kind { get; set; }
 
-    /// <summary>32-bit hash of the contract interface (helps to find similar contracts).</summary>
-    public int TypeHash { get; set; }
-
     /// <summary>32-bit hash of the contract code (helps to find identical contracts).</summary>
     public int CodeHash { get; set; }
 
@@ -497,9 +491,6 @@ public class XMichelsonContract : XMichelsonAddressBase
 {
     /// <summary>Contract kind (`smart_contract`, `delegator_contract` or `asset`).</summary>
     public required string Kind { get; set; }
-
-    /// <summary>32-bit hash of the contract parameter and storage types (helps to find similar contracts).</summary>
-    public int TypeHash { get; set; }
 
     /// <summary>32-bit hash of the contract code (helps to find identical contracts).</summary>
     public int CodeHash { get; set; }

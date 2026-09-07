@@ -232,9 +232,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                         .SelectMany(x => x)
                         .ToArray()
                         ?? [];
-                    var typeSchema = newScript.ParameterSchema.Concat(newScript.StorageSchema).Concat(viewsBytes);
-                    var fullSchema = typeSchema.Concat(newScript.CodeSchema);
-                    contract.TypeHash = newScript.TypeHash = MichelsonScript.GetHash(typeSchema);
+                    var fullSchema = newScript.ParameterSchema.Concat(newScript.StorageSchema).Concat(viewsBytes).Concat(newScript.CodeSchema);
                     contract.CodeHash = newScript.CodeHash = MichelsonScript.GetHash(fullSchema);
 
                     migration.ScriptId = newScript.Id;
@@ -454,7 +452,6 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     Db.Storages.Remove(storage);
                     Cache.Chain.ReleaseStorageId();
 
-                    contract.TypeHash = oldScript.TypeHash;
                     contract.CodeHash = oldScript.CodeHash;
                     contract.MigrationsCount--;
                 }

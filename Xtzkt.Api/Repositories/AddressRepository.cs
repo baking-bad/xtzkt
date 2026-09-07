@@ -147,7 +147,6 @@ public class AddressRepository(
                     case "softwareUpdateLevel":         columns.Add(@"""SoftwareUpdateLevel"""); break;
                     // L1Contract / XMichelsonContract / XEvmContract
                     case "kind":        columns.Add(@"""Kind"""); break;
-                    case "typeHash":    columns.Add(@"""TypeHash"""); break;
                     case "codeHash":    columns.Add(@"""CodeHash"""); break;
                     case "creator":     columns.Add(@"""CreatorId"""); break;
                     case "logsCount":   columns.Add(@"""LogsCount"""); break;
@@ -436,7 +435,6 @@ public class AddressRepository(
                 RefutationGamesCount = row.RefutationGamesCount,
                 ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                 Kind = ContractKinds.ToString((int)row.Kind),
-                TypeHash = row.TypeHash,
                 CodeHash = row.CodeHash,
                 Tags = ContractTags.ToList((int)row.Tags),
                 TokensCount = row.TokensCount,
@@ -648,7 +646,6 @@ public class AddressRepository(
                 Balance = row.Balance,
                 BlocksCount = row.BlocksCount,
                 Eip7702DelegationCount = row.Eip7702DelegationCount,
-                TypeHash = row.TypeHash,
                 CodeHash = row.CodeHash,
                 Creator = _addressCache.GetInfo(row.CreatorId),
                 LogsCount = row.LogsCount,
@@ -746,7 +743,6 @@ public class AddressRepository(
                 TransferTicketCount = row.TransferTicketCount,
                 IncreasePaidStorageCount = row.IncreasePaidStorageCount,
                 Kind = ContractKinds.ToString((int)row.Kind),
-                TypeHash = row.TypeHash,
                 CodeHash = row.CodeHash,
                 Tags = ContractTags.ToList((int)row.Tags),
                 TokensCount = row.TokensCount,
@@ -995,7 +991,6 @@ public class AddressRepository(
                     RefutationGamesCount = row.RefutationGamesCount,
                     ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                     Kind = ContractKinds.ToString((int)row.Kind),
-                    TypeHash = row.TypeHash,
                     CodeHash = row.CodeHash,
                     Tags = ContractTags.ToList((int)row.Tags),
                     TokensCount = row.TokensCount,
@@ -1207,7 +1202,6 @@ public class AddressRepository(
                     Balance = (BigInteger)row.Balance18,
                     BlocksCount = row.BlocksCount,
                     Eip7702DelegationCount = row.Eip7702DelegationCount,
-                    TypeHash = row.TypeHash,
                     CodeHash = row.CodeHash,
                     Creator = _addressCache.GetInfo((int)row.CreatorId),
                     LogsCount = row.LogsCount,
@@ -1305,7 +1299,6 @@ public class AddressRepository(
                     TransferTicketCount = row.TransferTicketCount,
                     IncreasePaidStorageCount = row.IncreasePaidStorageCount,
                     Kind = ContractKinds.ToString((int)row.Kind),
-                    TypeHash = row.TypeHash,
                     CodeHash = row.CodeHash,
                     Tags = ContractTags.ToList((int)row.Tags),
                     TokensCount = row.TokensCount,
@@ -1697,9 +1690,6 @@ public class AddressRepository(
                     break;
                 case "kind":
                     foreach (var row in rows) result[j++][i] = row.Kind == null ? null : ContractKinds.ToString((int)row.Kind);
-                    break;
-                case "typeHash":
-                    foreach (var row in rows) result[j++][i] = row.TypeHash;
                     break;
                 case "codeHash":
                     foreach (var row in rows) result[j++][i] = row.CodeHash;

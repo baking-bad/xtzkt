@@ -522,7 +522,6 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 Kind = XContractKind.SmartContract,
                 Tags = XMichelsonContractTags.None,
                 CodeHash = 0,
-                TypeHash = 0,
                 LogsCount = 0,
                 TicketsCount = 0,
                 TokensCount = 0,

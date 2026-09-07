@@ -15,7 +15,6 @@ namespace Xtzkt.Data.Models
         public long? MigrationId { get; set; }
         public bool Current { get; set; }
 
-        public int TypeHash { get; set; }
         public int CodeHash { get; set; }
     }
 

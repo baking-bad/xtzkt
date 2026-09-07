@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 #nullable disable
 
 namespace Xtzkt.Data.Migrations
-{   
+{
     /// <inheritdoc />
     public partial class Triggers : Migration
     {

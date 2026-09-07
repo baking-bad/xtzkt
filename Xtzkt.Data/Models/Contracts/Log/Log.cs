@@ -8,7 +8,7 @@ namespace Xtzkt.Data.Models;
 
 public abstract class Log(Runtime runtime)
 {
-    [Column(Order = 10)]
+    [Column(Order = 9)]
     public Runtime Runtime { get; private set; } = runtime;
 
     [Column(Order = 0)]
@@ -22,13 +22,11 @@ public abstract class Log(Runtime runtime)
     [Column(Order = 7)]
     public required int AddressId { get; set; }
     [Column(Order = 8)]
-    public required int ContractTypeHash { get; set; }
-    [Column(Order = 9)]
     public required int ContractCodeHash { get; set; }
 
     public string? Name { get; set; }
     public string? Payload { get; set; }
-    [Column(Order = 11)]
+    [Column(Order = 10)]
     public bool? Guessed { get; set; }
 
     #region binary writer
@@ -39,7 +37,6 @@ public abstract class Log(Runtime runtime)
         "{nameof(Level)}",
         "{nameof(Timestamp)}",
         "{nameof(AddressId)}",
-        "{nameof(ContractTypeHash)}",
         "{nameof(ContractCodeHash)}",
         "{nameof(Name)}",
         "{nameof(Payload)}",
@@ -56,7 +53,6 @@ public abstract class Log(Runtime runtime)
         writer.Write(Level, NpgsqlDbType.Integer);
         writer.Write(Timestamp, NpgsqlDbType.TimestampTz);
         writer.Write(AddressId, NpgsqlDbType.Integer);
-        writer.Write(ContractTypeHash, NpgsqlDbType.Integer);
         writer.Write(ContractCodeHash, NpgsqlDbType.Integer);
         writer.WriteNullable(Name, NpgsqlDbType.Text);
         writer.WriteNullable(Payload, NpgsqlDbType.Jsonb);

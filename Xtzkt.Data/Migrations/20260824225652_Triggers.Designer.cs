@@ -1892,15 +1892,11 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<int>("ContractCodeHash")
                         .HasColumnType("integer")
-                        .HasColumnOrder(9);
-
-                    b.Property<int>("ContractTypeHash")
-                        .HasColumnType("integer")
                         .HasColumnOrder(8);
 
                     b.Property<bool?>("Guessed")
                         .HasColumnType("boolean")
-                        .HasColumnOrder(11);
+                        .HasColumnOrder(10);
 
                     b.Property<int>("Level")
                         .HasColumnType("integer")
@@ -1914,7 +1910,7 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<byte>("Runtime")
                         .HasColumnType("smallint")
-                        .HasColumnOrder(10);
+                        .HasColumnOrder(9);
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
@@ -2594,9 +2590,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.Property<byte>("Runtime")
                         .HasColumnType("smallint");
-
-                    b.Property<int>("TypeHash")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -3679,6 +3672,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<byte[]>("RawValue")
                         .IsRequired()
                         .HasColumnType("bytea");
+
+                    b.Property<long?>("SubsidyId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("TransactionId")
                         .HasColumnType("bigint");
@@ -6260,11 +6256,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("TokensCount");
 
-                    b.Property<int>("TypeHash")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("TypeHash");
-
                     b.HasDiscriminator().HasValue(2);
                 });
 
@@ -6690,11 +6681,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("TokensCount");
 
-                    b.Property<int>("TypeHash")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("TypeHash");
-
                     b.HasDiscriminator().HasValue(12);
                 });
 
@@ -6760,11 +6746,6 @@ namespace Xtzkt.Data.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("integer")
                         .HasColumnName("TokensCount");
-
-                    b.Property<int>("TypeHash")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("integer")
-                        .HasColumnName("TypeHash");
 
                     b.HasDiscriminator().HasValue(22);
                 });

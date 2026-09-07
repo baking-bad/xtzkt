@@ -157,8 +157,8 @@ public class AddressCache
         if (Get(id) is not Address address)
             throw new Exception("You are lucky :)");
 
-        var (typeHash, codeHash, creatorId) = GetContractProps(address);
-        return BuildContractInfo(address, typeHash, codeHash, GetInfo(creatorId));
+        var (codeHash, creatorId) = GetContractProps(address);
+        return BuildContractInfo(address, codeHash, GetInfo(creatorId));
     }
 
     public async Task<Models.ContractInfo> GetContractInfoAsync(int id)
@@ -166,25 +166,24 @@ public class AddressCache
         if (await GetAsync(id) is not Address address)
             throw new Exception("You are lucky :)");
 
-        var (typeHash, codeHash, creatorId) = GetContractProps(address);
-        return BuildContractInfo(address, typeHash, codeHash, await GetInfoAsync(creatorId));
+        var (codeHash, creatorId) = GetContractProps(address);
+        return BuildContractInfo(address, codeHash, await GetInfoAsync(creatorId));
     }
 
-    static (int TypeHash, int CodeHash, int CreatorId) GetContractProps(Address address) => address switch
+    static (int CodeHash, int CreatorId) GetContractProps(Address address) => address switch
     {
-        L1Contract contract => (contract.TypeHash, contract.CodeHash, contract.CreatorId),
-        XEvmContract contract => (contract.TypeHash, contract.CodeHash, contract.CreatorId),
-        XMichelsonContract contract => (contract.TypeHash, contract.CodeHash, contract.CreatorId),
+        L1Contract contract => (contract.CodeHash, contract.CreatorId),
+        XEvmContract contract => (contract.CodeHash, contract.CreatorId),
+        XMichelsonContract contract => (contract.CodeHash, contract.CreatorId),
         _ => throw new Exception($"Address #{address.Id} is not a contract")
     };
 
-    Models.ContractInfo BuildContractInfo(Address address, int typeHash, int codeHash, Models.AddressInfo creator) => new()
+    Models.ContractInfo BuildContractInfo(Address address, int codeHash, Models.AddressInfo creator) => new()
     {
         Id = address.Id,
         Hash = address.Hash,
         Type = Models.Enums.AddressTypes.ToString((int)address.Type),
         Alias = AliasCache.Get(address.Id),
-        TypeHash = typeHash,
         CodeHash = codeHash,
         Creator = creator,
     };
