@@ -22,11 +22,9 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     ///
     /// By default the account is matched in any role (sender, target, initiator, or just mentioned)
     /// and noisy types such as attestations are left out. Use `roles` and `types` to change that.
-    ///
-    /// Prefer `cursor` over `offset` for paging — it stays fast no matter how deep into the history you go.
     /// </remarks>
     [HttpGet("account")]
-    public async Task<ActionResult<IEnumerable<IActivity>>> GetByAccount(AccountActivityFilter filter, CursorPagination pagination)
+    public async Task<ActionResult<IEnumerable<IActivity>>> GetByAccount(AccountActivityFilter filter, ActivityPagination pagination)
     {
         var query = ResponseCacheService.BuildKey(Request.Path.Value,
             ("filter", filter), ("pagination", pagination));
@@ -51,7 +49,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// add `chain` unless you really want all of them at once.
     /// </remarks>
     [HttpGet("block")]
-    public async Task<ActionResult<IEnumerable<IActivity>>> GetByBlock(BlockActivityFilter filter, CursorPagination pagination)
+    public async Task<ActionResult<IEnumerable<IActivity>>> GetByBlock(BlockActivityFilter filter, ActivityPagination pagination)
     {
         var query = ResponseCacheService.BuildKey(Request.Path.Value,
             ("filter", filter), ("pagination", pagination));
@@ -76,7 +74,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// instead of querying each operation endpoint separately and stitching the results together.
     /// </remarks>
     [HttpGet("opg")]
-    public async Task<ActionResult<IEnumerable<IOpgActivity>>> GetByOpg(OpgActivityFilter filter, CursorPagination pagination)
+    public async Task<ActionResult<IEnumerable<IOpgActivity>>> GetByOpg(OpgActivityFilter filter, ActivityPagination pagination)
     {
         var query = ResponseCacheService.BuildKey(Request.Path.Value,
             ("filter", filter), ("pagination", pagination));

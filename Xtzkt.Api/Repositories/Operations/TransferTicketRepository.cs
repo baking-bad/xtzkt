@@ -396,7 +396,7 @@ public class TransferTicketRepository(
         ActivityRole roles,
         ChainInfoParameter? chain,
         DateTimeParameter? timestamp,
-        CursorPagination pagination)
+        ActivityPagination pagination)
     {
         var or = new OrParameterBuilder(pagination.Limit);
 
@@ -431,14 +431,14 @@ public class TransferTicketRepository(
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
-    public async Task<IEnumerable<IActivity>> Activity(Int32EqParameter level, ChainInfoParameter? chain, CursorPagination pagination)
+    public async Task<IEnumerable<IActivity>> Activity(Int32EqParameter level, ChainInfoParameter? chain, ActivityPagination pagination)
     {
         return await Get(
             new() { Level = level.ToInt32Parameter(), Chain = chain },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
-    public async Task<IEnumerable<IOpgActivity>> Activity(OperationHashEqParameter hash, ChainInfoParameter? chain, CursorPagination pagination)
+    public async Task<IEnumerable<IOpgActivity>> Activity(OperationHashEqParameter hash, ChainInfoParameter? chain, ActivityPagination pagination)
     {
         return await Get(
             new() { Hash = hash.ToOperationHashParameter(), Chain = chain },

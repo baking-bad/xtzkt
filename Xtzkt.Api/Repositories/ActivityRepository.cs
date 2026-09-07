@@ -24,7 +24,7 @@ public class ActivityRepository(
     ChainCache _chainCache,
     AddressCache _addressCache)
 {
-    public async Task<IEnumerable<IActivity>> Get(AccountActivityFilter filter, CursorPagination pagination)
+    public async Task<IEnumerable<IActivity>> Get(AccountActivityFilter filter, ActivityPagination pagination)
     {
         ValidatePagination(pagination);
 
@@ -104,7 +104,7 @@ public class ActivityRepository(
         return Paginate(tasks.SelectMany(x => x.Result), pagination);
     }
 
-    public async Task<IEnumerable<IActivity>> Get(BlockActivityFilter filter, CursorPagination pagination)
+    public async Task<IEnumerable<IActivity>> Get(BlockActivityFilter filter, ActivityPagination pagination)
     {
         ValidatePagination(pagination);
 
@@ -165,7 +165,7 @@ public class ActivityRepository(
         return Paginate(tasks.SelectMany(x => x.Result), pagination);
     }
 
-    public async Task<IEnumerable<IOpgActivity>> Get(OpgActivityFilter filter, CursorPagination pagination)
+    public async Task<IEnumerable<IOpgActivity>> Get(OpgActivityFilter filter, ActivityPagination pagination)
     {
         ValidatePagination(pagination);
 
@@ -258,7 +258,7 @@ public class ActivityRepository(
 
     public static readonly string[] SortFields = ["id", "timestamp"];
 
-    static void ValidatePagination(CursorPagination pagination)
+    static void ValidatePagination(ActivityPagination pagination)
     {
         if (pagination.Sort == null)
             pagination.Sort = new() { Cols = [("id", true)] };
@@ -266,7 +266,7 @@ public class ActivityRepository(
             throw new BadRequestException(nameof(pagination.Sort), $"Sort by {pagination.Sort.Cols.First(x => !SortFields.Contains(x.field)).field} is not allowed. Allowed fields: {string.Join(", ", SortFields)}");
     }
 
-    static IEnumerable<T> Paginate<T>(IEnumerable<T> items, CursorPagination pagination) where T : IActivity
+    static IEnumerable<T> Paginate<T>(IEnumerable<T> items, ActivityPagination pagination) where T : IActivity
     {
         var sort = pagination.Sort!;
 
@@ -301,7 +301,7 @@ public class ActivityRepository(
         return result.Take(pagination.Limit);
     }
     
-    static (CursorPagination, long?) ExtendPagination(CursorPagination pagination)
+    static (ActivityPagination, long?) ExtendPagination(ActivityPagination pagination)
     {
         if (pagination.Cursor?.Cols?.Count > 0)
         {
@@ -319,7 +319,7 @@ public class ActivityRepository(
                         var newCursor = new CursorParameter { Cols = [.. pagination.Cursor.Cols] };
                         newCursor.Cols[i] = ((id & ~0xFFFFFL) - 1).ToString();
 
-                        var newPagination = new CursorPagination
+                        var newPagination = new ActivityPagination
                         {
                             Sort = pagination.Sort,
                             Cursor = newCursor,

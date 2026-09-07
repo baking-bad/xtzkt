@@ -57,16 +57,18 @@ GET /v1/tokens/balances?sort=balance.desc,id&limit=100&cursor=1000,1234
   items arrive between two requests, an offset shifts the whole list and you get duplicates or gaps,
   while a cursor stays anchored to the item you left off at.
 - To download a whole list, loop until the response is empty:
-  `?sort=id&limit=10000` and then `cursor=<id of the last item>` on every next request.
+  `?sort=id&limit={MaxLimit}` and then `cursor=<id of the last item>` on every next request.
 
 ### Offset and limit
 
-- `?limit=` is between `1` and `10000`, `100` by default.
-- `?offset=` is between `0` and `100000`. It is capped on purpose: DB materializes and throws
+- `?limit=` is between `1` and `{MaxLimit}`, `{DefaultLimit}` by default. Activity endpoints cap it at
+  `{MaxActivityLimit}`: they merge several tables per request, so their cost grows with the limit faster.
+- `?offset=` is between `0` and `{MaxOffset}`. It is capped on purpose: DB materializes and throws
   away the skipped rows, so an offset costs time proportional to its value, and past a certain depth
   a single request would occupy the database for seconds.
-- The cap is roughly 1000 pages of 100 items, which no interactive listing ever reaches. If you do
+- The cap is roughly {MaxOffsetPages} pages of {DefaultLimit} items, which no interactive listing ever reaches. If you do
   hit it, you're bulk-reading — which is exactly what `cursor` is for, and it's faster anyway.
+- All these caps are configured per instance; the numbers above are this instance's.
 
 ## Filtering
 

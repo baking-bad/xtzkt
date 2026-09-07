@@ -1,11 +1,11 @@
-using System.ComponentModel.DataAnnotations;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Services.ResponseCache;
+using Xtzkt.Api.Utils.Validation;
 
 namespace Xtzkt.Api.Filters;
 
-public class CursorPagination : INormalizable
+public class ActivityPagination : INormalizable
 {
     /// <summary>
     /// Comma-separated list of fields (with optional sort direction) to sort by.
@@ -24,12 +24,13 @@ public class CursorPagination : INormalizable
     public CursorParameter? Cursor { get; set; }
 
     /// <summary>
-    /// Maximum number of items to return (1-10000).
+    /// Maximum number of items to return (1-{MaxActivityLimit}). Lower than elsewhere, because activity is merged
+    /// from several tables per request, so its cost grows faster.
     ///
     /// Example: `?limit=50`.
     /// </summary>
-    [Range(1, 10000)]
-    public int Limit { get; set; } = 100;
+    [ActivityLimitRange]
+    public int Limit { get; set; } = ApiConfig.DefaultLimit;
 
     public string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.sort", Sort),

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 using Xtzkt.Api.Filters.Parameters;
+using Xtzkt.Api.Utils.Validation;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Api.Swagger;
@@ -124,6 +125,22 @@ static class SwaggerExtension
 
                         sort.Description += $"\n\nAllowed fields: `{string.Join("`, `", fields)}`.";
                     }
+
+                    // [Range] bounds are only known at runtime, so they don't reach the schema on their own
+                    foreach (var d in ctx.Description.ParameterDescriptions)
+                    {
+                        if (d.ModelMetadata?.ValidatorMetadata.OfType<RangeAttribute>().FirstOrDefault() is RangeAttribute range &&
+                            op.Parameters.FirstOrDefault(x => x.Name == JsonNamingPolicy.CamelCase.ConvertName(d.Name)) is OpenApiParameter p &&
+                            p.Schema is OpenApiSchema schema)
+                        {
+                            schema.Minimum = range.Minimum.ToString();
+                            schema.Maximum = range.Maximum.ToString();
+                        }
+                    }
+
+                    foreach (var p in op.Parameters)
+                        if (p is OpenApiParameter _p && _p.Description != null)
+                            _p.Description = WithLimits(_p.Description);
                 }
                 return Task.CompletedTask;
             });
@@ -137,8 +154,7 @@ static class SwaggerExtension
                     Email = "hello@bakingbad.dev",
                     Url = new("https://bakingbad.dev"),
                 };
-                doc.Info.Description = LoadText("Xtzkt.Api.Swagger.description.md")
-                    .Replace("{MaxBatchSize}", ApiConfig.MaxBatchSize.ToString());
+                doc.Info.Description = WithLimits(LoadText("Xtzkt.Api.Swagger.description.md"));
                 doc.Info.Extensions ??= new Dictionary<string, IOpenApiExtension>();
                 doc.Info.Extensions["x-logo"] = new JsonNodeExtension(new JsonObject
                 {
@@ -236,6 +252,14 @@ static class SwaggerExtension
         stream.CopyTo(buffer);
         return buffer.ToArray();
     }
+
+    static string WithLimits(string text) => text
+        .Replace("{DefaultLimit}", ApiConfig.DefaultLimit.ToString())
+        .Replace("{MaxBatchSize}", ApiConfig.MaxBatchSize.ToString())
+        .Replace("{MaxLimit}", ApiConfig.MaxLimit.ToString())
+        .Replace("{MaxActivityLimit}", ApiConfig.MaxActivityLimit.ToString())
+        .Replace("{MaxOffset}", ApiConfig.MaxOffset.ToString())
+        .Replace("{MaxOffsetPages}", (ApiConfig.MaxOffset / ApiConfig.DefaultLimit).ToString());
 
     static string LoadText(string name)
     {
