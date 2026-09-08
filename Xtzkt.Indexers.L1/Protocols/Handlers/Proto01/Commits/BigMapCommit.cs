@@ -78,25 +78,33 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 .Where(x => x.diff.Ptr >= 0 && !allocated.Contains(x.diff.Ptr) && x.diff.Action == BigMapDiffAction.Update && Cache.BigMaps.HasCached(x.diff.Ptr))
                 .Select(x => (Cache.BigMaps.Get(x.diff.Ptr).Id, (x.diff as UpdateDiff)!.KeyHash)));
 
-            var copiedKeys = new List<BigMapKey>();
+            var images = new Dictionary<int, Dictionary<HashKey, (byte[] RawKey, byte[] RawValue)>>();
+
             if (copiedFrom.Count != 0)
             {
                 await Cache.BigMaps.Prefetch(copiedFrom);
 
+                // origins allocated in this block are not in the DB yet, their images are built in the loop below
                 var copiedFromIds = copiedFrom
-                    .Select(ptr => Cache.BigMaps.Get(ptr).Id)
-                    .ToHashSet();
+                    .Where(Cache.BigMaps.HasCached)
+                    .ToDictionary(ptr => Cache.BigMaps.Get(ptr).Id);
 
-                copiedKeys = await Db.BigMapKeys
+                foreach (var ptr in copiedFromIds.Values)
+                    images.Add(ptr, []);
+
+                var ids = copiedFromIds.Keys.ToHashSet();
+                var copiedKeys = ids.Count == 0 ? [] : await Db.BigMapKeys
                     .AsNoTracking()
-                    .Where(x => copiedFromIds.Contains(x.BigMapId))
+                    .Where(x => ids.Contains(x.BigMapId) && x.Active)
                     .ToListAsync();
+
+                foreach (var copiedKey in copiedKeys)
+                    images[copiedFromIds[copiedKey.BigMapId]].Add(copiedKey.KeyHash, (copiedKey.RawKey, copiedKey.RawValue));
             }
             #endregion
 
             BigMapUpdate bigMapUpdate;
             var bigMapUpdates = new List<BigMapUpdate>(Updates.Count);
-            var images = new Dictionary<int, Dictionary<HashKey, (byte[] RawKey, byte[] RawValue)>>();
             foreach (var diff in Diffs)
             {
                 switch (diff.diff)
@@ -171,14 +179,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                         }
                         break;
                     case CopyDiff copy:
-                        if (copy.SourcePtr >= 0 && !copiedFrom.Contains(copy.SourcePtr))
-                            break;
                         if (!images.TryGetValue(copy.SourcePtr, out var src))
                         {
-                            var sourceId = Cache.BigMaps.Get(copy.SourcePtr).Id;
-                            src = copiedKeys
-                                .Where(x => x.BigMapId == sourceId)
-                                .ToDictionary(x => (HashKey)x.KeyHash, x => (x.RawKey, x.RawValue));
+                            if (copy.Ptr >= 0)
+                                throw new Exception($"Copied big_map {copy.Ptr} has unknown source big_map {copy.SourcePtr}");
+
+                            src = [];
                         }
                         if (copy.Ptr >= 0)
                         {
@@ -432,6 +438,10 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                                 diff.op.BigMapUpdates = (diff.op.BigMapUpdates ?? 0) + 1;
                                 #endregion
                             }
+
+                            // keep the image in sync, in case the big_map is copied later in this block
+                            if (images.TryGetValue(update.Ptr, out var image))
+                                UpdateImage(image, update);
                         }
                         else
                         {
@@ -439,21 +449,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                             if (!images.TryGetValue(update.Ptr, out var image))
                                 throw new Exception("Can't update non-existent temporary big_map");
 
-                            if (image.TryGetValue(update.KeyHash, out var key))
-                            {
-                                if (update.Value != null)
-                                {
-                                    image[update.KeyHash] = (key.RawKey, update.Value.ToBytes());
-                                }
-                                else
-                                {
-                                    image.Remove(update.KeyHash);
-                                }
-                            }
-                            else if (update.Value != null) // WTF: edo2net:34839 - non-existent key was removed
-                            {
-                                image.Add(update.KeyHash, (update.Key.ToBytes(), update.Value.ToBytes()));
-                            }
+                            UpdateImage(image, update);
                             #endregion
                         }
                         break;
@@ -499,6 +495,25 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 .FirstOrDefault(x => x.diff.Action == BigMapDiffAction.Copy && x.diff.Ptr == copy.SourcePtr).diff is CopyDiff prevCopy
                     ? GetOrigin(prevCopy)
                     : copy.SourcePtr;
+        }
+
+        static void UpdateImage(Dictionary<HashKey, (byte[] RawKey, byte[] RawValue)> image, UpdateDiff update)
+        {
+            if (image.TryGetValue(update.KeyHash, out var key))
+            {
+                if (update.Value != null)
+                {
+                    image[update.KeyHash] = (key.RawKey, update.Value.ToBytes());
+                }
+                else
+                {
+                    image.Remove(update.KeyHash);
+                }
+            }
+            else if (update.Value != null) // WTF: edo2net:34839 - non-existent key was removed
+            {
+                image.Add(update.KeyHash, (update.Key.ToBytes(), update.Value.ToBytes()));
+            }
         }
 
         protected virtual BigMapTag GetTags(L1Contract contract, TreeView node) => BigMaps.GetTags(contract, node);
