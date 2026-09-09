@@ -10,8 +10,9 @@ namespace Xtzkt.Indexers.Common.Cache;
 public class XChainCache(XtzktContext db, IConfiguration config) : IChainCache
 {
     static XChain Chain = null!;
-    static int ChainIdMask32 = 0;
     static long ChainIdMask64 = 0;
+    static int ChainIdMask32 = 0;
+    static int ChainIdMask16 = 0;
 
     readonly XtzktContext Db = db;
     readonly ChainConfig ChainConfig = config.GetChainConfig();
@@ -22,8 +23,9 @@ public class XChainCache(XtzktContext db, IConfiguration config) : IChainCache
             throw new Exception("Invalid chain");
 
         Chain = chain;
-        ChainIdMask32 = chain.Id << 28;
-        ChainIdMask64 = (long)chain.Id << 60;
+        ChainIdMask64 = IdLayout.Mask64(chain.Id);
+        ChainIdMask32 = IdLayout.Mask32(chain.Id);
+        ChainIdMask16 = IdLayout.Mask16(chain.Id);
     }
 
     public XChain Get()
@@ -58,10 +60,10 @@ public class XChainCache(XtzktContext db, IConfiguration config) : IChainCache
 
     public int NextProtocolId()
     {
-        if (Chain.ProtocolsCount == 0xFF)
+        if (Chain.ProtocolsCount == 0xFFF)
             throw new Exception("Protocols count limit reached");
 
-        return (Chain.Id << 8) + ++Chain.ProtocolsCount;
+        return ChainIdMask16 + ++Chain.ProtocolsCount;
     }
 
     public void ReleaseProtocolId()

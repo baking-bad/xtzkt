@@ -14,6 +14,7 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
     static int TargetCap = 0;
     static Dictionary<int, L1Address> CachedById = [];
     static Dictionary<string, L1Address> CachedByHash = [];
+    static Dictionary<int, L1Baker> CachedBakers = [];
 
     public static void Configure(CacheSize? size)
     {
@@ -21,6 +22,7 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
         TargetCap = size?.TargetCap ?? 100_000;
         CachedById = new(SoftCap + 4096);
         CachedByHash = new(SoftCap + 4096);
+        CachedBakers = new(4001);
     }
     #endregion
 
@@ -32,6 +34,7 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
     {
         CachedById.Clear();
         CachedByHash.Clear();
+        CachedBakers.Clear();
 
         var bakers = await Db.Addresses
             .AsNoTracking()
@@ -62,21 +65,24 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
     {
         CachedById[address.Id] = address;
         CachedByHash[address.Hash] = address;
+
+        if (address is L1Baker baker)
+            CachedBakers[baker.Id] = baker;
+        else
+            CachedBakers.Remove(address.Id);
     }
 
     public void Update(L1Address address)
     {
         if (CachedById.ContainsKey(address.Id))
-        {
-            CachedById[address.Id] = address;
-            CachedByHash[address.Hash] = address;
-        }
+            Add(address);
     }
 
     public void Remove(L1Address address)
     {
         CachedById.Remove(address.Id);
         CachedByHash.Remove(address.Hash);
+        CachedBakers.Remove(address.Id);
     }
 
     public async Task Preload(IEnumerable<int> ids)
@@ -85,12 +91,15 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
         if (missed.Count != 0)
         {
             var addresses = await Db.Addresses
-                .OfType<L1Address>()
-                .Where(x => missed.Contains(x.Id))
+                .FromSqlRaw("""
+                    SELECT *
+                    FROM "Addresses"
+                    WHERE "Id" = ANY({0})
+                    """, missed.ToList())
                 .ToListAsync();
-            
+
             foreach (var address in addresses)
-                Add(address);
+                Add((L1Address)address);
         }
     }
 
@@ -100,12 +109,16 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
         if (missed.Count != 0)
         {
             var addresses = await Db.Addresses
-                .OfType<L1Address>()
-                .Where(x => x.ChainId == ChainConfig.Id && missed.Contains(x.Hash))
+                .FromSqlRaw("""
+                    SELECT *
+                    FROM "Addresses"
+                    WHERE "ChainId" = {0}
+                    AND "Hash" = ANY({1})
+                    """, ChainConfig.Id, missed.ToList())
                 .ToListAsync();
 
             foreach (var address in addresses)
-                Add(address);
+                Add((L1Address)address);
         }
     }
 
@@ -115,12 +128,16 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
         if (missed.Count != 0)
         {
             var addresses = await Db.Addresses
-                .OfType<L1Address>()
-                .Where(x => x.ChainId == ChainConfig.Id && missed.Contains(x.Hash))
+                .FromSqlRaw("""
+                    SELECT *
+                    FROM "Addresses"
+                    WHERE "ChainId" = {0}
+                    AND "Hash" = ANY({1})
+                    """, ChainConfig.Id, missed.ToList())
                 .ToListAsync();
 
             foreach (var address in addresses)
-                Add(address);
+                Add((L1Address)address);
 
             if (addresses.Count != missed.Count)
             {
@@ -393,9 +410,7 @@ public class AddressesCache(XtzktContext db, IChainCache chain, ChainConfig chai
 
     public IEnumerable<L1Baker> GetBakers()
     {
-        return CachedById.Values
-            .Where(x => x.Type == AddressType.L1Baker)
-            .OfType<L1Baker>();
+        return CachedBakers.Values;
     }
 
     L1User CreateUser(string hash, int level, DateTime timestamp)

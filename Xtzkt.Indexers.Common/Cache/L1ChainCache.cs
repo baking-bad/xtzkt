@@ -18,8 +18,9 @@ public interface IChainCache
 public class L1ChainCache(XtzktContext db, IConfiguration config) : IChainCache
 {
     static L1Chain Chain = null!;
-    static int ChainIdMask32 = 0;
     static long ChainIdMask64 = 0;
+    static int ChainIdMask32 = 0;
+    static int ChainIdMask16 = 0;
 
     readonly XtzktContext Db = db;
     readonly ChainConfig ChainConfig = config.GetChainConfig();
@@ -27,8 +28,9 @@ public class L1ChainCache(XtzktContext db, IConfiguration config) : IChainCache
     public async Task ResetAsync()
     {
         Chain = (await Db.Chains.SingleAsync(x => x.Id == ChainConfig.Id) as L1Chain)!;
-        ChainIdMask32 = Chain.Id << 28;
-        ChainIdMask64 = (long)Chain.Id << 60;
+        ChainIdMask64 = IdLayout.Mask64(Chain.Id);
+        ChainIdMask32 = IdLayout.Mask32(Chain.Id);
+        ChainIdMask16 = IdLayout.Mask16(Chain.Id);
     }
 
     public L1Chain Get()
@@ -104,10 +106,10 @@ public class L1ChainCache(XtzktContext db, IConfiguration config) : IChainCache
 
     public int NextProtocolId()
     {
-        if (Chain.ProtocolsCount == 0xFF)
+        if (Chain.ProtocolsCount == 0xFFF)
             throw new Exception("Protocols count limit reached");
 
-        return (Chain.Id << 8) + ++Chain.ProtocolsCount;
+        return ChainIdMask16 + ++Chain.ProtocolsCount;
     }
 
     public void ReleaseProtocolId()
@@ -243,10 +245,10 @@ public class L1ChainCache(XtzktContext db, IConfiguration config) : IChainCache
 
     public int NextSoftwareId()
     {
-        if (Chain.SoftwareCounter == 0xFFFF)
+        if (Chain.SoftwareCounter == 0xFFF)
             throw new Exception("Software count limit reached");
 
-        return (Chain.Id << 16) + ++Chain.SoftwareCounter;
+        return ChainIdMask16 + ++Chain.SoftwareCounter;
     }
 
     public void ReleaseSoftwareId()

@@ -284,9 +284,9 @@ namespace Xtzkt.Indexers.TezosX
         async Task<BlockContext> InitContext(XChain state, MetaBlock block)
         {
             var protocol = await Cache.Protocols.GetAsync(state.Kernel);
-            var timestamp = state.Timestamp == block.Timestamp
-                ? block.Timestamp.AddMilliseconds(protocol.MinBlockTimeMs)
-                : block.Timestamp;
+            var timestamp = block.Timestamp > state.Timestamp
+                ? block.Timestamp
+                : state.Timestamp.AddMilliseconds(protocol.MinBlockTimeMs);
             
             var prevStats = Cache.Statistics.Current;
             
@@ -307,7 +307,7 @@ namespace Xtzkt.Indexers.TezosX
                 {
                     ChainId = state.Id,
                     Level = block.Level,
-                    Timestamp = block.Timestamp,
+                    Timestamp = timestamp,
                     TotalBootstrapped = prevStats.TotalBootstrapped,
                     TotalBurned = prevStats.TotalBurned,
                     TotalBanished = prevStats.TotalBanished,

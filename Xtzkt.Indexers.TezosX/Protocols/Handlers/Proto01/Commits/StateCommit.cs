@@ -11,9 +11,9 @@ class StateCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
     {
         var state = Cache.Chain.Get();
 
-        state.Level = block.Level;
-        state.Timestamp = block.Timestamp;
-        state.Hash = Hashes.FormatEvmBlockHash(block.Hash);
+        state.Level = Context.Block.Level;
+        state.Timestamp = Context.Block.Timestamp;
+        state.Hash = Hashes.FormatEvmBlockHash(Context.Block.Hash);
 
         if (block.MichelsonBlock is JsonElement mb)
             state.MichelsonBlock = mb.RequiredString("hash");
