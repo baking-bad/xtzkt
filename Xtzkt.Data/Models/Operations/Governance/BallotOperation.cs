@@ -37,10 +37,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<BallotOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<BallotOperation>()
                 //.HasIndex(x => new { x.ChainId, x.Period });
                 .HasIndex(x => x.Period);
             #endregion

@@ -53,10 +53,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<DelegationOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<DelegationOperation>()
                 .HasIndex(x => x.SenderId, $"IX_{nameof(XtzktContext.DelegationOps)}_{nameof(DelegationOperation.SenderId)}_Partial")
                 .HasFilter($@"""{nameof(DelegationOperation.Status)}"" = {(int)OperationStatus.Applied}");
             #endregion

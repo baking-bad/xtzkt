@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
@@ -108,10 +109,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto02
                 user.MigrationsCount--;
             }
 
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             var migrationOps = await Db.MigrationOps
                 .AsNoTracking()
                 .OfType<MichelsonMigrationOperation>()
-                .Where(x => x.ChainId == block.ChainId && x.Level == state.Level && x.Kind == MigrationKind.ActivateBaker)
+                .Where(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.ActivateBaker)
                 .ToListAsync();
 
             Db.MigrationOps.RemoveRange(migrationOps);

@@ -49,10 +49,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<SetDelegateParametersOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<SetDelegateParametersOperation>()
                 //.HasIndex(x => new { x.ChainId, x.ActivationCycle });
                 .HasIndex(x => x.ActivationCycle, $"IX_{nameof(XtzktContext.SetDelegateParametersOps)}_{nameof(SetDelegateParametersOperation.ActivationCycle)}_Partial")
                 .HasFilter($@"""{nameof(SetDelegateParametersOperation.Status)}"" = {(int)OperationStatus.Applied}");

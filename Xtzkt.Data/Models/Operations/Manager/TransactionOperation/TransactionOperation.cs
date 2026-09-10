@@ -128,12 +128,6 @@ namespace Xtzkt.Data.Models
                 .HasColumnType("jsonb");
             #endregion
 
-            #region indexes
-            modelBuilder.Entity<TransactionOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
-
             #region inheritance
             modelBuilder.Entity<TransactionOperation>()
                 .HasDiscriminator<Direction>(nameof(TransactionOperation.Direction))

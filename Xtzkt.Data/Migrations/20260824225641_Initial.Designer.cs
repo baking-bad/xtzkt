@@ -56,8 +56,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("ActivationOps");
                 });
 
@@ -216,8 +214,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("AttestationOps");
                 });
 
@@ -258,8 +254,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("AttestationRewardOps");
                 });
 
@@ -293,8 +287,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("AutostakingOps");
                 });
@@ -565,8 +557,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("Period");
 
@@ -940,8 +930,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChainId", "Level");
-
                     b.ToTable("BridgeTicketTransfers");
                 });
 
@@ -1179,8 +1167,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("DalAttestationRewardOps");
                 });
 
@@ -1218,8 +1204,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("DalEntrapmentEvidenceOps");
                 });
@@ -1286,8 +1270,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("DalPublishCommitmentOps");
                 });
@@ -1377,8 +1359,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex(new[] { "SenderId" }, "IX_DelegationOps_SenderId_Partial")
                         .HasFilter("\"Status\" = 1");
@@ -1500,8 +1480,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("DepositOps");
 
                     b.HasDiscriminator<byte>("Runtime");
@@ -1609,8 +1587,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasIndex("Hash");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SlashedLevel");
 
                     b.ToTable("DoubleBakingOps");
@@ -1674,8 +1650,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasIndex("Hash");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SlashedLevel");
 
                     b.ToTable("DoubleConsensusOps");
@@ -1718,8 +1692,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("DrainDelegateOps");
                 });
@@ -1864,8 +1836,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("IncreasePaidStorageOps");
 
                     b.HasDiscriminator<byte>("Layer");
@@ -1960,8 +1930,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasIndex("AddressId");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("MigrationOps");
 
                     b.HasDiscriminator<byte>("Runtime");
@@ -2021,8 +1989,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("RevealedCycle");
 
@@ -2094,8 +2060,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("OriginationOps");
 
                     b.HasDiscriminator<int>("Env");
@@ -2131,8 +2095,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("PreattestationOps");
                 });
@@ -2234,8 +2196,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("SenderId", "Id");
 
@@ -2452,8 +2412,6 @@ namespace Xtzkt.Data.Migrations
                     b.HasIndex("Address")
                         .HasFilter("\"Address\" IS NOT NULL");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("RegisterConstantOps");
 
                     b.HasDiscriminator<byte>("Layer");
@@ -2517,8 +2475,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("RevealOps");
 
                     b.HasDiscriminator<byte>("Layer");
@@ -2553,8 +2509,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("RevelationPenaltyOps");
                 });
@@ -2670,8 +2624,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SenderId", "Id");
 
                     b.HasIndex(new[] { "ActivationCycle" }, "IX_SetDelegateParametersOps_ActivationCycle_Partial")
@@ -2739,8 +2691,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SenderId", "Id");
 
                     b.ToTable("SetDepositsLimitOps");
@@ -2804,8 +2754,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("SmartRollupAddMessagesOps");
                 });
@@ -2871,8 +2819,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("SmartRollupId", "Id");
 
@@ -3011,8 +2957,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("CommitmentId", "Id");
 
                     b.ToTable("SmartRollupExecuteOps");
@@ -3089,8 +3033,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("SmartRollupId");
 
@@ -3170,8 +3112,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasIndex("CommitmentId");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SmartRollupId", "BondStatus", "SenderId")
                         .HasFilter("\"BondStatus\" IS NOT NULL");
 
@@ -3244,8 +3184,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("SmartRollupRecoverBondOps");
                 });
@@ -3326,8 +3264,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.HasIndex("GameId", "Id");
 
@@ -3531,8 +3467,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("StakingOps");
                 });
 
@@ -3717,8 +3651,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("SubsidyOps");
                 });
 
@@ -3878,8 +3810,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ChainId", "Level");
 
                     b.ToTable("TicketTransfers");
                 });
@@ -4096,8 +4026,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChainId", "Level");
-
                     b.ToTable("TokenTransfers");
                 });
 
@@ -4197,8 +4125,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.ToTable("TransactionOps");
 
                     b.HasDiscriminator<byte>("Direction");
@@ -4289,8 +4215,6 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("TransferTicketOps");
 
@@ -4426,8 +4350,6 @@ namespace Xtzkt.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Level");
-
                     b.HasIndex("SenderId", "Id");
 
                     b.HasIndex(new[] { "ActivationCycle" }, "IX_UpdateSecondaryKeyOps_ActivationCycle_Partial")
@@ -4486,8 +4408,6 @@ namespace Xtzkt.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Cycle");
-
-                    b.HasIndex("Level");
 
                     b.ToTable("VdfRevelationOps");
                 });

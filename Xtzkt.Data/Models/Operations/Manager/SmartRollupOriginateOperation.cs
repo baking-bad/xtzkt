@@ -52,10 +52,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<SmartRollupOriginateOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<SmartRollupOriginateOperation>()
                 .HasIndex(x => x.SmartRollupId);
             #endregion
         }

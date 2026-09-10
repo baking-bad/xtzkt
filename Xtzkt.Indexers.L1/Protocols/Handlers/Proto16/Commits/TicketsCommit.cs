@@ -1,5 +1,6 @@
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
@@ -426,9 +427,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
 
             var state = Cache.Chain.Get();
 
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             var transfers = await Db.TicketTransfers
                 .AsNoTracking()
-                .Where(x => x.ChainId == block.ChainId && x.Level == block.Level)
+                .Where(x => x.Id >= lo && x.Id <= hi)
                 .OrderByDescending(x => x.Id)
                 .ToListAsync();
 
@@ -628,9 +631,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto16
 
             await Db.Database.ExecuteSqlRawAsync("""
                 DELETE FROM "TicketTransfers"
-                WHERE "ChainId" = {0}
-                AND "Level" = {1}
-                """, block.ChainId, block.Level);
+                WHERE "Id" >= {0}
+                AND "Id" <= {1}
+                """, lo, hi);
         }
     }
 }

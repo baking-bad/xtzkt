@@ -53,11 +53,15 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         public async Task Revert(XtzktContext db)
         {
             if (TransactionOps.Count != 0)
+            {
+                var (lo, hi) = IdLayout.Id64Range(Block.ChainId, Block.Id);
+
                 await db.Database.ExecuteSqlRawAsync($$"""
                     DELETE FROM "{{nameof(XtzktContext.TransactionOps)}}"
-                    WHERE "{{nameof(TransactionOperation.ChainId)}}" = {0}
-                    AND "{{nameof(TransactionOperation.Level)}}" = {1}
-                    """, Block.ChainId, Block.Level);
+                    WHERE "{{nameof(TransactionOperation.Id)}}" >= {0}
+                    AND "{{nameof(TransactionOperation.Id)}}" <= {1}
+                    """, lo, hi);
+            }
         }
     }
 

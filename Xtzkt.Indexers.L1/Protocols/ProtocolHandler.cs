@@ -92,20 +92,31 @@ namespace Xtzkt.Indexers.L1
                     await Commit(block);
                 }
 
-                Logger.LogDebug("Touch addresses");
-                TouchAddresses();
+                Db.ChangeTracker.DetectChanges();
 
                 var nextProtocol = this;
-                if (state.Protocol != state.NextProtocol)
-                    nextProtocol = Services.GetProtocolHandler(state.Level + 1, state.NextProtocol).WithContext(Context);
-
-                Logger.LogDebug("Save changes");
-                using (Metrics.Measure.Timer.Time(MetricsRegistry.SaveChangesTime))
+                Db.ChangeTracker.AutoDetectChangesEnabled = false;
+                try
                 {
-                    if (Config.Diagnostics || _ForceDiagnostics)
-                        nextProtocol.Diagnostics.TrackChanges();
-                    Context.Apply(Db);
-                    await Db.SaveChangesAsync();
+                    Logger.LogDebug("Touch addresses");
+                    TouchAddresses();
+
+                    if (state.Protocol != state.NextProtocol)
+                        nextProtocol = Services.GetProtocolHandler(state.Level + 1, state.NextProtocol).WithContext(Context);
+
+                    Logger.LogDebug("Save changes");
+                    using (Metrics.Measure.Timer.Time(MetricsRegistry.SaveChangesTime))
+                    {
+                        if (Config.Diagnostics || _ForceDiagnostics)
+                            nextProtocol.Diagnostics.TrackChanges();
+                        Context.Apply(Db);
+                        await Db.SaveChangesAsync();
+                        ResetTracker(state);
+                    }
+                }
+                finally
+                {
+                    Db.ChangeTracker.AutoDetectChangesEnabled = true;
                 }
 
                 Logger.LogDebug("Save post-changes");
@@ -115,6 +126,7 @@ namespace Xtzkt.Indexers.L1
                     if (Config.Diagnostics || _ForceDiagnostics)
                         nextProtocol.Diagnostics.TrackChanges();
                     await Db.SaveChangesAsync();
+                    ResetTracker(state);
                 }
 
                 Logger.LogDebug("Process quotes");
@@ -317,145 +329,147 @@ namespace Xtzkt.Indexers.L1
         async Task InitContext(L1Chain state)
         {
             var currBlock = Cache.Blocks.Get(state.Level);
+            var (lo, hi) = IdLayout.Id64Range(currBlock.ChainId, currBlock.Id);
+
             Context.Block = currBlock;
             Context.Proposer = Cache.Addresses.GetBaker(currBlock.ProposerId!.Value);
             Context.Protocol = await Cache.Protocols.GetAsync(currBlock.ProtocolId);
 
             if (currBlock.Operations.HasFlag(L1Operations.Attestation))
-                Context.AttestationOps = await Db.AttestationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.AttestationOps = await Db.AttestationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Preattestation))
-                Context.PreattestationOps = await Db.PreattestationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.PreattestationOps = await Db.PreattestationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Proposal))
-                Context.ProposalOps = await Db.ProposalOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.ProposalOps = await Db.ProposalOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Ballot))
-                Context.BallotOps = await Db.BallotOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.BallotOps = await Db.BallotOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Activation))
-                Context.ActivationOps = await Db.ActivationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.ActivationOps = await Db.ActivationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DalEntrapmentEvidence))
-                Context.DalEntrapmentEvidenceOps = await Db.DalEntrapmentEvidenceOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DalEntrapmentEvidenceOps = await Db.DalEntrapmentEvidenceOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DoubleBaking))
-                Context.DoubleBakingOps = await Db.DoubleBakingOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DoubleBakingOps = await Db.DoubleBakingOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DoubleConsensus))
-                Context.DoubleConsensusOps = await Db.DoubleConsensusOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DoubleConsensusOps = await Db.DoubleConsensusOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.NonceRevelation))
-                Context.NonceRevelationOps = await Db.NonceRevelationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.NonceRevelationOps = await Db.NonceRevelationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.VdfRevelation))
-                Context.VdfRevelationOps = await Db.VdfRevelationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.VdfRevelationOps = await Db.VdfRevelationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DrainDelegate))
-                Context.DrainDelegateOps = await Db.DrainDelegateOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DrainDelegateOps = await Db.DrainDelegateOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Delegation))
-                Context.DelegationOps = await Db.DelegationOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DelegationOps = await Db.DelegationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Origination))
                 Context.OriginationOps = await Db.OriginationOps
                     .AsNoTracking()
                     .OfType<L1OriginationOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Transaction))
                 Context.TransactionOps = await Db.TransactionOps
                     .AsNoTracking()
                     .OfType<L1TransactionOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Reveal))
                 Context.RevealOps = await Db.RevealOps
                     .AsNoTracking()
                     .OfType<L1RevealOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.RegisterConstant))
                 Context.RegisterConstantOps = await Db.RegisterConstantOps
                     .AsNoTracking()
                     .OfType<L1RegisterConstantOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SetDepositsLimits))
-                Context.SetDepositsLimitOps = await Db.SetDepositsLimitOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SetDepositsLimitOps = await Db.SetDepositsLimitOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.IncreasePaidStorage))
                 Context.IncreasePaidStorageOps = await Db.IncreasePaidStorageOps
                     .AsNoTracking()
                     .OfType<L1IncreasePaidStorageOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.UpdateSecondaryKey))
-                Context.UpdateSecondaryKeyOps = await Db.UpdateSecondaryKeyOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.UpdateSecondaryKeyOps = await Db.UpdateSecondaryKeyOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.TransferTicket))
                 Context.TransferTicketOps = await Db.TransferTicketOps
                     .AsNoTracking()
                     .OfType<L1TransferTicketOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SetDelegateParameters))
-                Context.SetDelegateParametersOps = await Db.SetDelegateParametersOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SetDelegateParametersOps = await Db.SetDelegateParametersOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DalPublishCommitment))
-                Context.DalPublishCommitmentOps = await Db.DalPublishCommitmentOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DalPublishCommitmentOps = await Db.DalPublishCommitmentOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Staking))
-                Context.StakingOps = await Db.StakingOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.StakingOps = await Db.StakingOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupAddMessages))
-                Context.SmartRollupAddMessagesOps = await Db.SmartRollupAddMessagesOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupAddMessagesOps = await Db.SmartRollupAddMessagesOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupCement))
-                Context.SmartRollupCementOps = await Db.SmartRollupCementOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupCementOps = await Db.SmartRollupCementOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupExecute))
-                Context.SmartRollupExecuteOps = await Db.SmartRollupExecuteOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupExecuteOps = await Db.SmartRollupExecuteOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupOriginate))
-                Context.SmartRollupOriginateOps = await Db.SmartRollupOriginateOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupOriginateOps = await Db.SmartRollupOriginateOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupPublish))
-                Context.SmartRollupPublishOps = await Db.SmartRollupPublishOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupPublishOps = await Db.SmartRollupPublishOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupRecoverBond))
-                Context.SmartRollupRecoverBondOps = await Db.SmartRollupRecoverBondOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupRecoverBondOps = await Db.SmartRollupRecoverBondOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.SmartRollupRefute))
-                Context.SmartRollupRefuteOps = await Db.SmartRollupRefuteOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SmartRollupRefuteOps = await Db.SmartRollupRefuteOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Migration))
                 Context.MigrationOps = await Db.MigrationOps
                     .AsNoTracking()
                     .OfType<MichelsonMigrationOperation>()
-                    .Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level)
+                    .Where(x => x.Id >= lo && x.Id <= hi)
                     .ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Subsidy))
-                Context.SubsidyOps = await Db.SubsidyOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.SubsidyOps = await Db.SubsidyOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.RevelationPenalty))
-                Context.RevelationPenaltyOps = await Db.RevelationPenaltyOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.RevelationPenaltyOps = await Db.RevelationPenaltyOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.AttestationRewards))
-                Context.AttestationRewardOps = await Db.AttestationRewardOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.AttestationRewardOps = await Db.AttestationRewardOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.DalAttestationReward))
-                Context.DalAttestationRewardOps = await Db.DalAttestationRewardOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.DalAttestationRewardOps = await Db.DalAttestationRewardOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Operations.HasFlag(L1Operations.Autostaking))
-                Context.AutostakingOps = await Db.AutostakingOps.AsNoTracking().Where(x => x.ChainId == currBlock.ChainId && x.Level == currBlock.Level).ToListAsync();
+                Context.AutostakingOps = await Db.AutostakingOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (currBlock.Events.HasFlag(L1BlockEvents.NewAddresses))
             {
@@ -469,20 +483,26 @@ namespace Xtzkt.Indexers.L1
             }
         }
 
+        void ResetTracker(L1Chain state)
+        {
+            Db.ChangeTracker.Clear();
+            Db.TryAttach(state);
+            Db.TryAttach(Context.Block);
+            Db.TryAttach(Cache.Statistics.Current);
+        }
+
         void TouchAddresses()
         {
-            var state = Cache.Chain.Get();
-            var block = (Db.ChangeTracker.Entries()
-                .First(x => x.Entity is L1Block block && block.Level == state.Level).Entity as L1Block)!;
+            var block = Context.Block;
 
-            foreach (var entry in Db.ChangeTracker.Entries().Where(x => x.Entity is L1Address).ToList())
+            foreach (var entry in Db.ChangeTracker.Entries<L1Address>().ToList())
             {
-                var address = (entry.Entity as L1Address)!;
+                var address = entry.Entity;
 
                 if (entry.State == EntityState.Modified)
                 {
-                    address.LastLevel = state.Level;
-                    address.LastTimestamp = state.Timestamp;
+                    entry.Property(nameof(L1Address.LastLevel)).CurrentValue = block.Level;
+                    entry.Property(nameof(L1Address.LastTimestamp)).CurrentValue = block.Timestamp;
                 }
                 else if (entry.State == EntityState.Added)
                 {
@@ -494,11 +514,9 @@ namespace Xtzkt.Indexers.L1
 
         void ClearAddresses()
         {
-            var state = Cache.Chain.Get();
-
-            foreach (var entry in Db.ChangeTracker.Entries().Where(x => x.Entity is L1Address).ToList())
+            foreach (var entry in Db.ChangeTracker.Entries<L1Address>().ToList())
             {
-                var address = (entry.Entity as L1Address)!;
+                var address = entry.Entity;
 
                 if (entry.State == EntityState.Modified)
                 {

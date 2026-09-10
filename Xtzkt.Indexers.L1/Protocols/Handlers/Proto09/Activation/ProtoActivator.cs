@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 
@@ -47,10 +48,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto09
         {
             var block = await Cache.Blocks.CurrentAsync();
 
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             var invoice = await Db.MigrationOps
                 .AsNoTracking()
                 .OfType<MichelsonMigrationOperation>()
-                .FirstAsync(x => x.ChainId == block.ChainId && x.Level == block.Level && x.Kind == MigrationKind.ProposalInvoice);
+                .FirstAsync(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.ProposalInvoice);
 
             var address = await Cache.Addresses.GetAsync(invoice.AddressId);
             Db.TryAttach(address);

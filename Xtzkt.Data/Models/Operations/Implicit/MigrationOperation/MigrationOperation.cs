@@ -42,10 +42,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<MigrationOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<MigrationOperation>()
                 .HasIndex(x => x.AddressId);
             #endregion
 

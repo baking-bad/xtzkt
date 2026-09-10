@@ -38,12 +38,6 @@ public static class DepositOperationModel
             .HasKey(x => x.Id);
         #endregion
 
-        #region indexes
-        modelBuilder.Entity<DepositOperation>()
-            //.HasIndex(x => new { x.ChainId, x.Level });
-            .HasIndex(x => x.Level);
-        #endregion
-
         #region inheritance
         modelBuilder.Entity<DepositOperation>()
             .HasDiscriminator<Runtime>(nameof(DepositOperation.Runtime))

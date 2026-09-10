@@ -43,10 +43,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<DoubleBakingOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<DoubleBakingOperation>()
                 //.HasIndex(x => new { x.ChainId, x.Hash });
                 .HasIndex(x => x.Hash);
 

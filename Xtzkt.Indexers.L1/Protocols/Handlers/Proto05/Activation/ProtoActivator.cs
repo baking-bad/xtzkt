@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
 using Newtonsoft.Json.Linq;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
@@ -296,11 +297,14 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
         protected override async Task RevertContext(L1Chain state)
         {
+            var block = await Cache.Blocks.CurrentAsync();
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             #region airdrop
             var airDrops = await Db.MigrationOps
                 .AsNoTracking()
                 .OfType<MichelsonMigrationOperation>()
-                .Where(x => x.ChainId == state.Id && x.Level == state.Level && x.Kind == MigrationKind.AirDrop)
+                .Where(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.AirDrop)
                 .ToListAsync();
 
             foreach (var airDrop in airDrops)
@@ -322,7 +326,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
             var invoice = await Db.MigrationOps
                 .AsNoTracking()
                 .OfType<MichelsonMigrationOperation>()
-                .FirstAsync(x => x.ChainId == state.Id && x.Level == state.Level && x.Kind == MigrationKind.ProposalInvoice);
+                .FirstAsync(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.ProposalInvoice);
 
             var invoiceAddress = await Cache.Addresses.GetAsync(invoice.AddressId);
             Db.TryAttach(invoiceAddress);
@@ -353,7 +357,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
             var codeChanges = await Db.MigrationOps
                 .OfType<MichelsonMigrationOperation>()
-                .Where(x => x.ChainId == state.Id && x.Level == state.Level && x.Kind == MigrationKind.CodeChange)
+                .Where(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.CodeChange)
                 .ToListAsync();
 
             Cache.Schemas.Reset();

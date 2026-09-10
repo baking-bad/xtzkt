@@ -43,12 +43,6 @@ public static class IncreasePaidStorageOperationModel
             .IsRequired();
         #endregion
 
-        #region indexes
-        modelBuilder.Entity<IncreasePaidStorageOperation>()
-            //.HasIndex(x => new { x.ChainId, x.Level });
-            .HasIndex(x => x.Level);
-        #endregion
-
         #region inheritance
         modelBuilder.Entity<IncreasePaidStorageOperation>()
             .HasDiscriminator<Layer>(nameof(IncreasePaidStorageOperation.Layer))

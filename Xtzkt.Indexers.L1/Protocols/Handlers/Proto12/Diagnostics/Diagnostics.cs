@@ -48,15 +48,14 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
         protected override async Task TestParticipation(L1Chain state)
         {
             var bakers = Cache.Addresses.GetBakers().ToList();
-            var bakerCycles = Db.ChangeTracker.Entries()
-                .Where(x => x.Entity is BakerCycle bc && bc.Cycle == state.Cycle)
-                .Select(x => (x.Entity as BakerCycle)!)
+            var bakerCycles = TrackedBakerCycles.Values
+                .Where(x => x.Cycle == state.Cycle)
                 .ToDictionary(x => x.BakerId);
 
             foreach (var baker in bakers)
             {
                 var remote = await Rpc.GetDelegateParticipationAsync(state.Level, baker.Hash);
-                
+
                 if (bakerCycles.TryGetValue(baker.Id, out var bakerCycle))
                 {
                     if ((long)bakerCycle.ExpectedAttestations != remote.RequiredInt64("expected_cycle_activity"))

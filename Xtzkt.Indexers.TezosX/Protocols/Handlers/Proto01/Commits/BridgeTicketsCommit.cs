@@ -1,5 +1,6 @@
 using System.Numerics;
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
@@ -186,9 +187,11 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 
             var state = Cache.Chain.Get();
 
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             var transfers = await Db.BridgeTicketTransfers
                 .AsNoTracking()
-                .Where(x => x.ChainId == block.ChainId && x.Level == block.Level)
+                .Where(x => x.Id >= lo && x.Id <= hi)
                 .OrderByDescending(x => x.Id)
                 .ToListAsync();
 
@@ -310,9 +313,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01
 
             await Db.Database.ExecuteSqlRawAsync("""
                 DELETE FROM "BridgeTicketTransfers"
-                WHERE "ChainId" = {0}
-                AND "Level" = {1}
-                """, block.ChainId, block.Level);
+                WHERE "Id" >= {0}
+                AND "Id" <= {1}
+                """, lo, hi);
         }
     }
 }

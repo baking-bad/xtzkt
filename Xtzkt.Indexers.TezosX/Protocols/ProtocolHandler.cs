@@ -332,29 +332,31 @@ namespace Xtzkt.Indexers.TezosX
                 SequencerPool = sequencerPool,
             };
 
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
             if (block.Operations.HasFlag(XOperations.Deposit))
-                context.DepositOps = await Db.DepositOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.DepositOps = await Db.DepositOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.IncreasePaidStorage))
-                context.IncreasePaidStorageOps = await Db.IncreasePaidStorageOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.IncreasePaidStorageOps = await Db.IncreasePaidStorageOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.Origination))
-                context.OriginationOps = await Db.OriginationOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.OriginationOps = await Db.OriginationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.RegisterConstant))
-                context.RegisterConstantOps = await Db.RegisterConstantOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.RegisterConstantOps = await Db.RegisterConstantOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.Reveal))
-                context.RevealOps = await Db.RevealOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.RevealOps = await Db.RevealOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.Transaction))
-                context.TransactionOps = await Db.TransactionOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.TransactionOps = await Db.TransactionOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.TransferTicket))
-                context.TransferTicketOps = await Db.TransferTicketOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.TransferTicketOps = await Db.TransferTicketOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Operations.HasFlag(XOperations.Migration))
-                context.MigrationOps = await Db.MigrationOps.AsNoTracking().Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+                context.MigrationOps = await Db.MigrationOps.AsNoTracking().Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             if (block.Events.HasFlag(XBlockEvents.NewAddresses))
             {

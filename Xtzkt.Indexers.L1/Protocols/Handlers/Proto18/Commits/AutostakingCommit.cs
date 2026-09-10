@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 
@@ -74,7 +75,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
             var state = Cache.Chain.Get();
             Db.TryAttach(state);
 
-            foreach (var op in await Db.AutostakingOps.Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync())
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
+            foreach (var op in await Db.AutostakingOps.Where(x => x.Id >= lo && x.Id <= hi).ToListAsync())
             {
                 var baker = Cache.Addresses.GetBaker(op.BakerId);
                 Db.TryAttach(baker);

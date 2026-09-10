@@ -32,12 +32,6 @@ namespace Xtzkt.Data.Models
                 .Property(x => x.Hash)
                 .IsRequired();
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<DalEntrapmentEvidenceOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
         }
     }
 }

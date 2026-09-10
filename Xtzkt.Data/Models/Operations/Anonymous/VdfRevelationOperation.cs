@@ -38,10 +38,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<VdfRevelationOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<VdfRevelationOperation>()
                 //.HasIndex(x => new { x.ChainId, x.Cycle });
                 .HasIndex(x => x.Cycle);
             #endregion

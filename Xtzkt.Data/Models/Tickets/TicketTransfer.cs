@@ -29,11 +29,6 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<TicketTransfer>()
                 .HasKey(x => x.Id);
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<TicketTransfer>()
-                .HasIndex(x => new { x.ChainId, x.Level });
-            #endregion
         }
     }
 }

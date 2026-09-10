@@ -40,12 +40,6 @@ public static class RevealOperationModel
             .IsRequired();
         #endregion
 
-        #region indexes
-        modelBuilder.Entity<RevealOperation>()
-            //.HasIndex(x => new { x.ChainId, x.Level });
-            .HasIndex(x => x.Level);
-        #endregion
-
         #region inheritance
         modelBuilder.Entity<RevealOperation>()
             .HasDiscriminator<Layer>(nameof(RevealOperation.Layer))

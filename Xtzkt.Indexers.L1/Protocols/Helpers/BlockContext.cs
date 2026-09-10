@@ -113,19 +113,21 @@ namespace Xtzkt.Indexers.L1.Protocols
 
         public async Task Revert(XtzktContext db)
         {
+            var (lo, hi) = IdLayout.Id64Range(Block.ChainId, Block.Id);
+
             if (TransactionOps.Count != 0)
                 await db.Database.ExecuteSqlRawAsync($$"""
                     DELETE FROM "{{nameof(XtzktContext.TransactionOps)}}"
-                    WHERE "{{nameof(TransactionOperation.ChainId)}}" = {0}
-                    AND "{{nameof(TransactionOperation.Level)}}" = {1}
-                    """, Block.ChainId, Block.Level);
+                    WHERE "{{nameof(TransactionOperation.Id)}}" >= {0}
+                    AND "{{nameof(TransactionOperation.Id)}}" <= {1}
+                    """, lo, hi);
 
             if (AttestationOps.Count != 0)
                 await db.Database.ExecuteSqlRawAsync($$"""
                     DELETE FROM "{{nameof(XtzktContext.AttestationOps)}}"
-                    WHERE "{{nameof(AttestationOperation.ChainId)}}" = {0}
-                    AND "{{nameof(AttestationOperation.Level)}}" = {1}
-                    """, Block.ChainId, Block.Level);
+                    WHERE "{{nameof(AttestationOperation.Id)}}" >= {0}
+                    AND "{{nameof(AttestationOperation.Id)}}" <= {1}
+                    """, lo, hi);
         }
     }
 }

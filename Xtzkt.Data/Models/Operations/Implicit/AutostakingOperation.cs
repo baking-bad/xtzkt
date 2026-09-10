@@ -25,12 +25,6 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<AutostakingOperation>()
                 .HasKey(x => x.Id);
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<AutostakingOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
         }
     }
 }

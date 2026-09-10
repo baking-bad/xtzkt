@@ -48,10 +48,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<SetDepositsLimitOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<SetDepositsLimitOperation>()
                 .HasIndex(x => new { x.SenderId, x.Id });
             #endregion
         }

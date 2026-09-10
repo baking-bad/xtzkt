@@ -23,12 +23,6 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<SubsidyOperation>()
                 .HasKey(x => x.Id);
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<SubsidyOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
         }
     }
 }

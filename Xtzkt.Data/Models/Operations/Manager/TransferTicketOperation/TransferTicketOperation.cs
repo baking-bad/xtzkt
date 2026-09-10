@@ -57,12 +57,6 @@ namespace Xtzkt.Data.Models
                 .HasColumnType("jsonb");
             #endregion
 
-            #region indexes
-            modelBuilder.Entity<TransferTicketOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
-
             #region inheritance
             modelBuilder.Entity<TransferTicketOperation>()
                 .HasDiscriminator<Layer>(nameof(TransferTicketOperation.Layer))

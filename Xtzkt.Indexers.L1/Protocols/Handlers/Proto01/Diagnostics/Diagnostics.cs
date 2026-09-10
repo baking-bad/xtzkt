@@ -18,6 +18,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
         int AddedOperations = 0;
         readonly Dictionary<int, L1Address> ChangedAddresses = [];
         readonly Dictionary<long, TicketBalance> ChangedTicketBalances = [];
+        protected readonly Dictionary<int, Cycle> TrackedCycles = [];
+        protected readonly Dictionary<(int Cycle, int BakerId), BakerCycle> TrackedBakerCycles = [];
 
         public void TrackChanges()
         {
@@ -33,6 +35,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                 x.Entity is TicketBalance && (x.State == EntityState.Modified || x.State == EntityState.Added))
                 .Select(x => (x.Entity as TicketBalance)!))
                 ChangedTicketBalances[ticket.Id] = ticket;
+
+            foreach (var cycle in entries.Select(x => x.Entity).OfType<Cycle>())
+                TrackedCycles[cycle.Index] = cycle;
+
+            foreach (var bakerCycle in entries.Select(x => x.Entity).OfType<BakerCycle>())
+                TrackedBakerCycles[(bakerCycle.Cycle, bakerCycle.BakerId)] = bakerCycle;
         }
 
         public virtual Task Run(JsonElement block)
@@ -104,7 +112,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
             
             if (Cache.Blocks.Current().Events.HasFlag(L1BlockEvents.CycleBegin))
             {
-                foreach (var cycle in Db.ChangeTracker.Entries().Where(x => x.Entity is Cycle).Select(x => (x.Entity as Cycle)!))
+                foreach (var cycle in TrackedCycles.Values)
                     await TestCycle(state, cycle);
                 
                 await TestParticipation(state);

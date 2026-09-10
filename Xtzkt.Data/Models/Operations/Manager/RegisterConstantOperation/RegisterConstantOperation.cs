@@ -54,10 +54,6 @@ public static class RegisterConstantOperationModel
 
         #region indexes
         modelBuilder.Entity<RegisterConstantOperation>()
-            //.HasIndex(x => new { x.ChainId, x.Level });
-            .HasIndex(x => x.Level);
-
-        modelBuilder.Entity<RegisterConstantOperation>()
             //.HasIndex(x => new { x.ChainId, x.Address });
             .HasIndex(x => x.Address)
             .HasFilter($@"""{nameof(RegisterConstantOperation.Address)}"" IS NOT NULL");

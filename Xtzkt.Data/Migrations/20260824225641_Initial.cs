@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -2392,11 +2392,6 @@ namespace Xtzkt.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivationOps_Level",
-                table: "ActivationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Addresses_BakerId",
                 table: "Addresses",
                 column: "BakerId",
@@ -2466,28 +2461,8 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"UnstakedBakerId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttestationOps_Level",
-                table: "AttestationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AttestationRewardOps_Level",
-                table: "AttestationRewardOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AutostakingOps_Level",
-                table: "AutostakingOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_BakingRights_Level",
                 table: "BakingRights",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BallotOps_Level",
-                table: "BallotOps",
                 column: "Level");
 
             migrationBuilder.CreateIndex(
@@ -2552,34 +2527,9 @@ namespace Xtzkt.Data.Migrations
                 column: "WeakHash");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BridgeTicketTransfers_ChainId_Level",
-                table: "BridgeTicketTransfers",
-                columns: new[] { "ChainId", "Level" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Commitments_AddressId",
                 table: "Commitments",
                 column: "AddressId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DalAttestationRewardOps_Level",
-                table: "DalAttestationRewardOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DalEntrapmentEvidenceOps_Level",
-                table: "DalEntrapmentEvidenceOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DalPublishCommitmentOps_Level",
-                table: "DalPublishCommitmentOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DelegationOps_Level",
-                table: "DelegationOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DelegationOps_SenderId_Partial",
@@ -2605,19 +2555,9 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"DepositId\" is not null");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DepositOps_Level",
-                table: "DepositOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_DoubleBakingOps_Hash",
                 table: "DoubleBakingOps",
                 column: "Hash");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DoubleBakingOps_Level",
-                table: "DoubleBakingOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DoubleBakingOps_SlashedLevel",
@@ -2630,19 +2570,9 @@ namespace Xtzkt.Data.Migrations
                 column: "Hash");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DoubleConsensusOps_Level",
-                table: "DoubleConsensusOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_DoubleConsensusOps_SlashedLevel",
                 table: "DoubleConsensusOps",
                 column: "SlashedLevel");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DrainDelegateOps_Level",
-                table: "DrainDelegateOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Eip7702Delegations_TransactionId_Id",
@@ -2652,11 +2582,6 @@ namespace Xtzkt.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_InboxMessages_Level",
                 table: "InboxMessages",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_IncreasePaidStorageOps_Level",
-                table: "IncreasePaidStorageOps",
                 column: "Level");
 
             migrationBuilder.CreateIndex(
@@ -2670,16 +2595,6 @@ namespace Xtzkt.Data.Migrations
                 column: "AddressId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MigrationOps_Level",
-                table: "MigrationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NonceRevelationOps_Level",
-                table: "NonceRevelationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_NonceRevelationOps_RevealedCycle",
                 table: "NonceRevelationOps",
                 column: "RevealedCycle");
@@ -2689,21 +2604,6 @@ namespace Xtzkt.Data.Migrations
                 table: "OriginationOps",
                 column: "BakerId",
                 filter: "\"Status\" = 1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OriginationOps_Level",
-                table: "OriginationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PreattestationOps_Level",
-                table: "PreattestationOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProposalOps_Level",
-                table: "ProposalOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProposalOps_Period_ProposalId_SenderId",
@@ -2768,21 +2668,6 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"Address\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegisterConstantOps_Level",
-                table: "RegisterConstantOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RevealOps_Level",
-                table: "RevealOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RevelationPenaltyOps_Level",
-                table: "RevelationPenaltyOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Scripts_ContractId_Id",
                 table: "Scripts",
                 columns: new[] { "ContractId", "Id" });
@@ -2800,34 +2685,14 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"Status\" = 1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SetDelegateParametersOps_Level",
-                table: "SetDelegateParametersOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SetDelegateParametersOps_SenderId_Id",
                 table: "SetDelegateParametersOps",
                 columns: new[] { "SenderId", "Id" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SetDepositsLimitOps_Level",
-                table: "SetDepositsLimitOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SetDepositsLimitOps_SenderId_Id",
                 table: "SetDepositsLimitOps",
                 columns: new[] { "SenderId", "Id" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupAddMessagesOps_Level",
-                table: "SmartRollupAddMessagesOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupCementOps_Level",
-                table: "SmartRollupCementOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SmartRollupCementOps_SmartRollupId_Id",
@@ -2850,16 +2715,6 @@ namespace Xtzkt.Data.Migrations
                 columns: new[] { "CommitmentId", "Id" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupExecuteOps_Level",
-                table: "SmartRollupExecuteOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupOriginateOps_Level",
-                table: "SmartRollupOriginateOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SmartRollupOriginateOps_SmartRollupId",
                 table: "SmartRollupOriginateOps",
                 column: "SmartRollupId");
@@ -2868,11 +2723,6 @@ namespace Xtzkt.Data.Migrations
                 name: "IX_SmartRollupPublishOps_CommitmentId",
                 table: "SmartRollupPublishOps",
                 column: "CommitmentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupPublishOps_Level",
-                table: "SmartRollupPublishOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SmartRollupPublishOps_SmartRollupId_BondStatus_SenderId",
@@ -2886,19 +2736,9 @@ namespace Xtzkt.Data.Migrations
                 columns: new[] { "SmartRollupId", "SenderId", "Id" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupRecoverBondOps_Level",
-                table: "SmartRollupRecoverBondOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SmartRollupRefuteOps_GameId_Id",
                 table: "SmartRollupRefuteOps",
                 columns: new[] { "GameId", "Id" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SmartRollupRefuteOps_Level",
-                table: "SmartRollupRefuteOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SnapshotBalances_ChainId_Level_Partial",
@@ -2920,11 +2760,6 @@ namespace Xtzkt.Data.Migrations
                 name: "IX_StakerCycles_StakerId_Cycle",
                 table: "StakerCycles",
                 columns: new[] { "StakerId", "Cycle" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StakingOps_Level",
-                table: "StakingOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StakingUpdates_AutostakingOpId",
@@ -2978,11 +2813,6 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"Current\" = true");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubsidyOps_Level",
-                table: "SubsidyOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TicketBalances_AddressId_TicketId",
                 table: "TicketBalances",
                 columns: new[] { "AddressId", "TicketId" });
@@ -2991,11 +2821,6 @@ namespace Xtzkt.Data.Migrations
                 name: "IX_Tickets_WeakHash",
                 table: "Tickets",
                 column: "WeakHash");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TicketTransfers_ChainId_Level",
-                table: "TicketTransfers",
-                columns: new[] { "ChainId", "Level" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TokenBalances_AddressId_TokenId",
@@ -3013,25 +2838,10 @@ namespace Xtzkt.Data.Migrations
                 columns: new[] { "ContractId", "TokenId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TokenTransfers_ChainId_Level",
-                table: "TokenTransfers",
-                columns: new[] { "ChainId", "Level" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TransactionOps_Level",
-                table: "TransactionOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TransactionOps_TargetId_Partial",
                 table: "TransactionOps",
                 column: "TargetId",
                 filter: "\"Entrypoint\" = 'transfer' AND \"TokenTransfers\" IS NULL AND \"Status\" = 1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TransferTicketOps_Level",
-                table: "TransferTicketOps",
-                column: "Level");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UnstakeRequests_BakerId_Cycle_StakerId",
@@ -3045,11 +2855,6 @@ namespace Xtzkt.Data.Migrations
                 filter: "\"Status\" = 1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UpdateSecondaryKeyOps_Level",
-                table: "UpdateSecondaryKeyOps",
-                column: "Level");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UpdateSecondaryKeyOps_SenderId_Id",
                 table: "UpdateSecondaryKeyOps",
                 columns: new[] { "SenderId", "Id" });
@@ -3058,11 +2863,6 @@ namespace Xtzkt.Data.Migrations
                 name: "IX_VdfRevelationOps_Cycle",
                 table: "VdfRevelationOps",
                 column: "Cycle");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VdfRevelationOps_Level",
-                table: "VdfRevelationOps",
-                column: "Level");
         }
 
         /// <inheritdoc />

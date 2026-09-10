@@ -67,10 +67,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<SmartRollupPublishOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<SmartRollupPublishOperation>()
                 .HasIndex(x => x.CommitmentId);
 
             modelBuilder.Entity<SmartRollupPublishOperation>()

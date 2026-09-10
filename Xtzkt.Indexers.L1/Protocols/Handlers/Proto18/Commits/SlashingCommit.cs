@@ -36,6 +36,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                     ?? (IOperation?)Db.DoubleConsensusOps.FirstOrDefault(x => x.ChainId == block.ChainId && x.Hash == opHashBytes)
                     ?? throw new Exception($"Cannot find delayed operation '{opHash}'");
 
+                // an accusation included in this very block was detached by ProtocolHandler.ResetTracker()
+                Db.TryAttach(accusation);
+
                 var (accuserId, offenderId) = accusation switch
                 {
                     DoubleBakingOperation op => (op.AccuserId, op.OffenderId),

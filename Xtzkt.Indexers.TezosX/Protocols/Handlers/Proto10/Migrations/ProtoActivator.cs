@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Netezos.Encoding;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Utils;
@@ -185,9 +186,11 @@ class ProtoActivator(ProtocolHandler proto) : Proto01.ProtoActivator(proto)
         #endregion
 
         #region null-address + gateway + bootstrap
+        var (lo, hi) = IdLayout.Id64Range(Context.Block.ChainId, Context.Block.Id);
+
         var migrations = await Db.MigrationOps
             .OfType<MichelsonMigrationOperation>()
-            .Where(x => x.ChainId == state.Id && x.Level == Context.Block.Level && x.Kind == MigrationKind.Bootstrap)
+            .Where(x => x.Id >= lo && x.Id <= hi && x.Kind == MigrationKind.Bootstrap)
             .ExecuteDeleteAsync();
 
         var scripts = await Db.Scripts

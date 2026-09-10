@@ -39,12 +39,6 @@ public static class OriginationOperationModel
             .HasKey(x => x.Id);
         #endregion
 
-        #region indexes
-        modelBuilder.Entity<OriginationOperation>()
-            //.HasIndex(x => new { x.ChainId, x.Level });
-            .HasIndex(x => x.Level);
-        #endregion
-
         #region inheritance
         modelBuilder.Entity<OriginationOperation>()
             .HasDiscriminator<Env>(nameof(OriginationOperation.Env))

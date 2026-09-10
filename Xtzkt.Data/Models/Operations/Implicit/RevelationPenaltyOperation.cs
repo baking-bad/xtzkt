@@ -24,12 +24,6 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<RevelationPenaltyOperation>()
                 .HasKey(x => x.Id);
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<RevelationPenaltyOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-            #endregion
         }
     }
 }

@@ -9,9 +9,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto22
         protected override async Task TestDalParticipation(L1Chain state)
         {
             var bakers = Cache.Addresses.GetBakers().ToList();
-            var bakerCycles = Db.ChangeTracker.Entries()
-                .Where(x => x.Entity is BakerCycle bc && bc.Cycle == state.Cycle)
-                .Select(x => (x.Entity as BakerCycle)!)
+            var bakerCycles = TrackedBakerCycles.Values
+                .Where(x => x.Cycle == state.Cycle)
                 .ToDictionary(x => x.BakerId);
 
             foreach (var baker in bakers)

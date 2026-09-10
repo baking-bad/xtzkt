@@ -56,10 +56,6 @@ namespace Xtzkt.Data.Models
 
             #region indexes
             modelBuilder.Entity<UpdateSecondaryKeyOperation>()
-                //.HasIndex(x => new { x.ChainId, x.Level });
-                .HasIndex(x => x.Level);
-
-            modelBuilder.Entity<UpdateSecondaryKeyOperation>()
                 //.HasIndex(x => new { x.ChainId, x.ActivationCycle });
                 .HasIndex(x => x.ActivationCycle, $"IX_{nameof(XtzktContext.UpdateSecondaryKeyOps)}_{nameof(UpdateSecondaryKeyOperation.ActivationCycle)}_Partial")
                 .HasFilter($@"""{nameof(UpdateSecondaryKeyOperation.Status)}"" = {(int)OperationStatus.Applied}");

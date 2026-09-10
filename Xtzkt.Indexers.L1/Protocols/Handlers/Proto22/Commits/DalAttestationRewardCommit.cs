@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 
@@ -149,7 +150,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto22
             if (!block.Operations.HasFlag(L1Operations.DalAttestationReward))
                 return;
 
-            var ops = await Db.DalAttestationRewardOps.Where(x => x.ChainId == block.ChainId && x.Level == block.Level).ToListAsync();
+            var (lo, hi) = IdLayout.Id64Range(block.ChainId, block.Id);
+
+            var ops = await Db.DalAttestationRewardOps.Where(x => x.Id >= lo && x.Id <= hi).ToListAsync();
 
             foreach (var op in ops)
             {

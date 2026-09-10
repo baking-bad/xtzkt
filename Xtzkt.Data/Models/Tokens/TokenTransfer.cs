@@ -96,11 +96,6 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<TokenTransfer>()
                 .HasKey(x => x.Id);
             #endregion
-
-            #region indexes
-            modelBuilder.Entity<TokenTransfer>()
-                .HasIndex(x => new { x.ChainId, x.Level });
-            #endregion
         }
     }
 }
