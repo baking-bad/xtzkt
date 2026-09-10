@@ -118,7 +118,7 @@ while (true)
         var chain = await db.Chains.FirstOrDefaultAsync(x => x.Id == chainConfig.Id);
         if (chain == null)
         {
-            var rollupAddress = await node.GetRollupAddress();
+            var (genesisLevel, genesisTimestamp, rollupAddress) = await node.GetGenesisInfo();
             var michelsonActivationLevel = await node.GetMichelsonActivationLevel();
             var network = chainConfig.Network ?? chainId switch
             {
@@ -142,6 +142,8 @@ while (true)
                 Id = chainConfig.Id,
                 ChainId = chainId,
                 Network = network,
+                GenesisLevel = genesisLevel,
+                GenesisTimestamp = genesisTimestamp,
                 RollupAddress = rollupAddress,
                 Kernel = kernelVersion,
                 MichelsonActivationLevel = michelsonActivationLevel,

@@ -556,6 +556,8 @@ namespace Xtzkt.Data.Migrations
                     Layer = table.Column<byte>(type: "smallint", nullable: false),
                     ChainId = table.Column<string>(type: "text", nullable: false),
                     Network = table.Column<string>(type: "text", nullable: false),
+                    GenesisLevel = table.Column<int>(type: "integer", nullable: false),
+                    GenesisTimestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Level = table.Column<int>(type: "integer", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Hash = table.Column<string>(type: "text", nullable: false),

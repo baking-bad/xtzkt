@@ -27,11 +27,16 @@ public sealed class EvmNode : IDisposable
         return result.RequiredString();
     }
 
-    public async Task<string> GetRollupAddress()
+    public async Task<(int Level, DateTime Timestamp, string RollupAddress)> GetGenesisInfo()
     {
         var result = await GetAsync("evm/v2/blueprint/0");
-        var payload = result.Required("blueprint").RequiredArray("payload")[0].RequiredHexBytes();
-        return Base58.Convert(payload[1..21], Prefixes.sr1);
+        var blueprint = result.Required("blueprint");
+        var payload = blueprint.RequiredArray("payload")[0].RequiredHexBytes();
+
+        return (
+            blueprint.RequiredInt32("number"),
+            blueprint.RequiredDateTime("timestamp"),
+            Base58.Convert(payload[1..21], Prefixes.sr1));
     }
 
     public async Task<int?> GetMichelsonActivationLevel()

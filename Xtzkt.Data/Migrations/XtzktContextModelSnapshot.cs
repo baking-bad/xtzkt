@@ -960,6 +960,12 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Extras")
                         .HasColumnType("jsonb");
 
+                    b.Property<int>("GenesisLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("GenesisTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasColumnType("text");

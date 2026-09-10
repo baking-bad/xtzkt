@@ -10,6 +10,8 @@ public abstract class Chain(Layer layer)
     public required int Id { get; set; }
     public required string ChainId { get; set; }
     public required string Network { get; set; }
+    public required int GenesisLevel { get; set; }
+    public required DateTime GenesisTimestamp { get; set; }
 
     public int Level { get; set; }
     public DateTime Timestamp { get; set; }

@@ -5,6 +5,7 @@ using App.Metrics.Formatters.Prometheus;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.L1;
+using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Services;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.L1.Services;
@@ -122,7 +123,11 @@ while (true)
         {
             var node = scope.ServiceProvider.GetRequiredService<TezosNode>();
 
-            var chainId = await node.GetAsync<string>("chains/main/chain_id");
+            var genesis = await node.GetAsync("chains/main/blocks/0/header");
+            var chainId = genesis.RequiredString("chain_id");
+            var genesisLevel = genesis.RequiredInt32("level");
+            var genesisTimestamp = genesis.RequiredDateTime("timestamp");
+
             var network = chainId switch
             {
                 "NetXdQprcVkpaWU" => "mainnet",
@@ -136,6 +141,8 @@ while (true)
                 Id = chainConfig.Id,
                 ChainId = chainId,
                 Network = network,
+                GenesisLevel = genesisLevel,
+                GenesisTimestamp = genesisTimestamp,
                 Cycle = -1,
                 Level = -1,
                 Timestamp = DateTimeOffset.MinValue.UtcDateTime,
