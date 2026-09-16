@@ -7,23 +7,24 @@ namespace Xtzkt.Api.Filters;
 public class BlockActivityFilter : INormalizable
 {
     /// <summary>
-    /// Level of the block whose activity to return. Required. The same level exists on every chain,
-    /// so add `chain` unless you want all of them at once.
-    ///
-    /// Click on the parameter to expand more details.
-    ///
-    /// Examples: `?level=1500000`, `?level.in=1500000,1500001`.
-    /// </summary>
-    public required Int32EqParameter Level { get; set; }
-
-    /// <summary>
-    /// Filters by chain the item belongs to.
+    /// Chain the block belongs to, by either of its two ids. **Required**, and exactly one — a level
+    /// only identifies a block within one chain.
     ///
     /// Click on the parameter to expand more details.
     ///
     /// Examples: `?chain=0`, `?chain.chainId=NetXdQprcVkpaWU`.
     /// </summary>
-    public ChainInfoParameter? Chain { get; set; }
+    public required ChainInfoEqParameter Chain { get; set; }
+
+    /// <summary>
+    /// Level of the block whose activity to return. **Required**, and exactly one — for several blocks,
+    /// ask for them separately.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?level=1500000`.
+    /// </summary>
+    public required Int32EqParameter Level { get; set; }
 
     /// <summary>
     /// Comma-separated list of activity types to return. If not specified, most types are returned,
@@ -34,7 +35,7 @@ public class BlockActivityFilter : INormalizable
     public ActivityTypesParameter? Types { get; set; }
 
     public string Normalize(string name) => ResponseCacheService.BuildKey("",
-        ($"{name}.level", Level),
         ($"{name}.chain", Chain),
+        ($"{name}.level", Level),
         ($"{name}.types", Types));
 }

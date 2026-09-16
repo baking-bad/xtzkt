@@ -20,9 +20,7 @@ public class SortBinder : IModelBinder
 
         bindingContext.Result = ModelBindingResult.Success(new SortParameter
         {
-            Cols = [..list!
-                .Select(x => x.EndsWith(".desc") ? (x[..^5], false) : x.EndsWith(".asc") ? (x[..^4], true) : (x, true))
-                .DistinctBy(x => x.Item1)],
+            Cols = [..list!.Select(x => x.EndsWith(".desc") ? (x[..^5], false) : x.EndsWith(".asc") ? (x[..^4], true) : (x, true))],
         });
 
         return Task.CompletedTask;

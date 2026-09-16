@@ -43,15 +43,6 @@ public class AddressFilter : INormalizable
     public AddressTypeParameter? Type { get; set; }
 
     /// <summary>
-    /// Filters by layer.
-    ///
-    /// Click on the parameter to expand more details.
-    ///
-    /// Example: `?layer=l1`.
-    /// </summary>
-    public LayerParameter? Layer { get; set; }
-
-    /// <summary>
     /// Filters by runtime.
     ///
     /// Click on the parameter to expand more details.
@@ -101,7 +92,6 @@ public class AddressFilter : INormalizable
         Chain == null &&
         Hash == null &&
         Type == null &&
-        Layer == null &&
         Runtime == null &&
         FirstLevel == null &&
         FirstTimestamp == null &&
@@ -113,7 +103,6 @@ public class AddressFilter : INormalizable
         ($"{name}.chain", Chain),
         ($"{name}.hash", Hash),
         ($"{name}.type", Type),
-        ($"{name}.layer", Layer),
         ($"{name}.runtime", Runtime),
         ($"{name}.firstLevel", FirstLevel),
         ($"{name}.firstTimestamp", FirstTimestamp),

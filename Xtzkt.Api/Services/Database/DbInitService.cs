@@ -79,6 +79,8 @@ public class DbInitService(
 
             // re-read extensions after the init script
             await CheckExtensions(db, stoppingToken);
+
+            _logger.LogInformation("All checks completed");
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
         catch (Exception ex)

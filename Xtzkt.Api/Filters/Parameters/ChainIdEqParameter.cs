@@ -5,16 +5,16 @@ using Xtzkt.Api.Filters.Binders;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
-[ModelBinder(BinderType = typeof(Int32EqBinder))]
-public class Int32EqParameter : INormalizable
+[ModelBinder(BinderType = typeof(ChainIdEqBinder))]
+public class ChainIdEqParameter : INormalizable
 {
     /// <summary>
     /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
     /// Returns items where 'param' is equal to 'value'.
     ///
-    /// Example: `?level=123`.
+    /// Example: `?chainId=0x1f094`.
     /// </summary>
-    public int? Eq { get; set; }
+    public string? Eq { get; set; }
 
     public string Normalize(string name)
     {

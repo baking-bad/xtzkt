@@ -3,6 +3,7 @@ using Netezos.Encoding;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -19,27 +20,44 @@ public class LogRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"l.""Id""",        "bigint") },
-        { "level",     (@"l.""Level""",     "integer") },
         { "timestamp", (@"l.""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(LogFilter filter)
+    async Task<bool> ProcessFilters(LogFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Address?.Hash != null)
-            filter.Address.Id += await filter.Address.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.Timestamp != null || pagination?.SortingBy("timestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeRangeParameter.TryMerge(filter.Timestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.Timestamp = firstTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Address, chains))
+            return false;
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(LogFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -115,7 +133,6 @@ public class LogRepository(
 
         var (query, parameters) = sql
             .Where(@"l.""Id""",               filter.Id)
-            .Where(@"l.""ChainId""",          filter.Chain?.Id)
             .Where(@"l.""Runtime""",          filter.Runtime)
             .Where(@"l.""Level""",            filter.Level)
             .Where(@"l.""Timestamp""",        filter.Timestamp)
@@ -155,7 +172,6 @@ public class LogRepository(
 
         var (query, parameters) = sql
             .Where(@"l.""Id""",               filter.Id)
-            .Where(@"l.""ChainId""",          filter.Chain?.Id)
             .Where(@"l.""Runtime""",          filter.Runtime)
             .Where(@"l.""Level""",            filter.Level)
             .Where(@"l.""Timestamp""",        filter.Timestamp)

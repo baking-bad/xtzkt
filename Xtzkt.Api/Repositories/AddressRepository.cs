@@ -3,6 +3,7 @@ using Npgsql;
 using System.Numerics;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -18,22 +19,52 @@ public class AddressRepository(
 {
     public static readonly SortSpec SortSpec = new("id")
     {
-        { "id",         (@"""Id""",         "integer") },
-        { "firstLevel", (@"""FirstLevel""", "integer") },
-        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",  (@"""LastLevel""",  "integer") },
-        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
+        { "id",             (@"""Id""",                                 "integer") },
+        { "balance",        (@"COALESCE(""Balance"", ""Balance18"")",   "numeric") },
+        { "firstTimestamp", (@"""FirstTimestamp""",                     "timestamptz") },
+        { "lastTimestamp",  (@"""LastTimestamp""",                      "timestamptz") },
     };
 
-    bool ProcessFilters(AddressFilter filter)
+    bool ProcessFilters(AddressFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        return filter.Chain.Id!.Eq != -1;
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return false;
+
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId32Range(chains);
+            if (!Int32Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(AddressFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -183,10 +214,8 @@ public class AddressRepository(
             .Select(columns)
             .From(@"""Addresses""")
             .Where(@"""Id""", filter.Id)
-            .Where(@"""ChainId""", filter.Chain?.Id)
             .Where(@"""Hash""", filter.Hash)
             .Where(@"""Type""", filter.Type)
-            .Where(@"""Layer""", filter.Layer)
             .Where(@"""Runtime""", filter.Runtime)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""FirstTimestamp""", filter.FirstTimestamp)
@@ -214,10 +243,8 @@ public class AddressRepository(
             .Select("COUNT(*)")
             .From(@"""Addresses""")
             .Where(@"""Id""", filter.Id)
-            .Where(@"""ChainId""", filter.Chain?.Id)
             .Where(@"""Hash""", filter.Hash)
             .Where(@"""Type""", filter.Type)
-            .Where(@"""Layer""", filter.Layer)
             .Where(@"""Runtime""", filter.Runtime)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""FirstTimestamp""", filter.FirstTimestamp)

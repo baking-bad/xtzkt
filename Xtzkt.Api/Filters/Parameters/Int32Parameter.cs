@@ -82,18 +82,225 @@ public class Int32Parameter : INormalizable
         (In == null || In.Contains(value)) &&
         (Ni == null || !Ni.Contains(value));
 
-    public static implicit operator Int32Parameter(int value) => new() { Eq = value };
-
-    public static Int32Parameter? operator +(Int32Parameter? a, Int32Parameter? b)
+    public string Normalize(string name)
     {
-        if (a == null) return b;
-        if (b == null) return a;
-        var res = new Int32Parameter();
+        var sb = new StringBuilder();
+
+        if (Eq != null)
+            sb.Append($"{name}.eq={Eq}&");
+
+        if (Ne != null)
+            sb.Append($"{name}.ne={Ne}&");
+
+        if (Gt != null)
+            sb.Append($"{name}.gt={Gt}&");
+
+        if (Ge != null)
+            sb.Append($"{name}.ge={Ge}&");
+
+        if (Lt != null)
+            sb.Append($"{name}.lt={Lt}&");
+
+        if (Le != null)
+            sb.Append($"{name}.le={Le}&");
+
+        if (In?.Count > 0)
+            sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x))}&");
+
+        if (Ni?.Count > 0)
+            sb.Append($"{name}.ni={string.Join(",", Ni.OrderBy(x => x))}&");
+
+        return sb.ToString();
+    }
+
+    public bool Reduce()
+    {
+        if (Eq != null)
+        {
+            if (Ne != null)
+            {
+                if (Ne == Eq) return false;
+                Ne = null;
+            }
+            if (Gt != null)
+            {
+                if (Gt >= Eq) return false;
+                Gt = null;
+            }
+            if (Ge != null)
+            {
+                if (Ge > Eq) return false;
+                Ge = null;
+            }
+            if (Lt != null)
+            {
+                if (Lt <= Eq) return false;
+                Lt = null;
+            }
+            if (Le != null)
+            {
+                if (Le < Eq) return false;
+                Le = null;
+            }
+            if (In != null)
+            {
+                if (!In.Contains(Eq.Value)) return false;
+                In = null;
+            }
+            if (Ni != null)
+            {
+                if (Ni.Contains(Eq.Value)) return false;
+                Ni = null;
+            }
+            return true;
+        }
+
+        if (In != null)
+        {
+            In = [.. In.Distinct().OrderBy(x => x)];
+            if (Ne != null)
+            {
+                In.RemoveAll(x => x == Ne.Value);
+                if (In.Count == 0) return false;
+                Ne = null;
+            }
+            if (Gt != null)
+            {
+                In.RemoveAll(x => x <= Gt.Value);
+                if (In.Count == 0) return false;
+                Gt = null;
+            }
+            if (Ge != null)
+            {
+                In.RemoveAll(x => x < Ge.Value);
+                if (In.Count == 0) return false;
+                Ge = null;
+            }
+            if (Lt != null)
+            {
+                In.RemoveAll(x => x >= Lt.Value);
+                if (In.Count == 0) return false;
+                Lt = null;
+            }
+            if (Le != null)
+            {
+                In.RemoveAll(x => x > Le.Value);
+                if (In.Count == 0) return false;
+                Le = null;
+            }
+            if (Ni != null)
+            {
+                In.RemoveAll(x => Ni.Contains(x));
+                if (In.Count == 0) return false;
+                Ni = null;
+            }
+            if (In.Count == 0) return false;
+            if (In.Count == 1)
+            {
+                Eq = In[0];
+                In = null;
+            }
+            return true;
+        }
+
+        if (Ne != null)
+        {
+            if (Gt >= Ne) Ne = null;
+            else if (Ge > Ne) Ne = null;
+            else if (Lt <= Ne) Ne = null;
+            else if (Le < Ne) Ne = null;
+            else if (Ni != null)
+            {
+                if (!Ni.Contains(Ne.Value)) Ni.Add(Ne.Value);
+                Ne = null;
+            }
+        }
+
+        if (Ni != null)
+        {
+            Ni = [.. Ni.Distinct().OrderBy(x => x)];
+            if (Gt != null)
+            {
+                Ni.RemoveAll(x => x <= Gt.Value);
+                if (Ni.Count == 0) Ni = null;
+            }
+            if (Ni != null && Ge != null)
+            {
+                Ni.RemoveAll(x => x < Ge.Value);
+                if (Ni.Count == 0) Ni = null;
+            }
+            if (Ni != null && Lt != null)
+            {
+                Ni.RemoveAll(x => x >= Lt.Value);
+                if (Ni.Count == 0) Ni = null;
+            }
+            if (Ni != null && Le != null)
+            {
+                Ni.RemoveAll(x => x > Le.Value);
+                if (Ni.Count == 0) Ni = null;
+            }
+            if (Ni != null)
+            {
+                if (Ni.Count == 0) Ni = null;
+                else if (Ni.Count == 1)
+                {
+                    Ne = Ni[0];
+                    Ni = null;
+                }
+            }
+        }
+
+        if (Gt != null)
+        {
+            if (Gt < Ge) Gt = null;
+            else if (Gt >= Lt) return false;
+            else if (Gt >= Le) return false;
+        }
+
+        if (Ge != null)
+        {
+            if (Ge <= Gt) Ge = null;
+            else if (Ge >= Lt) return false;
+            else if (Ge > Le) return false;
+        }
+
+        if (Lt != null)
+        {
+            if (Lt > Le) Lt = null;
+            else if (Lt <= Gt) return false;
+            else if (Lt <= Ge) return false;
+        }
+
+        if (Le != null)
+        {
+            if (Le >= Lt) Le = null;
+            else if (Le <= Gt) return false;
+            else if (Le < Ge) return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryMerge(Int32Parameter? a, Int32Parameter? b, out Int32Parameter? res)
+    {
+        if (a == null)
+        {
+            res = b;
+            return true;
+        }
+
+        if (b == null)
+        {
+            res = a;
+            return true;
+        }
+
+        res = new();
 
         if (a.Eq != null)
         {
             if (b.Eq != null && b.Eq != a.Eq)
-                res.Eq = -1;
+                return false;
             else
                 res.Eq = a.Eq;
         }
@@ -167,56 +374,21 @@ public class Int32Parameter : INormalizable
             if (b.In != null)
                 res.In = [.. a.In.Intersect(b.In)];
             else
-                res.In = a.In;
+                res.In = [.. a.In];
         }
         else
         {
-            res.In = b.In;
+            res.In = b.In?.ToList();
         }
 
-        if (a.Ni != null)
+        if (a.Ni != null || b.Ni != null)
         {
-            if (b.Ni != null)
-                res.Ni = [.. a.Ni.Concat(b.Ni).Distinct()];
-            else
-                res.Ni = a.Ni;
-        }
-        else
-        {
-            res.Ni = b.Ni;
+            res.Ni = [.. (res.Ni ?? []).Concat(a.Ni ?? []).Concat(b.Ni ?? []).Distinct()];
         }
 
-        return res;
+        return res.Reduce();
     }
 
-    public string Normalize(string name)
-    {
-        var sb = new StringBuilder();
-
-        if (Eq != null)
-            sb.Append($"{name}.eq={Eq}&");
-
-        if (Ne != null)
-            sb.Append($"{name}.ne={Ne}&");
-
-        if (Gt != null)
-            sb.Append($"{name}.gt={Gt}&");
-
-        if (Ge != null)
-            sb.Append($"{name}.ge={Ge}&");
-
-        if (Lt != null)
-            sb.Append($"{name}.lt={Lt}&");
-
-        if (Le != null)
-            sb.Append($"{name}.le={Le}&");
-
-        if (In?.Count > 0)
-            sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x))}&");
-
-        if (Ni?.Count > 0)
-            sb.Append($"{name}.ni={string.Join(",", Ni.OrderBy(x => x))}&");
-
-        return sb.ToString();
-    }
+    public static implicit operator Int32Parameter(int eq) => new() { Eq = eq };
+    public static implicit operator Int32Parameter?(Int32RangeParameter? p) => p == null ? null : new() { Eq = p.Eq, Gt = p.Gt, Ge = p.Ge, Lt = p.Lt, Le = p.Le };
 }

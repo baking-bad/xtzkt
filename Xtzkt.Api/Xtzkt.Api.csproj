@@ -32,6 +32,7 @@
 
     <ItemGroup>
         <Content Include="init.pgsql" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        <Content Include="init.example.pgsql" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

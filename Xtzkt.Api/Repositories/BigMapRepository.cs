@@ -20,35 +20,56 @@ public class BigMapRepository(
     {
         { "id",             (@"b.""Id""",             "integer") },
         { "ptr",            (@"b.""Ptr""",            "integer") },
-        { "firstLevel",     (@"b.""FirstLevel""",     "integer") },
         { "firstTimestamp", (@"b.""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"b.""LastLevel""",      "integer") },
         { "lastTimestamp",  (@"b.""LastTimestamp""",  "timestamptz") },
         { "totalKeys",      (@"b.""TotalKeys""",      "integer") },
         { "activeKeys",     (@"b.""ActiveKeys""",     "integer") },
         { "updates",        (@"b.""Updates""",        "integer") },
     };
 
-    async Task<bool> ProcessFilters(BigMapFilter filter)
+    async Task<bool> ProcessFilters(BigMapFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Contract?.Hash != null)
-            filter.Contract.Id += await filter.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId32Range(chains);
+            if (!Int32Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
 
-        if (filter.Contract?.Creator?.Hash != null)
-            filter.Contract.Creator.Id += await filter.Contract.Creator.Hash.ToIdParameter(_addressCache, chainId);
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Contract, chains))
+            return false;
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(BigMapFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -92,7 +113,6 @@ public class BigMapRepository(
 
         var (query, parameters) = sql
             .Where(@"b.""Id""",             filter.Id)
-            .Where(@"b.""ChainId""",        filter.Chain?.Id)
             .Where(@"b.""Ptr""",            filter.Ptr)
             .Where(@"b.""ContractId""",     filter.Contract?.Id)
             .Where(@"c.""CodeHash""",       filter.Contract?.CodeHash)
@@ -131,7 +151,6 @@ public class BigMapRepository(
 
         var (query, parameters) = sql
             .Where(@"b.""Id""",             filter.Id)
-            .Where(@"b.""ChainId""",        filter.Chain?.Id)
             .Where(@"b.""Ptr""",            filter.Ptr)
             .Where(@"b.""ContractId""",     filter.Contract?.Id)
             .Where(@"c.""CodeHash""",       filter.Contract?.CodeHash)

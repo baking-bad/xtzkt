@@ -11,41 +11,41 @@ namespace Xtzkt.Api.Repositories;
 public class Eip7702DelegationRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"""Id""",        "bigint") },
-        { "level",     (@"""Level""",     "integer") },
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(Eip7702DelegationFilter filter)
+    async Task<List<IdRange>?> ProcessFilters(Eip7702DelegationFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return null;
 
-        if (chainId == -1)
-            return false;
+        if (!await _addressCache.Resolve(filter.Sender, chains))
+            return null;
 
-        if (filter.Sender?.Hash != null)
-            filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.Authority, chains))
+            return null;
 
-        if (filter.Authority?.Hash != null)
-            filter.Authority.Id += await filter.Authority.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.PrevDelegate, chains))
+            return null;
 
-        if (filter.PrevDelegate?.Hash != null)
-            filter.PrevDelegate.Id += await filter.PrevDelegate.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.Delegate, chains))
+            return null;
 
-        if (filter.Delegate?.Hash != null)
-            filter.Delegate.Id += await filter.Delegate.Hash.ToIdParameter(_addressCache, chainId);
-
-        return true;
+        return await _blockCache.ProcessOpFilters(chains, filter.Id, filter.Level, filter.Timestamp, pagination);
     }
 
     async Task<IEnumerable<dynamic>> Query(Eip7702DelegationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (await ProcessFilters(filter, pagination) is not List<IdRange> ranges)
             return [];
 
         var columns = new HashSet<string>();
@@ -73,8 +73,8 @@ public class Eip7702DelegationRepository(
         var (query, parameters) = new SqlBuilder()
             .Select(columns)
             .From(@"""Eip7702Delegations""")
+            .Where(@"""Id""",             ranges)
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""Level""",          filter.Level)
             .Where(@"""Timestamp""",      filter.Timestamp)
             .Where(@"""TransactionId""",  filter.TransactionId)
@@ -98,14 +98,14 @@ public class Eip7702DelegationRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().OfType<Data.Models.XChain>().Sum(x => x.Eip7702DelegationCount);
 
-        if (!await ProcessFilters(filter))
+        if (await ProcessFilters(filter) is not List<IdRange> ranges)
             return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""Eip7702Delegations""")
+            .Where(@"""Id""",             ranges)
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""Level""",          filter.Level)
             .Where(@"""Timestamp""",      filter.Timestamp)
             .Where(@"""TransactionId""",  filter.TransactionId)

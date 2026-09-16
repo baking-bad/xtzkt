@@ -3,6 +3,7 @@ using Npgsql;
 using System.Numerics;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -21,19 +22,41 @@ public class BlockRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"""Id""",        "bigint") },
-        { "level",     (@"""Level""",     "integer") },
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    bool ProcessFilters(BlockFilter filter)
+    bool ProcessFilters(BlockFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        return filter.Chain.Id!.Eq != -1;
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return false;
+
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.Timestamp != null || pagination?.SortingBy("timestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.Timestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.Timestamp = firstTimestamp;
+            }
+        }
+        #endregion
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(BlockFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -88,7 +111,6 @@ public class BlockRepository(
             .Select(columns)
             .From(@"""Blocks""")
             .Where(@"""Id""",            filter.Id)
-            .Where(@"""ChainId""",       filter.Chain?.Id)
             .Where(@"""Level""",         filter.Level)
             .Where(@"""Timestamp""",     filter.Timestamp)
             .Where(@"""Hash""",          filter.Hash)
@@ -115,7 +137,6 @@ public class BlockRepository(
             .Select("COUNT(*)")
             .From(@"""Blocks""")
             .Where(@"""Id""",            filter.Id)
-            .Where(@"""ChainId""",       filter.Chain?.Id)
             .Where(@"""Level""",         filter.Level)
             .Where(@"""Timestamp""",     filter.Timestamp)
             .Where(@"""Hash""",          filter.Hash)
@@ -124,30 +145,6 @@ public class BlockRepository(
 
         await using var db = await _dataSource.OpenConnectionAsync();
         return await db.QueryFirstAsync<long>(query, parameters);
-    }
-
-    internal async Task<IEnumerable<(Data.Models.AllOperations Operations, Data.Models.AllBlockEvents Events)>> GetMasks(BlockFilter filter)
-    {
-        if (!ProcessFilters(filter))
-            return [];
-
-        var (query, parameters) = new SqlBuilder()
-            .Select([@"""Operations""", @"""Events"""])
-            .From(@"""Blocks""")
-            .Where(@"""Id""",            filter.Id)
-            .Where(@"""ChainId""",       filter.Chain?.Id)
-            .Where(@"""Level""",         filter.Level)
-            .Where(@"""Timestamp""",     filter.Timestamp)
-            .Where(@"""Hash""",          filter.Hash)
-            .Where(@"""MichelsonHash""", filter.MichelsonHash)
-            .Build();
-
-        await using var db = await _dataSource.OpenConnectionAsync();
-        var rows = await db.QueryAsync(query, parameters);
-
-        return rows.Select(row => (
-            (Data.Models.AllOperations)(long)row.Operations,
-            (Data.Models.AllBlockEvents)(int)row.Events));
     }
 
     public async Task<IEnumerable<Block>> Get(BlockFilter filter, Pagination pagination)
@@ -388,4 +385,22 @@ public class BlockRepository(
 
         return result;
     }
+
+    #region activity
+    internal async Task<(Data.Models.AllOperations Operations, Data.Models.AllBlockEvents Events)?> GetMasks(int level, Data.Models.Chain chain)
+    {
+        var (query, parameters) = new SqlBuilder()
+            .Select([@"""Operations""", @"""Events"""])
+            .From(@"""Blocks""")
+            .Where(@"""Level""", level)
+            .Where(@"""ChainId""", chain.Id)
+            .Build();
+
+        await using var db = await _dataSource.OpenConnectionAsync();
+        var row = await db.QuerySingleOrDefaultAsync(query, parameters);
+        if (row == null) return null;
+
+        return ((Data.Models.AllOperations)(long)row.Operations, (Data.Models.AllBlockEvents)(int)row.Events);
+    }
+    #endregion
 }

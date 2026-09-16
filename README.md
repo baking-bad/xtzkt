@@ -68,7 +68,7 @@ sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
 sudo apt update
-sudo apt install -y postgresql-17
+sudo apt install -y postgresql-18
 ````
 
 ---
@@ -140,6 +140,8 @@ dotnet publish -o ~/xtzkt-api
 #### Configure API
 
 Edit the configuration file `~/xtzkt-api/appsettings.json`. What you basically need is to adjust the `Db.ConnectionString`, if needed.
+
+By default the API creates only the few indexes it needs to function (see `init.pgsql`), so most filters and sorts run without an index. `init.example.pgsql` next to it shows what a workable set might look like: the access paths behind the main scenarios of every endpoint. Copy it, adjust it to what your instance actually serves, and point `Db.InitScript` at your copy. The indexes are built `CONCURRENTLY` in the background on startup; on a synced database this takes a while.
 
 #### Run API
 

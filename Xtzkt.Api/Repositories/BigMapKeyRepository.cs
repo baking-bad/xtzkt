@@ -3,6 +3,7 @@ using Netezos.Encoding;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -18,33 +19,53 @@ public class BigMapKeyRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"bk.""Id""",             "bigint") },
-        { "firstLevel",     (@"bk.""FirstLevel""",     "integer") },
         { "firstTimestamp", (@"bk.""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"bk.""LastLevel""",      "integer") },
         { "lastTimestamp",  (@"bk.""LastTimestamp""",  "timestamptz") },
-        { "updates",        (@"bk.""Updates""",        "integer") },
     };
 
-    async Task<bool> ProcessFilters(BigMapKeyFilter filter)
+    async Task<bool> ProcessFilters(BigMapKeyFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.BigMap?.Contract?.Hash != null)
-            filter.BigMap.Contract.Id += await filter.BigMap.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
 
-        if (filter.BigMap?.Contract?.Creator?.Hash != null)
-            filter.BigMap.Contract.Creator.Id += await filter.BigMap.Contract.Creator.Hash.ToIdParameter(_addressCache, chainId);
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.BigMap?.Contract, chains))
+            return false;
 
         return await BigMapRepository.TryResolveIds(_dataSource, filter.Chain, filter.BigMap);
     }
 
     async Task<IEnumerable<dynamic>> Query(BigMapKeyFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -144,7 +165,6 @@ public class BigMapKeyRepository(
 
         var (query, parameters) = sql
             .Where(@"bk.""Id""",             filter.Id)
-            .Where(@"bk.""ChainId""",        filter.Chain?.Id)
             .Where(@"bk.""BigMapId""",       filter.BigMap?.Id)
             .Where(@"b.""Ptr""",             filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",      filter.BigMap?.Contract?.Id)
@@ -191,7 +211,6 @@ public class BigMapKeyRepository(
 
         var (query, parameters) = sql
             .Where(@"bk.""Id""",             filter.Id)
-            .Where(@"bk.""ChainId""",        filter.Chain?.Id)
             .Where(@"bk.""BigMapId""",       filter.BigMap?.Id)
             .Where(@"b.""Ptr""",             filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",      filter.BigMap?.Contract?.Id)

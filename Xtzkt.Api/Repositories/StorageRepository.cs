@@ -3,6 +3,7 @@ using Netezos.Encoding;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -17,28 +18,34 @@ public class StorageRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",    (@"s.""Id""",    "bigint") },
-        { "level", (@"s.""Level""", "integer") },
     };
 
     async Task<bool> ProcessFilters(StorageFilter filter)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Contract?.Hash != null)
-            filter.Contract.Id += await filter.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+        }
+        #endregion
 
-        if (filter.Contract?.Creator?.Hash != null)
-            filter.Contract.Creator.Id += await filter.Contract.Creator.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.Contract, chains))
+            return false;
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(StorageFilter filter, Pagination pagination, Selection? selection = null)
     {
+        pagination.Reduce(SortSpec);
+
         if (!await ProcessFilters(filter))
             return [];
 
@@ -89,7 +96,6 @@ public class StorageRepository(
 
         var (query, parameters) = sql
             .Where(@"s.""Id""", filter.Id)
-            .Where(@"s.""ChainId""", filter.Chain?.Id)
             .Where(@"s.""ContractId""", filter.Contract?.Id)
             .Where(@"c.""CodeHash""", filter.Contract?.CodeHash)
             .Where(@"c.""CreatorId""", filter.Contract?.Creator?.Id)
@@ -128,7 +134,6 @@ public class StorageRepository(
 
         var (query, parameters) = sql
             .Where(@"s.""Id""", filter.Id)
-            .Where(@"s.""ChainId""", filter.Chain?.Id)
             .Where(@"s.""ContractId""", filter.Contract?.Id)
             .Where(@"c.""CodeHash""", filter.Contract?.CodeHash)
             .Where(@"c.""CreatorId""", filter.Contract?.Creator?.Id)

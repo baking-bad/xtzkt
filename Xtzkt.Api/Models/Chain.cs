@@ -24,6 +24,16 @@ public abstract class Chain
     public required string Network { get; set; }
 
     /// <summary>
+    /// Level of the chain's very first (genesis) block.
+    /// </summary>
+    public int GenesisLevel { get; set; }
+
+    /// <summary>
+    /// Timestamp of the chain's very first (genesis) block (ISO 8601, e.g. `2020-02-20T02:40:57Z`).
+    /// </summary>
+    public DateTime GenesisTimestamp { get; set; }
+
+    /// <summary>
     /// Level of the last indexed block.
     /// </summary>
     public int Level { get; set; }

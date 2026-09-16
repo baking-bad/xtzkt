@@ -31,7 +31,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Examples: `?level=1500000`, `?level.gt=1500000`.
     /// </summary>
-    public Int32Parameter? Level { get; set; }
+    public Int32RangeParameter? Level { get; set; }
 
     /// <summary>
     /// Filters by timestamp of the block the item is in.
@@ -40,7 +40,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Example: `?timestamp.gt=2024-01-01T00:00:00Z`.
     /// </summary>
-    public DateTimeParameter? Timestamp { get; set; }
+    public DateTimeRangeParameter? Timestamp { get; set; }
 
     /// <summary>
     /// Filters by the transaction operation that carried the authorization.

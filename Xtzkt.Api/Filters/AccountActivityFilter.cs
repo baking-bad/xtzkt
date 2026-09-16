@@ -47,7 +47,7 @@ public class AccountActivityFilter : INormalizable
     ///
     /// Example: `?timestamp.gt=2024-01-01T00:00:00Z`.
     /// </summary>
-    public DateTimeParameter? Timestamp { get; set; }
+    public DateTimeRangeParameter? Timestamp { get; set; }
 
     public bool IsEmpty() =>
         Address == null &&

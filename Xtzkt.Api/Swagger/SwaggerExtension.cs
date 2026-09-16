@@ -46,8 +46,8 @@ static class SwaggerExtension
         { typeof(Models.Operations.TransactionOperation),          Repositories.Operations.TransactionRepository.SortSpec.Keys },
         { typeof(Models.Operations.TransferTicketOperation),       Repositories.Operations.TransferTicketRepository.SortSpec.Keys },
 
-        { typeof(Models.Abstract.IActivity),    Repositories.ActivityRepository.SortFields },
-        { typeof(Models.Abstract.IOpgActivity), Repositories.ActivityRepository.SortFields },
+        { typeof(Models.Abstract.IActivity),    Repositories.ActivityRepository.SortSpec.Keys },
+        { typeof(Models.Abstract.IOpgActivity), Repositories.ActivityRepository.SortSpec.Keys },
     };
 
     static Type ItemType(ApiDescription api)
@@ -211,6 +211,7 @@ static class SwaggerExtension
                     nameof(AddressInfoParameter),
                     nameof(AddressInfoNullParameter),
                     nameof(ChainInfoParameter),
+                    nameof(ChainInfoEqParameter),
                     nameof(TokenInfoParameter),
                     nameof(TicketInfoParameter),
                     nameof(BridgeTicketInfoParameter),

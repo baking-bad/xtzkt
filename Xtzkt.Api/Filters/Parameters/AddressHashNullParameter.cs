@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
-using Xtzkt.Api.Services.Cache;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
@@ -45,102 +44,6 @@ public class AddressHashNullParameter : INormalizable
     /// Example: `?target.ni=KT1...,tz1...` or `?target.ni=KT1...,null`.
     /// </summary>
     public List<string>? Ni { get; set; }
-
-    public async Task<Int32NullParameter?> ToIdParameter(AddressCache cache, int? chainId)
-    {
-        var id = new Int32NullParameter();
-
-        if (chainId is int _chainId)
-        {
-            if (Eq is string eq)
-            {
-                id.Eq = eq == Null ? Int32NullParameter.Null : ((await cache.GetAsync(_chainId, eq))?.Id ?? -1);
-                return id;
-            }
-
-            if (Ne is string ne)
-            {
-                id.Ne = ne == Null ? Int32NullParameter.Null : (await cache.GetAsync(_chainId, ne))?.Id;
-                return id;
-            }
-
-            if (In is List<string> @in)
-            {
-                var hasNull = @in.Contains(Null);
-                var addresses = await cache.GetAsync(_chainId, hasNull ? [.. @in.Where(x => x != Null)] : @in);
-                var ids = addresses.Select(x => x.Id).ToList();
-                if (hasNull) ids.Add(Int32NullParameter.Null);
-
-                if (ids.Count == 0) { id.Eq = -1; return id; }
-                if (ids.Count == 1) { id.Eq = ids[0]; return id; }
-                id.In = ids;
-                return id;
-            }
-
-            if (Ni is List<string> ni)
-            {
-                var hasNull = ni.Contains(Null);
-                var addresses = await cache.GetAsync(_chainId, hasNull ? [.. ni.Where(x => x != Null)] : ni);
-                var ids = addresses.Select(x => x.Id).ToList();
-                if (hasNull) ids.Add(Int32NullParameter.Null);
-
-                if (ids.Count == 0) { id.Ne = null; return id; }
-                if (ids.Count == 1) { id.Ne = ids[0]; return id; }
-                id.Ni = ids;
-                return id;
-            }
-        }
-        else
-        {
-            if (Eq is string eq)
-            {
-                if (eq == Null) { id.Eq = Int32NullParameter.Null; return id; }
-                var addresses = await cache.GetAsync(eq);
-                if (addresses.Count == 0) { id.Eq = -1; return id; }
-                if (addresses.Count == 1) { id.Eq = addresses[0].Id; return id; }
-                id.In = [.. addresses.Select(x => x.Id)];
-                return id;
-            }
-
-            if (Ne is string ne)
-            {
-                if (ne == Null) { id.Ne = Int32NullParameter.Null; return id; }
-                var addresses = await cache.GetAsync(ne);
-                if (addresses.Count == 0) { id.Ne = null; return id; }
-                if (addresses.Count == 1) { id.Ne = addresses[0].Id; return id; }
-                id.Ni = [.. addresses.Select(x => x.Id)];
-                return id;
-            }
-
-            if (In is List<string> @in)
-            {
-                var hasNull = @in.Contains(Null);
-                var addresses = await cache.GetAsync(hasNull ? [.. @in.Where(x => x != Null)] : @in);
-                var ids = addresses.Select(x => x.Id).ToList();
-                if (hasNull) ids.Add(Int32NullParameter.Null);
-
-                if (ids.Count == 0) { id.Eq = -1; return id; }
-                if (ids.Count == 1) { id.Eq = ids[0]; return id; }
-                id.In = ids;
-                return id;
-            }
-
-            if (Ni is List<string> ni)
-            {
-                var hasNull = ni.Contains(Null);
-                var addresses = await cache.GetAsync(hasNull ? [.. ni.Where(x => x != Null)] : ni);
-                var ids = addresses.Select(x => x.Id).ToList();
-                if (hasNull) ids.Add(Int32NullParameter.Null);
-
-                if (ids.Count == 0) { id.Ne = null; return id; }
-                if (ids.Count == 1) { id.Ne = ids[0]; return id; }
-                id.Ni = ids;
-                return id;
-            }
-        }
-
-        return id;
-    }
 
     public string Normalize(string name)
     {

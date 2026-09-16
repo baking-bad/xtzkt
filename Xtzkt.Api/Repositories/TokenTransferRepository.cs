@@ -14,31 +14,29 @@ namespace Xtzkt.Api.Repositories;
 public class TokenTransferRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"tt.""Id""",        "bigint") },
-        { "level",     (@"tt.""Level""",     "integer") },
         { "timestamp", (@"tt.""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(TokenTransferFilter filter)
+    async Task<List<IdRange>?> ProcessFilters(TokenTransferFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return null;
 
-        if (chainId == -1)
-            return false;
+        if (!await _addressCache.Resolve(filter.From, chains))
+            return null;
 
-        if (filter.From?.Hash != null)
-            filter.From.Id += await filter.From.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.To, chains))
+            return null;
 
-        if (filter.To?.Hash != null)
-            filter.To.Id += await filter.To.Hash.ToIdParameter(_addressCache, chainId);
-
-        if (filter.Token?.Contract?.Hash != null)
-            filter.Token.Contract.Id += await filter.Token.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.Token?.Contract, chains))
+            return null;
 
         if (filter.Token?.Contract?.Id?.Eq != null && filter.Token.TokenId?.Eq != null && filter.Token.Id?.Eq == null)
         {
@@ -52,7 +50,7 @@ public class TokenTransferRepository(
                     """, new { contractId = filter.Token.Contract.Id.Eq.Value, tokenId = filter.Token.TokenId.Eq });
 
             if (row == null)
-                return false;
+                return null;
 
             filter.Token.Contract.Id.Eq = null;
             filter.Token.TokenId.Eq = null;
@@ -61,12 +59,14 @@ public class TokenTransferRepository(
             filter.Token.Id.Eq = (long)row.Id;
         }
 
-        return true;
+        return await _blockCache.ProcessOpFilters(chains, filter.Id, filter.Level, filter.Timestamp, pagination);
     }
 
     async Task<IEnumerable<dynamic>> Query(TokenTransferFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (await ProcessFilters(filter, pagination) is not List<IdRange> ranges)
             return [];
 
         var columns = new HashSet<string>();
@@ -170,8 +170,8 @@ public class TokenTransferRepository(
                 "to" => @"tt.""ToId""",
                 _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
             })
+            .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
-            .Where(@"tt.""ChainId""",        filter.Chain?.Id)
             .Where(@"tt.""Level""",          filter.Level)
             .Where(@"tt.""Timestamp""",      filter.Timestamp)
             .Where(@"tt.""TokenId""",        filter.Token?.Id)
@@ -202,7 +202,7 @@ public class TokenTransferRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.TokenTransfersCount);
 
-        if (!await ProcessFilters(filter))
+        if (await ProcessFilters(filter) is not List<IdRange> ranges)
             return 0;
 
         var sql = new SqlBuilder()
@@ -219,8 +219,8 @@ public class TokenTransferRepository(
                 "to" => @"tt.""ToId""",
                 _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
             })
+            .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
-            .Where(@"tt.""ChainId""",        filter.Chain?.Id)
             .Where(@"tt.""Level""",          filter.Level)
             .Where(@"tt.""Timestamp""",      filter.Timestamp)
             .Where(@"tt.""TokenId""",        filter.Token?.Id)
@@ -424,7 +424,7 @@ public class TokenTransferRepository(
         List<Data.Models.Address> addresses,
         ActivityRole roles,
         ChainInfoParameter? chain,
-        DateTimeParameter? timestamp,
+        DateTimeRangeParameter? timestamp,
         ActivityPagination pagination)
     {
         var or = new OrParameterBuilder(pagination.Limit);
@@ -449,10 +449,10 @@ public class TokenTransferRepository(
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
-    public async Task<IEnumerable<IActivity>> Activity(Int32EqParameter level, ChainInfoParameter? chain, ActivityPagination pagination)
+    public async Task<IEnumerable<IActivity>> Activity(int level, Data.Models.Chain chain, ActivityPagination pagination)
     {
         return await Get(
-            new() { Level = level.ToInt32Parameter(), Chain = chain },
+            new() { Level = level, Chain = chain },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

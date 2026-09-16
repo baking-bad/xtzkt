@@ -5,6 +5,7 @@ using Xtzkt.Api.Models.Abstract;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Repositories.Operations;
 using Xtzkt.Api.Services.Cache;
+using Xtzkt.Api.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
@@ -22,37 +23,24 @@ public class ActivityRepository(
     BridgeTicketTransferRepository _bridgeTicketTransferRepo,
     BlockRepository _blockRepo,
     ChainCache _chainCache,
-    AddressCache _addressCache)
+    AddressCache _addressCache,
+    BlockCache _blockCache)
 {
+    public static readonly SortSpec SortSpec = new("id")
+    {
+        { "id",        (@"""Id""",        "bigint") },
+        { "timestamp", (@"""Timestamp""", "timestamptz") },
+    };
+
     public async Task<IEnumerable<IActivity>> Get(AccountActivityFilter filter, ActivityPagination pagination)
     {
         ValidatePagination(pagination);
 
-        var addresses = new List<Data.Models.Address>();
-        if ((filter.Chain?.Id + filter.Chain?.ChainId?.ToIdParameter(_chainCache))?.Eq is int _chainId)
-        {
-            if (filter.Address.Eq != null)
-            {
-                if (await _addressCache.GetAsync(_chainId, filter.Address.Eq) is Data.Models.Address address)
-                    addresses.Add(address);
-            }
-            else
-            {
-                addresses.AddRange(await _addressCache.GetAsync(_chainId, filter.Address.In!));
-            }
-        }
-        else
-        {
-            if (filter.Address.Eq != null)
-            {
-                addresses.AddRange(await _addressCache.GetAsync(filter.Address.Eq));
-            }
-            else
-            {
-                addresses.AddRange(await _addressCache.GetAsync(filter.Address.In!));
-            }
-        }
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return [];
 
+        var addresses = await _addressCache.ResolveAddresses(filter.Address, chains);
         if (addresses.Count == 0)
             return [];
 
@@ -63,6 +51,14 @@ public class ActivityRepository(
         var roles = filter.Roles?.Roles ?? ActivityRoles.Default;
         if (roles == ActivityRole.None)
             return [];
+
+        var actualChains = addresses.Select(x => x.ChainId).Distinct().Order().ToList();
+        filter.Chain = actualChains.Count == _chainCache.Count() ? null : new ChainInfoParameter
+        {
+            Id = actualChains.Count == 1
+                ? new() { Eq = actualChains[0] }
+                : new() { In = actualChains },
+        };
 
         var tasks = new List<Task<IEnumerable<IActivity>>>();
 
@@ -112,53 +108,52 @@ public class ActivityRepository(
         if (types.Count == 0)
             return [];
 
-        var blocks = await _blockRepo.GetMasks(new() { Level = filter.Level.ToInt32Parameter(), Chain = filter.Chain });
-        
-        var events = Data.Models.AllBlockEvents.None;
-        var operations = Data.Models.AllOperations.None;
-        foreach (var block in blocks)
-        {
-            events |= block.Events;
-            operations |= block.Operations;
-        }
+        if (!_chainCache.TryResolveChain(filter.Chain, out var chain))
+            return [];
 
-        if (events == Data.Models.AllBlockEvents.None && operations == Data.Models.AllOperations.None)
+        if (!_blockCache.TryResolveLevel(filter.Level, chain, out var level))
+            return [];
+
+        if (await _blockRepo.GetMasks(level, chain) is not (var operations, var events))
             return [];
 
         var tasks = new List<Task<IEnumerable<IActivity>>>();
 
         if (operations.HasFlag(Data.Models.AllOperations.Transaction) && types.Contains(ActivityTypes.Transaction))
-            tasks.Add(_transactionRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_transactionRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.Reveal) && types.Contains(ActivityTypes.Reveal))
-            tasks.Add(_revealRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_revealRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.IncreasePaidStorage) && types.Contains(ActivityTypes.IncreasePaidStorage))
-            tasks.Add(_increasePaidStorageRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_increasePaidStorageRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.TransferTicket) && types.Contains(ActivityTypes.TransferTicket))
-            tasks.Add(_transferTicketRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_transferTicketRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.RegisterConstant) && types.Contains(ActivityTypes.RegisterConstant))
-            tasks.Add(_registerConstantRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_registerConstantRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.Deposit) && types.Contains(ActivityTypes.Deposit))
-            tasks.Add(_depositRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_depositRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.Origination) && types.Contains(ActivityTypes.Origination))
-            tasks.Add(_originationRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_originationRepo.Activity(level, chain, pagination));
 
         if (operations.HasFlag(Data.Models.AllOperations.Migration) && types.Contains(ActivityTypes.Migration))
-            tasks.Add(_migrationRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_migrationRepo.Activity(level, chain, pagination));
 
         if (events.HasFlag(Data.Models.AllBlockEvents.Tokens) && types.Contains(ActivityTypes.TokenTransfer))
-            tasks.Add(_tokenTransferRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_tokenTransferRepo.Activity(level, chain, pagination));
 
         if (events.HasFlag(Data.Models.AllBlockEvents.Tickets) && types.Contains(ActivityTypes.TicketTransfer))
-            tasks.Add(_ticketTransferRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_ticketTransferRepo.Activity(level, chain, pagination));
 
         if (events.HasFlag(Data.Models.AllBlockEvents.BridgeTickets) && types.Contains(ActivityTypes.BridgeTicketTransfer))
-            tasks.Add(_bridgeTicketTransferRepo.Activity(filter.Level, filter.Chain, pagination));
+            tasks.Add(_bridgeTicketTransferRepo.Activity(level, chain, pagination));
+
+        if (tasks.Count == 0)
+            return [];
 
         await Task.WhenAll(tasks);
 
@@ -171,6 +166,10 @@ public class ActivityRepository(
 
         var types = filter.Types?.Types ?? ActivityTypes.Default;
         if (types.Count == 0)
+            return [];
+        
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return [];
 
         var tasks = new List<Task<IEnumerable<IOpgActivity>>>(8)
@@ -256,14 +255,12 @@ public class ActivityRepository(
         return Paginate(items, pagination);
     }
 
-    public static readonly string[] SortFields = ["id", "timestamp"];
-
     static void ValidatePagination(ActivityPagination pagination)
     {
-        if (pagination.Sort == null)
-            pagination.Sort = new() { Cols = [("id", true)] };
-        else if (pagination.Sort.Cols.Any(x => !SortFields.Contains(x.field)))
-            throw new BadRequestException(nameof(pagination.Sort), $"Sort by {pagination.Sort.Cols.First(x => !SortFields.Contains(x.field)).field} is not allowed. Allowed fields: {string.Join(", ", SortFields)}");
+        pagination.Reduce(SortSpec);
+
+        if (pagination.Sort!.Cols is [("timestamp", var asc1), ("id", var asc2)] && asc1 != asc2)
+            throw new BadRequestException(nameof(pagination.Sort), "Sorting by different directions is not allowed for this endpoint");
     }
 
     static IEnumerable<T> Paginate<T>(IEnumerable<T> items, ActivityPagination pagination) where T : IActivity
@@ -291,24 +288,16 @@ public class ActivityRepository(
             };
         }
 
-        if (!sort.Cols.Any(x => x.field == "id"))
-        {
-            result = sort.Cols[^1].asc
-                ? result.ThenBy(x => x.Id)
-                : result.ThenByDescending(x => x.Id);
-        }
-
         return result.Take(pagination.Limit);
     }
     
     static (ActivityPagination, long?) ExtendPagination(ActivityPagination pagination)
     {
-        if (pagination.Cursor?.Cols?.Count > 0)
+        if (pagination.Cursor?.Cols.Count > 0)
         {
-            var cols = Math.Min(pagination.Sort!.Cols.Count, pagination.Cursor.Cols.Count);
-            for (int i = 0; i < cols; i++)
+            for (int i = 0; i < pagination.Cursor.Cols.Count; i++)
             {
-                var (field, asc) = pagination.Sort.Cols[i];
+                var (field, asc) = pagination.Sort!.Cols[i];
                 if (field == "id")
                 {
                     // desc sort doesn't need extension

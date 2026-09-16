@@ -20,7 +20,7 @@ public class CursorBinder : IModelBinder
 
         bindingContext.Result = ModelBindingResult.Success(new CursorParameter
         {
-            Cols = list,
+            Cols = list!,
         });
 
         return Task.CompletedTask;

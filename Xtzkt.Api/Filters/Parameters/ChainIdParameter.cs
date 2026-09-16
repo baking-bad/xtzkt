@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
-using Xtzkt.Api.Services.Cache;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
@@ -46,66 +45,6 @@ public class ChainIdParameter : INormalizable
         (Ne == null || value != Ne) &&
         (In == null || In.Contains(value)) &&
         (Ni == null || !Ni.Contains(value));
-
-    public Int32Parameter ToIdParameter(ChainCache cache)
-    {
-        var id = new Int32Parameter();
-        var chains = cache.Get();
-
-        if (Eq is string eq)
-        {
-            id.Eq = chains.FirstOrDefault(x => x.ChainId == eq)?.Id ?? -1;
-            return id;
-        }
-
-        if (Ne is string ne)
-        {
-            id.Ne = chains.FirstOrDefault(x => x.ChainId == ne)?.Id;
-            return id;
-        }
-
-        if (In is List<string> @in)
-        {
-            var set = @in.ToHashSet();
-            var ids = chains.Where(x => set.Contains(x.ChainId)).Select(x => x.Id).ToList();
-            if (ids.Count == 0)
-            {
-                id.Eq = -1;
-                return id;
-            }
-
-            if (ids.Count == 1)
-            {
-                id.Eq = ids[0];
-                return id;
-            }
-
-            id.In = ids;
-            return id;
-        }
-
-        if (Ni is List<string> ni)
-        {
-            var set = ni.ToHashSet();
-            var ids = chains.Where(x => set.Contains(x.ChainId)).Select(x => x.Id).ToList();
-            if (ids.Count == 0)
-            {
-                id.Ne = null;
-                return id;
-            }
-
-            if (ids.Count == 1)
-            {
-                id.Ne = ids[0];
-                return id;
-            }
-
-            id.Ni = ids;
-            return id;
-        }
-
-        return id;
-    }
 
     public string Normalize(string name)
     {

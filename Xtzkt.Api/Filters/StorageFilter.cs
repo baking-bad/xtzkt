@@ -40,7 +40,7 @@ public class StorageFilter : INormalizable
     ///
     /// Examples: `?level=1500000`, `?level.gt=1500000`.
     /// </summary>
-    public Int32Parameter? Level { get; set; }
+    public Int32RangeParameter? Level { get; set; }
 
     /// <summary>
     /// Filters by status: `true` for the current storage of the contract, `false` for the historical ones.

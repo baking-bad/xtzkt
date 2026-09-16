@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -19,12 +20,27 @@ public class SoftwareRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
 
     bool ProcessFilters(SoftwareFilter filter)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        return filter.Chain.Id!.Eq != -1;
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return false;
+
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId16Range(chains);
+            if (!Int32Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+        }
+        #endregion
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(SoftwareFilter filter, Pagination pagination, Selection? selection = null)
     {
+        pagination.Reduce(SortSpec);
+
         if (!ProcessFilters(filter))
             return [];
 
@@ -50,7 +66,6 @@ public class SoftwareRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
             .Select(columns)
             .From(@"""Software""")
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""ShortHash""",  filter.ShortHash)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""LastLevel""",  filter.LastLevel)
@@ -76,7 +91,6 @@ public class SoftwareRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
             .Select("COUNT(*)")
             .From(@"""Software""")
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""ShortHash""",  filter.ShortHash)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""LastLevel""",  filter.LastLevel)

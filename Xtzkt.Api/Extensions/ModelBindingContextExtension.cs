@@ -984,6 +984,17 @@ internal static class ModelBindingContextExtension
         }
     }
 
+    public static bool ThrowUnsupportedMode(this ModelBindingContext bindingContext, string name)
+    {
+        if (!bindingContext.TryGetQueryParameter(name, out _))
+            return false;
+
+        bindingContext.ModelState.TryAddModelError(name,
+            "This mode is not supported for this parameter type. Check the documentation.");
+
+        return true;
+    }
+
     static bool TryGetQueryParameter(this ModelBindingContext bindingContext, string name, [NotNullWhen(true)] out string? value)
     {
         value = bindingContext.ActionContext.HttpContext.Request.Query[name].FirstOrDefault();

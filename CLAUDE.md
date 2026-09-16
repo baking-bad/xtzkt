@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Prerequisites
 - .NET SDK 10.0
-- PostgreSQL 17+
+- PostgreSQL 18+ (the API relies on btree skip scan)
 
 ## Build & Run
 
@@ -96,7 +96,7 @@ Indexes are split by consumer, and each consumer owns its own — an index decla
 |---|---|---|
 | `IX_` | Indexers (`Xtzkt.Indexers.*`) | `HasIndex` in `Xtzkt.Data/Models`, shipped in migrations |
 | `MX_` | `Xtzkt.Services.Metadata` | `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in `StoreService.Ensure*ResolverIndexes`, run at startup |
-| `AX_` | `Xtzkt.Api` | `Xtzkt.Api/init.pgsql` script (`Db.InitScript`), run by `DbInitService` at startup, per deployment — **not** in migrations |
+| `AX_` | `Xtzkt.Api` | `Db.InitScript`, run by `DbInitService` at startup, per deployment — **not** in migrations. The default `Xtzkt.Api/init.pgsql` is minimal: only what the caches and the level/timestamp translation need to function. `Xtzkt.Api/init.example.pgsql` is an example of a workable set — the access paths behind the main scenarios of every endpoint — which operators copy, adjust and point `Db.InitScript` at |
 
 So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actually uses. Before adding one there, find the query it serves; before removing one, check all three consumers. Write API queries as if their indexes existed rather than adding them to the models.
 
@@ -113,7 +113,7 @@ Indexers and services read config in this order, each source overriding the prev
 
 Every `Program.cs` builds that chain by hand after `builder.Configuration.Sources.Clear()`. The `AddEnvironmentVariables("ASPNETCORE_")` line is load-bearing and must not be dropped: `ASPNETCORE_URLS` / `ASPNETCORE_HTTP_PORTS` reach the `URLS` / `HTTP_PORTS` config keys only through that prefix, and without it the app silently ignores both and binds the default `localhost:5000` — which in a container means loopback-only, unreachable from outside.
 
-All four apps read their database settings from one shared `Db` section (`Xtzkt.Data/DbConfig.cs`, bound via `GetDbConfig()`): `ConnectionString` carries no timeouts of its own — `CommandTimeout` (client-side, enforced by Npgsql) and `StatementTimeout` (server-side, enforced by postgres, `0` = off) are separate settings that `GetConnectionString()` bakes into the string. Call it with `statementTimeout: false` for connections that legitimately run long: the API does that for its EF contexts (cache warm-up reads whole tables) and for the `LISTEN` connection. `DbInitService` shares the API's data source, which is why `init.pgsql` starts with `SET statement_timeout = 0` — a capped `CREATE INDEX CONCURRENTLY` leaves an INVALID index behind. Indexers leave `StatementTimeout` at 0, since it would cap migrations too.
+All four apps read their database settings from one shared `Db` section (`Xtzkt.Data/DbConfig.cs`, bound via `GetDbConfig()`): `ConnectionString` carries no timeouts of its own — `CommandTimeout` (client-side, enforced by Npgsql) and `StatementTimeout` (server-side, enforced by postgres, `0` = off) are separate settings that `GetConnectionString()` bakes into the string. Call it with `statementTimeout: false` for connections that legitimately run long: the API does that for its EF contexts (cache warm-up reads whole tables) and for the `LISTEN` connection. `DbInitService` shares the API's data source, which is why both init scripts start with `SET statement_timeout = 0` — a capped `CREATE INDEX CONCURRENTLY` leaves an INVALID index behind. Indexers leave `StatementTimeout` at 0, since it would cap migrations too.
 
 `Chain.Id` setting must be an integer (0–7) and must be unique for every indexer instance.
 
@@ -122,6 +122,16 @@ All four apps read their database settings from one shared `Db` section (`Xtzkt.
 ### Multi-chain support
 
 Each indexer instance handles one chain identified by `Chain.Id`. All data models have `ChainId` property, linking every record to a particular `Chain.Id`, so data from multiple chains coexist in the same database with no conflicts/collisions.
+
+### Entity id contract
+
+Ids are assigned by the indexer, never by the DB, from per-chain counters in the `Chain` row (`Cache.Chain.Next*Id()`), and carry the chain id in their high bits (`Xtzkt.Data/Utils/IdLayout.cs`). The properties below follow from that, and they are load-bearing on both sides: `Xtzkt.Api` turns a chain filter into an id range (`ChainCache.Resolve` + `GetId16Range`/`GetId32Range`/`GetId64Range`) and a level or timestamp filter into one id range per chain (`BlockCache.ProcessOpFilters`) instead of indexing those columns, and the indexers select a block's own rows by id window instead of by level (`IdLayout.Id64Range`).
+
+- **A chain is a contiguous id range.** Already relied upon — see `ChainCache.GetId64Range`, and the rule that no `AX_` index starts with `ChainId` (the one exception is `AX_Addresses_ChainId_LastLevel`, a `ChainId = c AND Level > L` scan where the other chains' levels run far ahead of `L`). It follows that **an id comparison only means anything inside one chain's window**: since the chain sits in the high bits, a lone `Id >= x` reaches into every chain above, so there is no such thing as a one-sided id bound. `IdLayout.MaxId64` closes the open end; never leave it open.
+- **Within a chain, `Id` is monotone in `Level`, and `Block.Id` is the exact lower bound of its level's id window.** Blocks take their id from the same `OperationCounter`, `BlockCommit` runs first in `Commit`, and everything a block produces afterwards — including `AfterCommit` and protocol activation — is allocated inside the same block. So the ids of level `L` live in `[Block(L).Id, Block(L+1).Id)`, and a level range is an id range. Everything numbered with `Cache.Chain.NextSubId(op)` — token, ticket and bridge ticket rows and transfers, `Eip7702Delegations` — takes its id from inside its parent operation's id, so it sits in the same window and the same translation works for it. Entities with their own counters are monotone in level too, but their windows are not derivable from `Blocks`.
+- **Within a chain, block timestamps strictly increase.** This one is *ours*, not the chain's: the node stamps blocks with a whole second and repeats it, so `ProtocolHandler.InitContext` (TezosX) pushes a non-advancing timestamp past the previous block's stored one by `Protocol.MinBlockTimeMs`. Hence `state.Timestamp` must always hold what was actually written to the last block, never the node's raw value — `StateCommit.Apply` copies it from `Context.Block`, mirroring `Revert`, which restores it from the stored block.
+
+Breaking any of these — pre-allocating or reusing ids, writing an operation under a level other than the block being processed, allocating before `BlockCommit`, reverting anything but the head, or letting a raw node timestamp reach `state` — does not fail loudly. It silently truncates API results, or deletes rows it shouldn't.
 
 ### Indexer loop
 

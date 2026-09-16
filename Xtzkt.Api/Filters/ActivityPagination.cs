@@ -1,6 +1,7 @@
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Services.ResponseCache;
+using Xtzkt.Api.Utils;
 using Xtzkt.Api.Utils.Validation;
 
 namespace Xtzkt.Api.Filters;
@@ -36,4 +37,9 @@ public class ActivityPagination : INormalizable
         ($"{name}.sort", Sort),
         ($"{name}.cursor", Cursor),
         ($"{name}.limit", Limit));
+
+    public void Reduce(SortSpec spec)
+    {
+        (Sort, Cursor) = Pagination.Reduce(Sort, Cursor, spec);
+    }
 }

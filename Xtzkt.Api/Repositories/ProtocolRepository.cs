@@ -3,6 +3,7 @@ using Npgsql;
 using System.Numerics;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -16,16 +17,32 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
     {
         { "id",         (@"""Id""",         "integer") },
         { "firstLevel", (@"""FirstLevel""", "integer") },
+        { "lastLevel",  (@"""LastLevel""",  "integer") },
     };
 
     bool ProcessFilters(ProtocolFilter filter)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        return filter.Chain.Id!.Eq != -1;
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return false;
+
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId16Range(chains);
+            if (!Int32Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+        }
+        #endregion
+
+        return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(ProtocolFilter filter, Pagination pagination, Selection? selection = null)
     {
+        pagination.Reduce(SortSpec);
+
         if (!ProcessFilters(filter))
             return [];
 
@@ -114,7 +131,6 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
             .Select(columns)
             .From(@"""Protocols""")
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""Hash""",       filter.Hash)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""LastLevel""",  filter.LastLevel)
@@ -140,7 +156,6 @@ public class ProtocolRepository(ChainCache _chainCache, NpgsqlDataSource _dataSo
             .Select("COUNT(*)")
             .From(@"""Protocols""")
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""Hash""",       filter.Hash)
             .Where(@"""FirstLevel""", filter.FirstLevel)
             .Where(@"""LastLevel""",  filter.LastLevel)

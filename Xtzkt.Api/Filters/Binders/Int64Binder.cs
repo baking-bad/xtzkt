@@ -38,7 +38,7 @@ public class Int64Binder : IModelBinder
         if (!bindingContext.TryGetInt64List($"{param}.ni", ref hasValue, out var ni))
             return Task.CompletedTask;
 
-        bindingContext.Result = ModelBindingResult.Success(!hasValue ? null : new Int64Parameter
+        var p = !hasValue ? null : new Int64Parameter
         {
             Eq = value ?? eq,
             Ne = ne,
@@ -48,7 +48,15 @@ public class Int64Binder : IModelBinder
             Le = le,
             In = @in,
             Ni = ni
-        });
+        };
+
+        if (p?.Reduce() == false)
+        {
+            bindingContext.ModelState.TryAddModelError(param, "Contains conflicting values.");
+            return Task.CompletedTask;
+        }
+
+        bindingContext.Result = ModelBindingResult.Success(p);
 
         return Task.CompletedTask;
     }

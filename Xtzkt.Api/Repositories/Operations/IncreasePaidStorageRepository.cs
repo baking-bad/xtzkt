@@ -15,35 +15,35 @@ namespace Xtzkt.Api.Repositories.Operations;
 public class IncreasePaidStorageRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"""Id""",        "bigint") },
-        { "level",     (@"""Level""",     "integer") },
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(IncreasePaidStorageOperationFilter filter)
+    async Task<List<IdRange>?> ProcessFilters(IncreasePaidStorageOperationFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return null;
 
-        if (chainId == -1)
-            return false;
+        if (!await _addressCache.Resolve(filter.Sender, chains))
+            return null;
 
-        if (filter.Sender?.Hash != null)
-            filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
+        if (!await _addressCache.Resolve(filter.Contract, chains))
+            return null;
 
-        if (filter.Contract?.Hash != null)
-            filter.Contract.Id += await filter.Contract.Hash.ToIdParameter(_addressCache, chainId);
-
-        return true;
+        return await _blockCache.ProcessOpFilters(chains, filter.Id, filter.Level, filter.Timestamp, pagination);
     }
 
     async Task<IEnumerable<dynamic>> Query(IncreasePaidStorageOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (await ProcessFilters(filter, pagination) is not List<IdRange> ranges)
             return [];
 
         var columns = new HashSet<string>();
@@ -83,8 +83,8 @@ public class IncreasePaidStorageRepository(
             .Select(columns)
             .From(@"""IncreasePaidStorageOps""")
             .Where(filter.Or)
+            .Where(@"""Id""",         ranges)
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""Level""",      filter.Level)
             .Where(@"""Timestamp""",  filter.Timestamp)
             .Where(@"""Hash""",       filter.Hash)
@@ -108,14 +108,14 @@ public class IncreasePaidStorageRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.IncreasePaidStorageOpsCount);
 
-        if (!await ProcessFilters(filter))
+        if (await ProcessFilters(filter) is not List<IdRange> ranges)
             return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""IncreasePaidStorageOps""")
+            .Where(@"""Id""",         ranges)
             .Where(@"""Id""",         filter.Id)
-            .Where(@"""ChainId""",    filter.Chain?.Id)
             .Where(@"""Level""",      filter.Level)
             .Where(@"""Timestamp""",  filter.Timestamp)
             .Where(@"""Hash""",       filter.Hash)
@@ -303,7 +303,7 @@ public class IncreasePaidStorageRepository(
         List<Data.Models.Address> addresses,
         ActivityRole roles,
         ChainInfoParameter? chain,
-        DateTimeParameter? timestamp,
+        DateTimeRangeParameter? timestamp,
         ActivityPagination pagination)
     {
         var or = new OrParameterBuilder(pagination.Limit);
@@ -340,10 +340,10 @@ public class IncreasePaidStorageRepository(
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
-    public async Task<IEnumerable<IActivity>> Activity(Int32EqParameter level, ChainInfoParameter? chain, ActivityPagination pagination)
+    public async Task<IEnumerable<IActivity>> Activity(int level, Data.Models.Chain chain, ActivityPagination pagination)
     {
         return await Get(
-            new() { Level = level.ToInt32Parameter(), Chain = chain },
+            new() { Level = level, Chain = chain },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -18,32 +19,55 @@ public class TokenRepository(
     {
         { "id",             (@"""Id""",             "bigint") },
         { "tokenId",        (@"""TokenId""",        "numeric") },
-        { "firstLevel",     (@"""FirstLevel""",     "integer") },
-        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"""LastLevel""",      "integer") },
-        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
-        { "transfersCount", (@"""TransfersCount""", "bigint") },
-        { "balancesCount",  (@"""BalancesCount""",  "integer") },
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
+        { "transfersCount", (@"""TransfersCount""", "bigint") },
+        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
+        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(TokenFilter filter)
+    async Task<bool> ProcessFilters(TokenFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Contract?.Hash != null)
-            filter.Contract.Id += await filter.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Contract, chains))
+            return false;
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TokenFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -96,7 +120,6 @@ public class TokenRepository(
             .Select(columns)
             .From(@"""Tokens""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""ContractId""",     filter.Contract?.Id)
             .Where(@"""TokenId""",        filter.TokenId)
             .Where(@"""Tags""",           filter.Standard)
@@ -127,7 +150,6 @@ public class TokenRepository(
             .Select("COUNT(*)")
             .From(@"""Tokens""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""ContractId""",     filter.Contract?.Id)
             .Where(@"""TokenId""",        filter.TokenId)
             .Where(@"""Tags""",           filter.Standard)

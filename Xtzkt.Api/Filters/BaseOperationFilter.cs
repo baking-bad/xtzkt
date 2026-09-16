@@ -25,13 +25,14 @@ public class BaseOperationFilter : INormalizable
     public ChainInfoParameter? Chain { get; set; }
 
     /// <summary>
-    /// Filters by operation level.
+    /// Filters by operation level. Note that filtering by level without specifying chain rarely makes sense,
+    /// so filter by `level`+`chain`, or by `timestamp` instead.
     ///
     /// Click on the parameter to expand more details.
     ///
     /// Examples: `?level=1500000`, `?level.gt=1500000`.
     /// </summary>
-    public Int32Parameter? Level { get; set; }
+    public Int32RangeParameter? Level { get; set; }
 
     /// <summary>
     /// Filters by operation timestamp.
@@ -40,7 +41,7 @@ public class BaseOperationFilter : INormalizable
     ///
     /// Example: `?timestamp.gt=2024-01-01T00:00:00Z`.
     /// </summary>
-    public DateTimeParameter? Timestamp { get; set; }
+    public DateTimeRangeParameter? Timestamp { get; set; }
 
     public virtual bool IsEmpty() =>
         Id == null &&

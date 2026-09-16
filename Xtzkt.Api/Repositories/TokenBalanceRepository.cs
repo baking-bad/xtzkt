@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -18,26 +19,48 @@ public class TokenBalanceRepository(
     {
         { "id",             (@"tb.""Id""",             "bigint") },
         { "balance",        (@"tb.""Balance""",        "numeric") },
-        { "firstLevel",     (@"tb.""FirstLevel""",     "integer") },
-        { "firstTimestamp", (@"tb.""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"tb.""LastLevel""",      "integer") },
-        { "lastTimestamp",  (@"tb.""LastTimestamp""",  "timestamptz") },
         { "transfersCount", (@"tb.""TransfersCount""", "bigint") },
+        { "firstTimestamp", (@"tb.""FirstTimestamp""", "timestamptz") },
+        { "lastTimestamp",  (@"tb.""LastTimestamp""",  "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(TokenBalanceFilter filter)
+    async Task<bool> ProcessFilters(TokenBalanceFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Address?.Hash != null)
-            filter.Address.Id += await filter.Address.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
 
-        if (filter.Token?.Contract?.Hash != null)
-            filter.Token.Contract.Id += await filter.Token.Contract.Hash.ToIdParameter(_addressCache, chainId);
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Address, chains))
+            return false;
+
+        if (!await _addressCache.Resolve(filter.Token?.Contract, chains))
+            return false;
 
         if (filter.Balance?.Gt == 0 && filter.Balance.Ne == null)
         {
@@ -71,7 +94,9 @@ public class TokenBalanceRepository(
 
     async Task<IEnumerable<dynamic>> Query(TokenBalanceFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -165,7 +190,6 @@ public class TokenBalanceRepository(
             .From(@"""TokenBalances""", "tb")
             .InnerJoin(@"""Tokens""", "t", @"""Id""", @"tb.""TokenId""")
             .Where(@"tb.""Id""",             filter.Id)
-            .Where(@"tb.""ChainId""",        filter.Chain?.Id)
             .Where(@"tb.""AddressId""",      filter.Address?.Id)
             .Where(@"tb.""TokenId""",        filter.Token?.Id)
             .Where(@"tb.""ContractId""",     filter.Token?.Contract?.Id)
@@ -206,7 +230,6 @@ public class TokenBalanceRepository(
 
         var (query, parameters) = sql
             .Where(@"tb.""Id""",             filter.Id)
-            .Where(@"tb.""ChainId""",        filter.Chain?.Id)
             .Where(@"tb.""AddressId""",      filter.Address?.Id)
             .Where(@"tb.""TokenId""",        filter.Token?.Id)
             .Where(@"tb.""ContractId""",     filter.Token?.Contract?.Id)

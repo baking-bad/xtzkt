@@ -3,6 +3,7 @@ using Netezos.Encoding;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -17,35 +18,58 @@ public class TicketRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"""Id""",             "bigint") },
-        { "firstLevel",     (@"""FirstLevel""",     "integer") },
-        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"""LastLevel""",      "integer") },
-        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
-        { "transfersCount", (@"""TransfersCount""", "integer") },
-        { "balancesCount",  (@"""BalancesCount""",  "integer") },
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
+        { "transfersCount", (@"""TransfersCount""", "integer") },
+        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
+        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(TicketFilter filter)
+    async Task<bool> ProcessFilters(TicketFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Ticketer?.Hash != null)
-            filter.Ticketer.Id += await filter.Ticketer.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
 
-        if (filter.FirstMinter?.Hash != null)
-            filter.FirstMinter.Id += await filter.FirstMinter.Hash.ToIdParameter(_addressCache, chainId);
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Ticketer, chains))
+            return false;
+
+        if (!await _addressCache.Resolve(filter.FirstMinter, chains))
+            return false;
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(TicketFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -93,7 +117,6 @@ public class TicketRepository(
             .Select(columns)
             .From(@"""Tickets""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""TicketerId""",     filter.Ticketer?.Id)
             .Where(@"""FirstMinterId""",  filter.FirstMinter?.Id)
             .Where(@"""WeakHash""",       filter.WeakHash)
@@ -126,7 +149,6 @@ public class TicketRepository(
             .Select("COUNT(*)")
             .From(@"""Tickets""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""TicketerId""",     filter.Ticketer?.Id)
             .Where(@"""FirstMinterId""",  filter.FirstMinter?.Id)
             .Where(@"""WeakHash""",       filter.WeakHash)

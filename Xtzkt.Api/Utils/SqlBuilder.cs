@@ -17,6 +17,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
     readonly List<string> _joins = [];
     readonly List<string> _filters = [];
     readonly List<string> _orFilters = [];
+    readonly List<string> _idRangeFilters = [];
     readonly List<(string field, string column, bool asc)> _sorting = [];
     int _offset = 0;
     int _limit = 0;
@@ -74,6 +75,17 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
+    public SqlBuilder Where(string column, List<IdRange>? idRanges)
+    {
+        if (idRanges?.Count is not > 0) return this;
+
+        var target = idRanges.Count == 1 ? _filters : _idRangeFilters;
+        foreach (var range in idRanges)
+            target.Add($"({column} >= {Param(range.Min)} AND {column} <= {Param(range.Max)})");
+
+        return this;
+    }
+
     public SqlBuilder Where(OrParameter? or)
     {
         if (or == null) return this;
@@ -119,6 +131,15 @@ public class SqlBuilder(SqlBuilder? _root = null)
                 _filters.Add($"({string.Join(" OR ", anyof.Fields.Select(x => $"{map(x)} = ANY ({p})"))})");
             }
         }
+
+        return this;
+    }
+
+    public SqlBuilder Where(string column, int? value)
+    {
+        if (value == null) return this;
+
+        _filters.Add($"{column} = {Param(value.Value)}");
 
         return this;
     }
@@ -190,7 +211,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (ne == Int32NullParameter.Null)
                 _filters.Add($"{column} IS NOT NULL");
             else
-                _filters.Add($"{column} != {Param(ne)}");
+                _filters.Add($"({column} IS NULL OR {column} != {Param(ne)})");
         }
 
         if (value.Gt is int gt && gt != Int32NullParameter.Null)
@@ -218,7 +239,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (value.Ni.Contains(Int32NullParameter.Null))
                 _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x != Int32NullParameter.Null).ToArray())})))");
             else
-                _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
         }
 
         return this;
@@ -241,7 +262,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (ne == Int64NullParameter.Null)
                 _filters.Add($"{column} IS NOT NULL");
             else
-                _filters.Add($"{column} != {Param(ne)}");
+                _filters.Add($"({column} IS NULL OR {column} != {Param(ne)})");
         }
 
         if (value.Gt is long gt && gt != Int64NullParameter.Null)
@@ -269,7 +290,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (value.Ni.Contains(Int64NullParameter.Null))
                 _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x != Int64NullParameter.Null).ToArray())})))");
             else
-                _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
         }
 
         return this;
@@ -292,7 +313,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (ne == BigIntegerNullParameter.Null)
                 _filters.Add($"{column} IS NOT NULL");
             else
-                _filters.Add($"{column} != {Param(ne)}");
+                _filters.Add($"({column} IS NULL OR {column} != {Param(ne)})");
         }
 
         if (value.Gt is BigInteger gt && gt != BigIntegerNullParameter.Null)
@@ -320,7 +341,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (value.Ni.Contains(BigIntegerNullParameter.Null))
                 _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x != BigIntegerNullParameter.Null).ToArray())}::numeric[])))");
             else
-                _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}::numeric[]))");
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)}::numeric[])))");
         }
 
         return this;
@@ -343,7 +364,7 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (value.Ne == StringNullParameter.Null)
                 _filters.Add($"{column} IS NOT NULL");
             else
-                _filters.Add($"{column} != {Param(value.Ne)}");
+                _filters.Add($"({column} IS NULL OR {column} != {Param(value.Ne)})");
         }
 
         if (value.In != null)
@@ -359,8 +380,52 @@ public class SqlBuilder(SqlBuilder? _root = null)
             if (value.Ni.Contains(StringNullParameter.Null))
                 _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x != StringNullParameter.Null).ToArray())})))");
             else
-                _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
         }
+
+        return this;
+    }
+
+    public SqlBuilder Where(string column, Int32RangeParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+            _filters.Add($"{column} = {Param(value.Eq)}");
+
+        if (value.Gt != null)
+            _filters.Add($"{column} > {Param(value.Gt)}");
+
+        if (value.Ge != null)
+            _filters.Add($"{column} >= {Param(value.Ge)}");
+
+        if (value.Lt != null)
+            _filters.Add($"{column} < {Param(value.Lt)}");
+
+        if (value.Le != null)
+            _filters.Add($"{column} <= {Param(value.Le)}");
+
+        return this;
+    }
+
+    public SqlBuilder Where(string column, DateTimeRangeParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+            _filters.Add($"{column} = {Param(value.Eq)}");
+
+        if (value.Gt != null)
+            _filters.Add($"{column} > {Param(value.Gt)}");
+
+        if (value.Ge != null)
+            _filters.Add($"{column} >= {Param(value.Ge)}");
+
+        if (value.Lt != null)
+            _filters.Add($"{column} < {Param(value.Lt)}");
+
+        if (value.Le != null)
+            _filters.Add($"{column} <= {Param(value.Le)}");
 
         return this;
     }
@@ -1101,14 +1166,17 @@ public class SqlBuilder(SqlBuilder? _root = null)
             }
 
             var asc = _sorting[0].asc;
-            if (values.Count == 1 || _sorting.Take(values.Count).All(x => x.asc == asc))
+            var prefix = _sorting.Take(values.Count).TakeWhile(x => x.asc == asc).Count();
+            var cols = string.Join(", ", _sorting.Take(prefix).Select(x => x.column));
+            var vals = string.Join(", ", values.Take(prefix).Select(x => $"{Param(x.Value)}::{x.Type}"));
+            if (prefix == values.Count)
             {
-                var cols = string.Join(", ", _sorting.Take(values.Count).Select(x => x.column));
-                var vals = string.Join(", ", values.Select(x => $"{Param(x.Value)}::{x.Type}"));
                 _filters.Add($"({cols}) {(asc ? ">" : "<")} ({vals})");
             }
             else
             {
+                // adding redundant filter to enable index scan
+                _filters.Add($"({cols}) {(asc ? ">=" : "<=")} ({vals})");
                 _filters.Add(BuildFilter(values, 0));
             }
         }
@@ -1129,7 +1197,19 @@ public class SqlBuilder(SqlBuilder? _root = null)
 
     public (string, DynamicParameters) Build()
     {
-        return (_orFilters.Count > 1 && _sorting.Count != 0 ? BuildFlat(0) : Build(0), _params);
+        return (Branches().Count > 1 && _sorting.Count != 0 ? BuildFlat(0) : Build(0), _params);
+    }
+
+    List<string> Branches()
+    {
+        if (_idRangeFilters.Count == 0)
+            return _orFilters;
+
+        if (_orFilters.Count == 0)
+            return _idRangeFilters;
+
+        // TODO: merge branches by chain id
+        return [.. _orFilters.SelectMany(or => _idRangeFilters.Select(range => $"{or} AND {range}"))];
     }
 
     string Build(int padding)
@@ -1165,11 +1245,12 @@ public class SqlBuilder(SqlBuilder? _root = null)
         if (_joins.Count != 0)
             sql += $"\n{string.Join('\n', _joins.Select(x => $"{Pad(padding)}{x}"))}";
 
-        var filters = _orFilters.Count switch
+        var branches = Branches();
+        var filters = branches.Count switch
         {
             0 => _filters,
-            1 => _filters.Append(_orFilters[0]),
-            _ => _filters.Append($"({string.Join(" OR ", _orFilters)})")
+            1 => _filters.Append(branches[0]),
+            _ => _filters.Append($"({string.Join(" OR ", branches)})")
         };
 
         if (filters.Any())
@@ -1221,13 +1302,27 @@ public class SqlBuilder(SqlBuilder? _root = null)
         if (_joins.Count != 0)
             baseQuery += $"\n{string.Join('\n', _joins.Select(x => $"{Pad(padding + 4)}{x}"))}";
 
-        var basePagination = $"\n{Pad(padding + 4)}ORDER BY {string.Join(", ", sortCols.Select(x => x.column + (x.asc ? " ASC" : " DESC")))}";
+        string branchSortCols;
+        if (_idRangeFilters.Count != 0 && _sorting.Count != 0)
+        {
+            var asc = _sorting[0].asc;
+            if (_sorting.Any(x => x.asc != asc || x.field != "id" && x.field != "timestamp"))
+                throw new InvalidOperationException("Cannot use branches for non-op sort");
+
+            branchSortCols = _sorting.First(x => x.field == "id").column + (asc ? " ASC" : " DESC");
+        }
+        else
+        {
+            branchSortCols = string.Join(", ", sortCols.Select(x => x.column + (x.asc ? " ASC" : " DESC")));
+        }
+
+        var basePagination = $"\n{Pad(padding + 4)}ORDER BY {branchSortCols}";
 
         if (_limit != 0)
             basePagination += $"\n{Pad(padding + 4)}LIMIT {_offset + _limit}";
 
-        var branches = _orFilters.Select(orFilter =>
-            $"{baseQuery}\n{Pad(padding + 4)}WHERE {string.Join($"\n{Pad(padding + 4)}AND ", _filters.Prepend(orFilter))}{basePagination})");
+        var branches = Branches().Select(branch =>
+            $"{baseQuery}\n{Pad(padding + 4)}WHERE {string.Join($"\n{Pad(padding + 4)}AND ", _filters.Prepend(branch))}{basePagination})");
 
         var sql = $"""
             {Pad(padding)}SELECT DISTINCT ON ({string.Join(", ", sortCols.Select(x => x.alias))}) *

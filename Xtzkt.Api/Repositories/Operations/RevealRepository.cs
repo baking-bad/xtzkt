@@ -15,32 +15,32 @@ namespace Xtzkt.Api.Repositories.Operations;
 public class RevealRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"""Id""",        "bigint") },
-        { "level",     (@"""Level""",     "integer") },
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(ManagerOperationFilter filter)
+    async Task<List<IdRange>?> ProcessFilters(ManagerOperationFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
+            return null;
 
-        if (chainId == -1)
-            return false;
+        if (!await _addressCache.Resolve(filter.Sender, chains))
+            return null;
 
-        if (filter.Sender?.Hash != null)
-            filter.Sender.Id += await filter.Sender.Hash.ToIdParameter(_addressCache, chainId);
-
-        return true;
+        return await _blockCache.ProcessOpFilters(chains, filter.Id, filter.Level, filter.Timestamp, pagination);
     }
 
     async Task<IEnumerable<dynamic>> Query(ManagerOperationFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (await ProcessFilters(filter, pagination) is not List<IdRange> ranges)
             return [];
 
         var columns = new HashSet<string>();
@@ -78,8 +78,8 @@ public class RevealRepository(
         var (query, parameters) = new SqlBuilder()
             .Select(columns)
             .From(@"""RevealOps""")
+            .Where(@"""Id""",        ranges)
             .Where(@"""Id""",        filter.Id)
-            .Where(@"""ChainId""",   filter.Chain?.Id)
             .Where(@"""Level""",     filter.Level)
             .Where(@"""Timestamp""", filter.Timestamp)
             .Where(@"""Hash""",      filter.Hash)
@@ -101,14 +101,14 @@ public class RevealRepository(
         if (filter.IsEmpty())
             return _chainCache.Get().Sum(x => x.RevealOpsCount);
 
-        if (!await ProcessFilters(filter))
+        if (await ProcessFilters(filter) is not List<IdRange> ranges)
             return 0;
 
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""RevealOps""")
+            .Where(@"""Id""",        ranges)
             .Where(@"""Id""",        filter.Id)
-            .Where(@"""ChainId""",   filter.Chain?.Id)
             .Where(@"""Level""",     filter.Level)
             .Where(@"""Timestamp""", filter.Timestamp)
             .Where(@"""Hash""",      filter.Hash)
@@ -277,7 +277,7 @@ public class RevealRepository(
         List<Data.Models.Address> addresses,
         ActivityRole roles,
         ChainInfoParameter? chain,
-        DateTimeParameter? timestamp,
+        DateTimeRangeParameter? timestamp,
         ActivityPagination pagination)
     {
         if ((roles & ActivityRole.Sender) == 0)
@@ -307,10 +307,10 @@ public class RevealRepository(
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 
-    public async Task<IEnumerable<IActivity>> Activity(Int32EqParameter level, ChainInfoParameter? chain, ActivityPagination pagination)
+    public async Task<IEnumerable<IActivity>> Activity(int level, Data.Models.Chain chain, ActivityPagination pagination)
     {
         return await Get(
-            new() { Level = level.ToInt32Parameter(), Chain = chain },
+            new() { Level = level, Chain = chain },
             new() { Sort = pagination.Sort, Cursor = pagination.Cursor, Limit = pagination.Limit });
     }
 

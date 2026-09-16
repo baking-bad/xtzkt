@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -15,29 +16,52 @@ public class BridgeTicketRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",             (@"""Id""",             "bigint") },
-        { "firstLevel",     (@"""FirstLevel""",     "integer") },
-        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"""LastLevel""",      "integer") },
-        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
-        { "transfersCount", (@"""TransfersCount""", "integer") },
-        { "balancesCount",  (@"""BalancesCount""",  "integer") },
         { "holdersCount",   (@"""HoldersCount""",   "integer") },
+        { "transfersCount", (@"""TransfersCount""", "integer") },
+        { "firstTimestamp", (@"""FirstTimestamp""", "timestamptz") },
+        { "lastTimestamp",  (@"""LastTimestamp""",  "timestamptz") },
     };
 
-    bool ProcessFilters(BridgeTicketFilter filter)
+    bool ProcessFilters(BridgeTicketFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
+
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
 
         return true;
     }
 
     async Task<IEnumerable<dynamic>> Query(BridgeTicketFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -69,7 +93,6 @@ public class BridgeTicketRepository(
             .Select(columns)
             .From(@"""BridgeTickets""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""WeakHash""",       filter.WeakHash)
             .Where(@"""FirstLevel""",     filter.FirstLevel)
             .Where(@"""LastLevel""",      filter.LastLevel)
@@ -97,7 +120,6 @@ public class BridgeTicketRepository(
             .Select("COUNT(*)")
             .From(@"""BridgeTickets""")
             .Where(@"""Id""",             filter.Id)
-            .Where(@"""ChainId""",        filter.Chain?.Id)
             .Where(@"""WeakHash""",       filter.WeakHash)
             .Where(@"""FirstLevel""",     filter.FirstLevel)
             .Where(@"""LastLevel""",      filter.LastLevel)

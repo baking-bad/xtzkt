@@ -77,113 +77,6 @@ public class Int32NullParameter : INormalizable
     /// </summary>
     public List<int>? Ni { get; set; }
 
-    public static implicit operator Int32NullParameter(int? value) => new() { Eq = value ?? Null };
-
-    public static Int32NullParameter? operator +(Int32NullParameter? a, Int32NullParameter? b)
-    {
-        if (a == null) return b;
-        if (b == null) return a;
-        var res = new Int32NullParameter();
-
-        if (a.Eq != null)
-        {
-            if (b.Eq != null && b.Eq != a.Eq)
-                res.Eq = -1;
-            else
-                res.Eq = a.Eq;
-        }
-        else
-        {
-            res.Eq = b.Eq;
-        }
-
-        if (a.Ne != null)
-        {
-            if (b.Ne != null && b.Ne != a.Ne)
-                res.Ni = [a.Ne.Value, b.Ne.Value];
-            else
-                res.Ne = a.Ne;
-        }
-        else
-        {
-            res.Ne = b.Ne;
-        }
-
-        if (a.Gt != null)
-        {
-            if (b.Gt != null && b.Gt != a.Gt)
-                res.Gt = Math.Max(a.Gt.Value, b.Gt.Value);
-            else
-                res.Gt = a.Gt;
-        }
-        else
-        {
-            res.Gt = b.Gt;
-        }
-
-        if (a.Ge != null)
-        {
-            if (b.Ge != null && b.Ge != a.Ge)
-                res.Ge = Math.Max(a.Ge.Value, b.Ge.Value);
-            else
-                res.Ge = a.Ge;
-        }
-        else
-        {
-            res.Ge = b.Ge;
-        }
-
-        if (a.Lt != null)
-        {
-            if (b.Lt != null && b.Lt != a.Lt)
-                res.Lt = Math.Min(a.Lt.Value, b.Lt.Value);
-            else
-                res.Lt = a.Lt;
-        }
-        else
-        {
-            res.Lt = b.Lt;
-        }
-
-        if (a.Le != null)
-        {
-            if (b.Le != null && b.Le != a.Le)
-                res.Le = Math.Min(a.Le.Value, b.Le.Value);
-            else
-                res.Le = a.Le;
-        }
-        else
-        {
-            res.Le = b.Le;
-        }
-
-        if (a.In != null)
-        {
-            if (b.In != null)
-                res.In = [.. a.In.Intersect(b.In)];
-            else
-                res.In = a.In;
-        }
-        else
-        {
-            res.In = b.In;
-        }
-
-        if (a.Ni != null)
-        {
-            if (b.Ni != null)
-                res.Ni = [.. a.Ni.Concat(b.Ni).Distinct()];
-            else
-                res.Ni = a.Ni;
-        }
-        else
-        {
-            res.Ni = b.Ni;
-        }
-
-        return res;
-    }
-
     public string Normalize(string name)
     {
         var sb = new StringBuilder();
@@ -214,4 +107,257 @@ public class Int32NullParameter : INormalizable
 
         return sb.ToString();
     }
+
+    public bool Reduce()
+    {
+        Gt = NullIfNull(Gt);
+        Ge = NullIfNull(Ge);
+        Lt = NullIfNull(Lt);
+        Le = NullIfNull(Le);
+
+        if (Eq != null)
+        {
+            if (Eq == Null)
+            {
+                if (Ne == Eq) return false;
+                if (Gt != null || Ge != null || Lt != null || Le != null) return false;
+                if (In != null && !In.Contains(Null)) return false;
+                if (Ni != null && Ni.Contains(Null)) return false;
+                Ne = null;
+                In = null;
+                Ni = null;
+                return true;
+            }
+
+            if (Ne != null)
+            {
+                if (Ne == Eq) return false;
+                Ne = null;
+            }
+            if (Gt != null)
+            {
+                if (Gt >= Eq) return false;
+                Gt = null;
+            }
+            if (Ge != null)
+            {
+                if (Ge > Eq) return false;
+                Ge = null;
+            }
+            if (Lt != null)
+            {
+                if (Lt <= Eq) return false;
+                Lt = null;
+            }
+            if (Le != null)
+            {
+                if (Le < Eq) return false;
+                Le = null;
+            }
+            if (In != null)
+            {
+                if (!In.Contains(Eq.Value)) return false;
+                In = null;
+            }
+            if (Ni != null)
+            {
+                if (Ni.Contains(Eq.Value)) return false;
+                Ni = null;
+            }
+            return true;
+        }
+
+        if (In != null)
+        {
+            In = [.. In.Distinct().OrderBy(x => x)];
+            if (Ne != null)
+            {
+                In.RemoveAll(x => x == Ne.Value);
+                if (In.Count == 0) return false;
+                Ne = null;
+            }
+            if (Gt != null)
+            {
+                In.RemoveAll(x => x == Null || x <= Gt.Value);
+                if (In.Count == 0) return false;
+                Gt = null;
+            }
+            if (Ge != null)
+            {
+                In.RemoveAll(x => x == Null || x < Ge.Value);
+                if (In.Count == 0) return false;
+                Ge = null;
+            }
+            if (Lt != null)
+            {
+                In.RemoveAll(x => x == Null || x >= Lt.Value);
+                if (In.Count == 0) return false;
+                Lt = null;
+            }
+            if (Le != null)
+            {
+                In.RemoveAll(x => x == Null || x > Le.Value);
+                if (In.Count == 0) return false;
+                Le = null;
+            }
+            if (Ni != null)
+            {
+                In.RemoveAll(x => Ni.Contains(x));
+                if (In.Count == 0) return false;
+                Ni = null;
+            }
+            if (In.Count == 0) return false;
+            if (In.Count == 1)
+            {
+                Eq = In[0];
+                In = null;
+            }
+            return true;
+        }
+
+        if (Ne != null)
+        {
+            if (Ne == Null)
+            {
+                if (Gt != null || Ge != null || Lt != null || Le != null)
+                {
+                    Ne = null;
+                }
+                else if (Ni != null)
+                {
+                    if (!Ni.Contains(Null)) Ni.Add(Null);
+                    Ne = null;
+                }
+            }
+            else
+            {
+                if (Gt >= Ne) Ne = null;
+                else if (Ge > Ne) Ne = null;
+                else if (Lt <= Ne) Ne = null;
+                else if (Le < Ne) Ne = null;
+                else if (Ni != null)
+                {
+                    if (!Ni.Contains(Ne.Value)) Ni.Add(Ne.Value);
+                    Ne = null;
+                }
+            }
+        }
+
+        if (Ni != null)
+        {
+            Ni = [.. Ni.Distinct().OrderBy(x => x)];
+            if (Gt != null || Ge != null || Lt != null || Le != null) Ni.RemoveAll(x => x == Null);
+            if (Gt != null) Ni.RemoveAll(x => x <= Gt.Value);
+            if (Ge != null) Ni.RemoveAll(x => x < Ge.Value);
+            if (Lt != null) Ni.RemoveAll(x => x >= Lt.Value);
+            if (Le != null) Ni.RemoveAll(x => x > Le.Value);
+            if (Ni.Count == 0) Ni = null;
+            else if (Ni.Count == 1)
+            {
+                Ne = Ni[0];
+                Ni = null;
+            }
+        }
+
+        if (Gt != null)
+        {
+            if (Gt < Ge) Gt = null;
+            else if (Gt >= Lt) return false;
+            else if (Gt >= Le) return false;
+        }
+
+        if (Ge != null)
+        {
+            if (Ge <= Gt) Ge = null;
+            else if (Ge >= Lt) return false;
+            else if (Ge > Le) return false;
+        }
+
+        if (Lt != null)
+        {
+            if (Lt > Le) Lt = null;
+            else if (Lt <= Gt) return false;
+            else if (Lt <= Ge) return false;
+        }
+
+        if (Le != null)
+        {
+            if (Le >= Lt) Le = null;
+            else if (Le <= Gt) return false;
+            else if (Le < Ge) return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryMerge(Int32NullParameter? a, Int32NullParameter? b, out Int32NullParameter? res)
+    {
+        if (a == null)
+        {
+            res = b;
+            return true;
+        }
+
+        if (b == null)
+        {
+            res = a;
+            return true;
+        }
+
+        res = new();
+
+        if (a.Eq != null)
+        {
+            if (b.Eq != null && b.Eq != a.Eq)
+                return false;
+            else
+                res.Eq = a.Eq;
+        }
+        else
+        {
+            res.Eq = b.Eq;
+        }
+
+        if (a.Ne != null)
+        {
+            if (b.Ne != null && b.Ne != a.Ne)
+                res.Ni = [a.Ne.Value, b.Ne.Value];
+            else
+                res.Ne = a.Ne;
+        }
+        else
+        {
+            res.Ne = b.Ne;
+        }
+
+        res.Gt = Max(NullIfNull(a.Gt), NullIfNull(b.Gt));
+        res.Ge = Max(NullIfNull(a.Ge), NullIfNull(b.Ge));
+        res.Lt = Min(NullIfNull(a.Lt), NullIfNull(b.Lt));
+        res.Le = Min(NullIfNull(a.Le), NullIfNull(b.Le));
+
+        if (a.In != null)
+        {
+            if (b.In != null)
+                res.In = [.. a.In.Intersect(b.In)];
+            else
+                res.In = [.. a.In];
+        }
+        else
+        {
+            res.In = b.In?.ToList();
+        }
+
+        if (a.Ni != null || b.Ni != null)
+        {
+            res.Ni = [.. (res.Ni ?? []).Concat(a.Ni ?? []).Concat(b.Ni ?? []).Distinct()];
+        }
+
+        return res.Reduce();
+    }
+
+    static int? NullIfNull(int? value) => value == Null ? null : value;
+
+    static int? Max(int? a, int? b) => a == null ? b : b == null ? a : Math.Max(a.Value, b.Value);
+
+    static int? Min(int? a, int? b) => a == null ? b : b == null ? a : Math.Min(a.Value, b.Value);
 }

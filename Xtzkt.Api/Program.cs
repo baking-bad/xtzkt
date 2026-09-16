@@ -56,11 +56,12 @@ builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequired
 builder.Services.AddHostedService<DbListenerService>();
 
 builder.Services.AddSingleton<AddressCache>();
-builder.Services.AddSingleton<AssetCache>();
-builder.Services.AddSingleton<SoftwareCache>();
 builder.Services.AddSingleton<AliasCache>();
+builder.Services.AddSingleton<AssetCache>();
+builder.Services.AddSingleton<BlockCache>();
 builder.Services.AddSingleton<ChainCache>();
 builder.Services.AddSingleton<ProtocolCache>();
+builder.Services.AddSingleton<SoftwareCache>();
 builder.Services.AddSingleton<ResponseCacheService>();
 builder.Services.AddTransient<AccountRepository>();
 builder.Services.AddTransient<AssetRepository>();

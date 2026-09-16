@@ -1,12 +1,16 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
+using Xtzkt.Utils.Extensions;
 
 namespace Xtzkt.Api.Services.Cache
 {
     public class ChainCache
     {
+        #region cache
         readonly Chain?[] Chains = new Chain?[8];
         readonly IDbContextFactory<XtzktContext> DbFactory;
         readonly ILogger Logger;
@@ -53,24 +57,9 @@ namespace Xtzkt.Api.Services.Cache
             };
         }
 
-        public ChainInfoParameter ResolveChainFilter(ChainInfoParameter? filter)
+        public int Count()
         {
-            var id = filter?.Id + filter?.ChainId?.ToIdParameter(this);
-
-            var ids = new List<int>(2);
-            for (int i = 0; i < Chains.Length; i++)
-                if (Chains[i] is Chain chain && (id == null || id.Matches(chain.Id)))
-                    ids.Add(chain.Id);
-
-            return new ChainInfoParameter
-            {
-                Id = ids.Count switch
-                {
-                    0 => new() { Eq = -1 },
-                    1 => new() { Eq = ids[0] },
-                    _ => new() { In = ids }
-                }
-            };
+            return Chains.Count(x => x != null);
         }
 
         public List<Chain> Get()
@@ -93,5 +82,155 @@ namespace Xtzkt.Api.Services.Cache
             }
             return chain;
         }
+        #endregion
+
+        #region resolvers
+        public bool TryResolveChain(ChainInfoEqParameter p, [NotNullWhen(true)] out Chain? chain)
+        {
+            if (p.Id == null && p.ChainId == null)                
+                throw new InvalidOperationException("Cannot resolve chain by empty filter"); // should never happen
+
+            chain = Get().FirstOrDefault(x =>
+                (p.Id == null || p.Id.Eq == x.Id) &&
+                (p.ChainId == null || p.ChainId.Eq == x.ChainId));
+
+            return chain != null;
+        }
+
+        public List<Chain> Resolve(ChainInfoParameter? p)
+        {
+            var chains = Get();
+
+            if (p == null || p.IsEmpty())
+                return chains;
+
+            chains = [.. chains.Where(x => (p.Id == null || p.Id.Matches(x.Id)) && (p.ChainId == null || p.ChainId.Matches(x.ChainId)))];
+
+            p.Id = chains.Count == Count()
+                ? null
+                : chains.Count == 1
+                    ? new() { Eq = chains[0].Id }
+                    : new() { In = [.. chains.Select(x => x.Id)] };
+            p.ChainId = null;
+
+            return chains;
+        }
+
+        public Int32RangeParameter? GetId16Range(List<Chain> chains)
+        {
+            if (chains.Count == Count())
+                return null;
+
+            if (chains.Count == 0)
+                return new()
+                {
+                    Gt = short.MaxValue,
+                    Lt = short.MinValue,
+                };
+
+            if (chains.Count == 1)
+                return new()
+                {
+                    Ge = IdLayout.MinId16(chains[0].Id),
+                    Le = IdLayout.MaxId16(chains[0].Id),
+                };
+
+            if (chains[^1].Id - chains[0].Id + 1 != chains.Count)
+                throw new BadRequestException("chain", "Filtering by non-adjacent chains is not supported, query them separately");
+
+            return new()
+            {
+                Ge = IdLayout.MinId16(chains[0].Id),
+                Le = IdLayout.MaxId16(chains[^1].Id),
+            };
+        }
+
+        public Int32RangeParameter? GetId32Range(List<Chain> chains)
+        {
+            if (chains.Count == Count())
+                return null;
+
+            if (chains.Count == 0)
+                return new()
+                {
+                    Gt = int.MaxValue,
+                    Lt = int.MinValue,
+                };
+
+            if (chains.Count == 1)
+                return new()
+                {
+                    Ge = IdLayout.MinId32(chains[0].Id),
+                    Le = IdLayout.MaxId32(chains[0].Id),
+                };
+
+            if (chains[^1].Id - chains[0].Id + 1 != chains.Count)
+                throw new BadRequestException("chain", "Filtering by non-adjacent chains is not supported, query them separately");
+
+            return new()
+            {
+                Ge = IdLayout.MinId32(chains[0].Id),
+                Le = IdLayout.MaxId32(chains[^1].Id),
+            };
+        }
+
+        public Int64RangeParameter? GetId64Range(List<Chain> chains)
+        {
+            if (chains.Count == Count())
+                return null;
+
+            if (chains.Count == 0)
+                return new()
+                {
+                    Gt = long.MaxValue,
+                    Lt = long.MinValue,
+                };
+
+            if (chains.Count == 1)
+                return new()
+                {
+                    Ge = IdLayout.MinId64(chains[0].Id),
+                    Le = IdLayout.MaxId64(chains[0].Id),
+                };
+
+            if (chains[^1].Id - chains[0].Id + 1 != chains.Count)
+                throw new BadRequestException("chain", "Filtering by non-adjacent chains is not supported, query them separately");
+
+            return new()
+            {
+                Ge = IdLayout.MinId64(chains[0].Id),
+                Le = IdLayout.MaxId64(chains[^1].Id),
+            };
+        }
+
+        public DateTimeRangeParameter? GetTimestampRange(List<Chain> chains)
+        {
+            if (chains.Count == Count())
+                return null;
+
+            if (chains.Count == 0)
+                return new()
+                {
+                    Gt = DateTimeExtension.UtcMaxValue,
+                    Lt = DateTimeExtension.UtcMinValue,
+                };
+
+            if (chains.Count == 1)
+                return new()
+                {
+                    Ge = chains[0].GenesisTimestamp,
+                    Le = chains[0].Timestamp.AddMinutes(5),
+                };
+
+            if (chains[^1].Id - chains[0].Id + 1 != chains.Count)
+                throw new BadRequestException("chain", "Filtering by non-adjacent chains is not supported, query them separately");
+
+            return new()
+            {
+                Ge = chains.Min(x => x.GenesisTimestamp),
+                Le = chains.Max(x => x.Timestamp).AddMinutes(5),
+            };
+        }
+        #endregion
     }
 }

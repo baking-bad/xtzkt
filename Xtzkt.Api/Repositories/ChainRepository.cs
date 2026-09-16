@@ -70,6 +70,8 @@ public class ChainRepository(ChainCache _chainCache)
                 Id = l1.Id,
                 ChainId = l1.ChainId,
                 Network = l1.Network,
+                GenesisLevel = l1.GenesisLevel,
+                GenesisTimestamp = l1.GenesisTimestamp,
                 Hash = l1.Hash,
                 Level = l1.Level,
                 Timestamp = l1.Timestamp,
@@ -86,6 +88,8 @@ public class ChainRepository(ChainCache _chainCache)
                 Id = x.Id,
                 ChainId = x.ChainId,
                 Network = x.Network,
+                GenesisLevel = x.GenesisLevel,
+                GenesisTimestamp = x.GenesisTimestamp,
                 Hash = x.Hash,
                 Level = x.Level,
                 Timestamp = x.Timestamp,
@@ -129,6 +133,12 @@ public class ChainRepository(ChainCache _chainCache)
                     break;
                 case "network":
                     foreach (var row in rows) result[j++][i] = row.Network;
+                    break;
+                case "genesisLevel":
+                    foreach (var row in rows) result[j++][i] = row.GenesisLevel;
+                    break;
+                case "genesisTimestamp":
+                    foreach (var row in rows) result[j++][i] = row.GenesisTimestamp;
                     break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;

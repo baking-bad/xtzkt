@@ -45,8 +45,7 @@ public class ActivityController(ActivityRepository _activity, ResponseCacheServi
     /// merged into a single stream sorted by `id`, so a block can be rendered from one request.
     /// Each item carries an `activity` field telling you which kind it is, and which model to expect.
     ///
-    /// The block is addressed by `level`. Since the same level exists on every indexed chain,
-    /// add `chain` unless you really want all of them at once.
+    /// The block is addressed by `level` + `chain`.
     /// </remarks>
     [HttpGet("block")]
     public async Task<ActionResult<IEnumerable<IActivity>>> GetByBlock(BlockActivityFilter filter, ActivityPagination pagination)

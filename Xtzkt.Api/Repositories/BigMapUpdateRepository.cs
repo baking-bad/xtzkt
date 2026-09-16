@@ -3,6 +3,7 @@ using Netezos.Encoding;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
@@ -19,30 +20,44 @@ public class BigMapUpdateRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"bu.""Id""",        "bigint") },
-        { "level",     (@"bu.""Level""",     "integer") },
         { "timestamp", (@"bu.""Timestamp""", "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(BigMapUpdateFilter filter)
+    async Task<bool> ProcessFilters(BigMapUpdateFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.BigMap?.Contract?.Hash != null)
-            filter.BigMap.Contract.Id += await filter.BigMap.Contract.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
 
-        if (filter.BigMap?.Contract?.Creator?.Hash != null)
-            filter.BigMap.Contract.Creator.Id += await filter.BigMap.Contract.Creator.Hash.ToIdParameter(_addressCache, chainId);
+            if (filter.Timestamp != null || pagination?.SortingBy("timestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeRangeParameter.TryMerge(filter.Timestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.Timestamp = firstTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.BigMap?.Contract, chains))
+            return false;
 
         return await BigMapRepository.TryResolveIds(_dataSource, filter.Chain, filter.BigMap);
     }
 
     async Task<IEnumerable<dynamic>> Query(BigMapUpdateFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -162,7 +177,6 @@ public class BigMapUpdateRepository(
 
         var (query, parameters) = sql
             .Where(@"bu.""Id""",            filter.Id)
-            .Where(@"bu.""ChainId""",       filter.Chain?.Id)
             .Where(@"bu.""BigMapId""",      filter.BigMap?.Id)
             .Where(@"b.""Ptr""",            filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",     filter.BigMap?.Contract?.Id)
@@ -214,7 +228,6 @@ public class BigMapUpdateRepository(
 
         var (query, parameters) = sql
             .Where(@"bu.""Id""",            filter.Id)
-            .Where(@"bu.""ChainId""",       filter.Chain?.Id)
             .Where(@"bu.""BigMapId""",      filter.BigMap?.Id)
             .Where(@"b.""Ptr""",            filter.BigMap?.Ptr)
             .Where(@"b.""ContractId""",     filter.BigMap?.Contract?.Id)

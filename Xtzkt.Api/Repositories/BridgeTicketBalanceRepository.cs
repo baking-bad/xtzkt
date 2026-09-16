@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
@@ -17,23 +18,45 @@ public class BridgeTicketBalanceRepository(
     {
         { "id",             (@"tb.""Id""",             "bigint") },
         { "balance",        (@"tb.""Balance""",        "numeric") },
-        { "firstLevel",     (@"tb.""FirstLevel""",     "integer") },
-        { "firstTimestamp", (@"tb.""FirstTimestamp""", "timestamptz") },
-        { "lastLevel",      (@"tb.""LastLevel""",      "integer") },
-        { "lastTimestamp",  (@"tb.""LastTimestamp""",  "timestamptz") },
         { "transfersCount", (@"tb.""TransfersCount""", "integer") },
+        { "firstTimestamp", (@"tb.""FirstTimestamp""", "timestamptz") },
+        { "lastTimestamp",  (@"tb.""LastTimestamp""",  "timestamptz") },
     };
 
-    async Task<bool> ProcessFilters(BridgeTicketBalanceFilter filter)
+    async Task<bool> ProcessFilters(BridgeTicketBalanceFilter filter, Pagination? pagination = null)
     {
-        filter.Chain = _chainCache.ResolveChainFilter(filter.Chain);
-        var chainId = filter.Chain.Id!.Eq;
-
-        if (chainId == -1)
+        #region replace chain filter
+        var chains = _chainCache.Resolve(filter.Chain);
+        if (chains.Count == 0)
             return false;
 
-        if (filter.Address?.Hash != null)
-            filter.Address.Id += await filter.Address.Hash.ToIdParameter(_addressCache, chainId);
+        if (chains.Count != _chainCache.Count())
+        {
+            var idRange = _chainCache.GetId64Range(chains);
+            if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
+                return false;
+            filter.Id = id;
+
+            if (filter.FirstTimestamp != null || pagination?.SortingBy("firstTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.FirstTimestamp, timestampRange, out var firstTimestamp))
+                    return false;
+                filter.FirstTimestamp = firstTimestamp;
+            }
+
+            if (filter.LastTimestamp != null || pagination?.SortingBy("lastTimestamp") == true)
+            {
+                var timestampRange = _chainCache.GetTimestampRange(chains);
+                if (!DateTimeParameter.TryMerge(filter.LastTimestamp, timestampRange, out var lastTimestamp))
+                    return false;
+                filter.LastTimestamp = lastTimestamp;
+            }
+        }
+        #endregion
+
+        if (!await _addressCache.Resolve(filter.Address, chains))
+            return false;
 
         if (filter.Balance?.Gt == 0 && filter.Balance.Ne == null)
         {
@@ -46,7 +69,9 @@ public class BridgeTicketBalanceRepository(
 
     async Task<IEnumerable<dynamic>> Query(BridgeTicketBalanceFilter filter, Pagination pagination, Selection? selection = null)
     {
-        if (!await ProcessFilters(filter))
+        pagination.Reduce(SortSpec);
+
+        if (!await ProcessFilters(filter, pagination))
             return [];
 
         var columns = new HashSet<string>();
@@ -106,7 +131,6 @@ public class BridgeTicketBalanceRepository(
             .From(@"""BridgeTicketBalances""", "tb")
             .InnerJoin(@"""BridgeTickets""", "t", @"""Id""", @"tb.""TicketId""")
             .Where(@"tb.""Id""",             filter.Id)
-            .Where(@"tb.""ChainId""",        filter.Chain?.Id)
             .Where(@"tb.""AddressId""",      filter.Address?.Id)
             .Where(@"tb.""TicketId""",       filter.Ticket?.Id)
             .Where(@"t.""WeakHash""",        filter.Ticket?.WeakHash)
@@ -143,7 +167,6 @@ public class BridgeTicketBalanceRepository(
 
         var (query, parameters) = sql
             .Where(@"tb.""Id""",             filter.Id)
-            .Where(@"tb.""ChainId""",        filter.Chain?.Id)
             .Where(@"tb.""AddressId""",      filter.Address?.Id)
             .Where(@"tb.""TicketId""",       filter.Ticket?.Id)
             .Where(@"t.""WeakHash""",        filter.Ticket?.WeakHash)

@@ -4,50 +4,43 @@ using Xtzkt.Api.Filters.Parameters;
 
 namespace Xtzkt.Api.Filters.Binders;
 
-public class Int32Binder : IModelBinder
+public class Int64RangeBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
         var param = bindingContext.ModelName;
         var hasValue = false;
 
-        if (!bindingContext.TryGetInt32($"{param}", ref hasValue, out var value))
+        if (bindingContext.ThrowUnsupportedMode($"{param}.ne") ||
+            bindingContext.ThrowUnsupportedMode($"{param}.in") ||
+            bindingContext.ThrowUnsupportedMode($"{param}.ni"))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.eq", ref hasValue, out var eq))
+        if (!bindingContext.TryGetInt64($"{param}", ref hasValue, out var value))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.ne", ref hasValue, out var ne))
+        if (!bindingContext.TryGetInt64($"{param}.eq", ref hasValue, out var eq))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.gt", ref hasValue, out var gt))
+        if (!bindingContext.TryGetInt64($"{param}.gt", ref hasValue, out var gt))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.ge", ref hasValue, out var ge))
+        if (!bindingContext.TryGetInt64($"{param}.ge", ref hasValue, out var ge))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.lt", ref hasValue, out var lt))
+        if (!bindingContext.TryGetInt64($"{param}.lt", ref hasValue, out var lt))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32($"{param}.le", ref hasValue, out var le))
+        if (!bindingContext.TryGetInt64($"{param}.le", ref hasValue, out var le))
             return Task.CompletedTask;
 
-        if (!bindingContext.TryGetInt32List($"{param}.in", ref hasValue, out var @in))
-            return Task.CompletedTask;
-
-        if (!bindingContext.TryGetInt32List($"{param}.ni", ref hasValue, out var ni))
-            return Task.CompletedTask;
-
-        var p = !hasValue ? null : new Int32Parameter
+        var p = !hasValue ? null : new Int64RangeParameter
         {
             Eq = value ?? eq,
-            Ne = ne,
             Gt = gt,
             Ge = ge,
             Lt = lt,
             Le = le,
-            In = @in,
-            Ni = ni
         };
 
         if (p?.Reduce() == false)

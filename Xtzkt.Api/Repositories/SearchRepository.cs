@@ -438,16 +438,8 @@ public class SearchRepository(
 
     (int[], int[]) ResolveChains(ChainInfoParameter? filter)
     {
-        var chains = _chainCache.Get();
+        var chains = _chainCache.Resolve(filter);
         var xChains = chains.Where(x => x.Layer == Data.Models.Layer.TezosX);
-
-        if (filter == null || filter.IsEmpty())
-            return ([.. chains.Select(x => x.Id)], [..xChains.Select(x => x.Id)]);
-
-        var id = filter.Id + filter.ChainId?.ToIdParameter(_chainCache);
-        if (id == null)
-            return ([.. chains.Select(x => x.Id)], [.. xChains.Select(x => x.Id)]);
-
-        return ([.. chains.Select(x => x.Id).Where(id.Matches)], [.. xChains.Select(x => x.Id).Where(id.Matches)]);
+        return ([.. chains.Select(x => x.Id)], [.. xChains.Select(x => x.Id)]);
     }
 }
