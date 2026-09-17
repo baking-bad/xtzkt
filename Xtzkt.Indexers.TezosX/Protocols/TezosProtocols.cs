@@ -77,8 +77,10 @@ namespace Xtzkt.Indexers.TezosX
                 #region tezos x
                 // Ganesha 7.0
                 "0x008c903318dfc0016de771f981069498f7774f3c35ffcc3f2dce63f5a3b6d03df6" => services.GetRequiredService<Proto10Handler>(),
-                // Ganesha 7.0.1
+                // Ganesha 7.1
                 "0x00db5a8b279b9915f7ffef420347b5d9667ac4e73a9c766b7ef71513f748f52c67" => services.GetRequiredService<Proto10Handler>(),
+                // Ganesha 7.2
+                "0x009e07373751a43acbf0cd747b404f45130e0ad561c4b7da937e02eb812bd0f7e8" => services.GetRequiredService<Proto10Handler>(),
 
                 // TODO: remove it after previewnet reset
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto10Handler>(), // v0.1
