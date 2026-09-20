@@ -21,6 +21,7 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 ? (DepositType.Fa, faDeposit.Amount, faDeposit.Receiver, faDeposit.InboxLevel, faDeposit.InboxMessageId, faDeposit.Proxy, faDeposit.TicketHash)
                 : throw new InvalidOperationException("Invalid deposit type");
 
+        var sender = await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress);
         var receiver = await Helpers.GetOrCreateXEvmAddress(receiverAddress);
         var proxy = proxyAddress == null ? null : await Helpers.GetOrCreateXEvmAddress(proxyAddress);
 
@@ -47,7 +48,7 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             GasUsed = gasUsed,
 
             #region crutch for nested proxy calls in old etherlink
-            SenderId = (await Cache.Addresses.GetExistingAsync(EvmRuntime.NullAddress)).Id,
+            SenderId = sender.Id,
             Counter = 0,
             InternalOperations = null,
             #endregion
@@ -55,6 +56,9 @@ class DepositCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #endregion
 
         #region apply operation
+        Db.TryAttach(sender);
+        // nothing to update, because sender is fictive here
+
         Db.TryAttach(receiver);
         receiver.DepositOpsCount++;
         receiver.LastLevel = op.Level;

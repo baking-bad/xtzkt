@@ -154,6 +154,7 @@ partial class ProtoHelpers
             Counter = 0, // contract nonce starts at 1 (EIP161)
         };
 
+        Db.TryAttach(creator);
         creator.ContractsCount++;
 
         Context.Block.Events |= XBlockEvents.NewAddresses;
@@ -193,6 +194,9 @@ partial class ProtoHelpers
             Eip7702DelegationCount = ghost.Eip7702DelegationCount,
             LogsCount = ghost.LogsCount,
             AliasesCount = ghost.AliasesCount,
+            ActiveBridgeTicketsCount = ghost.ActiveBridgeTicketsCount,
+            BridgeTicketBalancesCount = ghost.BridgeTicketBalancesCount,
+            BridgeTicketTransfersCount = ghost.BridgeTicketTransfersCount,
             Kind = XContractKind.SmartContract,
             Tags = XEvmContractTags.None,
             CreatorId = creator.Id,
@@ -205,6 +209,7 @@ partial class ProtoHelpers
         Db.Entry(ghost).State = EntityState.Detached;
         Db.Entry(contract).State = isAdded ? EntityState.Added : EntityState.Modified;
 
+        Db.TryAttach(creator);
         creator.ContractsCount++;
 
         return contract;
@@ -221,6 +226,7 @@ partial class ProtoHelpers
         if (contract.AliasesCount != 0)
             await UnbindAliases(contract);
 
+        Db.TryAttach(creator);
         creator.ContractsCount--;
         creator.LastLevel = Context.Block.Level;
         creator.LastTimestamp = Context.Block.Timestamp;
@@ -257,6 +263,9 @@ partial class ProtoHelpers
             TransactionsCount = contract.TransactionsCount,
             Eip7702DelegationCount = contract.Eip7702DelegationCount,
             AliasesCount = contract.AliasesCount,
+            ActiveBridgeTicketsCount = contract.ActiveBridgeTicketsCount,
+            BridgeTicketBalancesCount = contract.BridgeTicketBalancesCount,
+            BridgeTicketTransfersCount = contract.BridgeTicketTransfersCount,
             Eip7702DelegateId = null,
             Counter = -1, // counter keeps the last used nonce, for new address it's -1
         };
@@ -264,6 +273,7 @@ partial class ProtoHelpers
         Db.Entry(contract).State = EntityState.Detached;
         Db.Entry(user).State = EntityState.Modified;
 
+        Db.TryAttach(creator);
         creator.ContractsCount--;
     }
     #endregion

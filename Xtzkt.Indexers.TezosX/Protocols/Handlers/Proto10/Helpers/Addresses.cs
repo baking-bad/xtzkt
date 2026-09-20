@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Xtzkt.Data.Models;
+using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
 {
@@ -34,6 +35,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 OwnerId = owner.Id,
             };
 
+            Db.TryAttach(owner);
             owner.AliasesCount++;
 
             Context.Block.Events |= XBlockEvents.NewAddresses;
@@ -76,6 +78,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 Eip7702DelegationCount = user.Eip7702DelegationCount,
                 LogsCount = user.LogsCount,
                 AliasesCount = user.AliasesCount,
+                ActiveBridgeTicketsCount = user.ActiveBridgeTicketsCount,
+                BridgeTicketBalancesCount = user.BridgeTicketBalancesCount,
+                BridgeTicketTransfersCount = user.BridgeTicketTransfersCount,
                 Eip7702DelegateId = aliasForwarder.Id,
                 OwnerId = owner.Id,
             };
@@ -84,6 +89,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             Db.Entry(user).State = EntityState.Detached;
             Db.Entry(alias).State = isAdded ? EntityState.Added : EntityState.Modified;
 
+            Db.TryAttach(owner);
             owner.AliasesCount++;
 
             return alias;
@@ -95,6 +101,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             if (alias.AliasesCount != 0)
                 await UnbindAliases(alias);
 
+            Db.TryAttach(owner);
             owner.AliasesCount--;
             owner.LastLevel = Context.Block.Level;
             owner.LastTimestamp = Context.Block.Timestamp;
@@ -155,12 +162,16 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 Eip7702DelegationCount = alias.Eip7702DelegationCount,
                 LogsCount = alias.LogsCount,
                 AliasesCount = alias.AliasesCount,
+                ActiveBridgeTicketsCount = alias.ActiveBridgeTicketsCount,
+                BridgeTicketBalancesCount = alias.BridgeTicketBalancesCount,
+                BridgeTicketTransfersCount = alias.BridgeTicketTransfersCount,
                 Eip7702DelegateId = null,
             };
             Cache.Addresses.Add(user);
             Db.Entry(alias).State = EntityState.Detached;
             Db.Entry(user).State = EntityState.Modified;
 
+            Db.TryAttach(owner);
             owner.AliasesCount--;
         }
         #endregion
@@ -326,6 +337,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 OwnerId = owner.Id,
             };
 
+            Db.TryAttach(owner);
             owner.AliasesCount++;
 
             Context.Block.Events |= XBlockEvents.NewAddresses;
@@ -373,6 +385,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             Db.Entry(ghost).State = EntityState.Detached;
             Db.Entry(alias).State = isAdded ? EntityState.Added : EntityState.Modified;
 
+            Db.TryAttach(owner);
             owner.AliasesCount++;
 
             return alias;
@@ -410,6 +423,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             Db.Entry(alias).State = EntityState.Detached;
             Db.Entry(ghost).State = EntityState.Modified;
 
+            Db.TryAttach(owner);
             owner.AliasesCount--;
         }
 
@@ -419,6 +433,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             if (alias.AliasesCount != 0)
                 await UnbindAliases(alias);
 
+            Db.TryAttach(owner);
             owner.AliasesCount--;
             owner.LastLevel = Context.Block.Level;
             owner.LastTimestamp = Context.Block.Timestamp;
@@ -479,6 +494,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
                 Kind = XContractKind.SmartContract,
             };
 
+            Db.TryAttach(creator);
             creator.ContractsCount++;
 
             Context.Block.Events |= XBlockEvents.NewAddresses;
@@ -531,6 +547,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             Db.Entry(ghost).State = EntityState.Detached;
             Db.Entry(contract).State = isAdded ? EntityState.Added : EntityState.Modified;
 
+            Db.TryAttach(creator);
             creator.ContractsCount++;
 
             return contract;
@@ -568,6 +585,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             Db.Entry(contract).State = EntityState.Detached;
             Db.Entry(ghost).State = EntityState.Modified;
 
+            Db.TryAttach(creator);
             creator.ContractsCount--;
         }
 
@@ -582,6 +600,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers
             if (contract.AliasesCount != 0)
                 await UnbindAliases(contract);
 
+            Db.TryAttach(creator);
             creator.ContractsCount--;
 
             Cache.Chain.ReleaseAddressId();

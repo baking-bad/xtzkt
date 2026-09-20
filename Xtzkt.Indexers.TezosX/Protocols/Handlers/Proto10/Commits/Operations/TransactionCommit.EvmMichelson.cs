@@ -366,14 +366,6 @@ partial class TransactionCommit
         if (op.Eip7702DelegationCount > 0)
             await new Eip7702DelegationCommit(Proto).Revert(op);
 
-        RevertPayFee(sender, op.DaFee!.Value);
-        RevertBurnFee(sender, op.GasFee!.Value);
-        sender.Counter = op.Counter - 1;
-        sender.TransactionsCount--;
-        sender.LastLevel = op.Level;
-        sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
-
         Db.TryAttach(gateway);
         gateway.TransactionsCount--;
         gateway.LastLevel = op.Level;
@@ -393,6 +385,14 @@ partial class TransactionCommit
             target.LastTimestamp = op.Timestamp;
             if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
         }
+
+        RevertPayFee(sender, op.DaFee!.Value);
+        RevertBurnFee(sender, op.GasFee!.Value);
+        sender.Counter = op.Counter - 1;
+        sender.TransactionsCount--;
+        sender.LastLevel = op.Level;
+        sender.LastTimestamp = op.Timestamp;
+        if (sender.IsEmpty()) await Helpers.RemoveXEvmUser(sender);
 
         Cache.Chain.Get().TransactionOpsCount--;
         #endregion
@@ -431,10 +431,13 @@ partial class TransactionCommit
         #endregion
 
         #region revert operation
-        sender.TransactionsCount--;
-        sender.LastLevel = op.Level;
-        sender.LastTimestamp = op.Timestamp;
-        if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
+        if (sender is XEvmAlias) // order matters
+        {
+            sender.TransactionsCount--;
+            sender.LastLevel = op.Level;
+            sender.LastTimestamp = op.Timestamp;
+            if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
+        }
 
         Db.TryAttach(gateway);
         gateway.TransactionsCount--;
@@ -454,6 +457,14 @@ partial class TransactionCommit
             target.LastLevel = op.Level;
             target.LastTimestamp = op.Timestamp;
             if (target.IsEmpty()) await Helpers.RemoveXMichelsonAddress(target);
+        }
+
+        if (sender is not XEvmAlias)  // order matters
+        {
+            sender.TransactionsCount--;
+            sender.LastLevel = op.Level;
+            sender.LastTimestamp = op.Timestamp;
+            if (sender.IsEmpty()) await Helpers.RemoveXEvmAddress(sender);
         }
 
         if (initiator != sender && initiator != target)
