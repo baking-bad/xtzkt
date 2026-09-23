@@ -4,7 +4,7 @@ using System.Net.Sockets;
 namespace Xtzkt.Services.Metadata.Utils;
 
 /// <summary>
-/// Http client with built-in SSRF protection (if no baseUri specified) and PooledConnectionLifetime
+/// Http client with built-in SSRF protection and PooledConnectionLifetime
 /// </summary>
 public sealed class SafeHttpClient : IDisposable
 {

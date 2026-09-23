@@ -19,7 +19,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<XtzktConte
             .Build();
 
         var builder = new DbContextOptionsBuilder<XtzktContext>();
-        builder.UseNpgsql(configuration.GetDbConnectionString());
+        builder.UseNpgsql(configuration.GetDbConnectionString(statementTimeout: false), o => o.CommandTimeout(0));
 
         return new XtzktContext(builder.Options);
     }

@@ -90,6 +90,7 @@ while (true)
         {
             logger.LogInformation("{cnt} pending migrations. Migrate database...", migrations.Count - applied.Count);
             db.Database.SetCommandTimeout(0);
+            db.Database.SetConnectionString(app.Configuration.GetDbConnectionString(statementTimeout: false));
             db.Database.Migrate();
         }
 

@@ -4,6 +4,7 @@ x-db: &db
   Db__ConnectionString: >-
     host=db;port=5432;database=${POSTGRES_DB:-xtzkt_db};username=${POSTGRES_USER:-xtzkt};password=${POSTGRES_PASSWORD:-123};
   Db__CommandTimeout: "${COMMAND_TIMEOUT:-600}"
+  Db__StatementTimeout: "${STATEMENT_TIMEOUT:-598}"
 
 x-defaults: &defaults
   restart: unless-stopped
@@ -44,9 +45,31 @@ services:
     environment:
       <<: *db
       Db__CommandTimeout: "${API_COMMAND_TIMEOUT:-60}"
-      Db__StatementTimeout: "${STATEMENT_TIMEOUT:-58}"
+      Db__StatementTimeout: "${API_STATEMENT_TIMEOUT:-58}"
     ports:
       - "${API_PORT:-5000}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      indexer-tezosx:
+        condition: service_healthy
+        required: false
+      indexer-l1:
+        condition: service_healthy
+        required: false
+
+  domains:
+    profiles: ["domains", "full"]
+    <<: *defaults
+    build:
+      context: .
+      dockerfile: Xtzkt.Services.Domains/Dockerfile
+    image: xtzkt-domains
+    environment:
+      <<: *db
+      TezosDomainsResolver__Sources__0__NameRegistry: ${DOMAINS_L1_NAME_REGISTRY:-KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS}
+    ports:
+      - "${DOMAINS_PORT:-5003}:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -66,7 +89,7 @@ services:
     image: xtzkt-indexer-l1
     environment:
       <<: *db
-      TezosNode__Endpoint: ${L1_TEZOS_NODE:-https://rpc.tzkt.io/shadownet}
+      TezosNode__Endpoint: ${L1_TEZOS_NODE:-https://rpc.tzkt.io/mainnet}
     ports:
       - "${L1_PORT:-5001}:8080"
     depends_on:
@@ -101,13 +124,13 @@ services:
       EvmResolver__EvmNodes__0__Url: ${METADATA_EVM_NODE:-https://evm.previewnet.tezosx.nomadic-labs.com}
       IpfsResolver__IpfsGateways__0__Url: ${METADATA_IPFS_GATEWAY:-https://ipfs.io/ipfs}
       DipDupResolver__Sources__0__Url: ${METADATA_L1_DIPDUP_URL:-https://metadata.dipdup.net/v1/graphql}
-      DipDupResolver__Sources__0__IndexName: ${METADATA_L1_DIPDUP_INDEX:-metadata_shadownet}
-      DipDupResolver__Sources__0__Network: ${METADATA_L1_DIPDUP_NETWORK:-shadownet}
+      DipDupResolver__Sources__0__IndexName: ${METADATA_L1_DIPDUP_INDEX:-metadata_mainnet}
+      DipDupResolver__Sources__0__Network: ${METADATA_L1_DIPDUP_NETWORK:-mainnet}
       DipDupResolver__Sources__1__Url: ${METADATA_TEZOSX_DIPDUP_URL:-https://metadata.dipdup.net/v1/graphql}
       DipDupResolver__Sources__1__IndexName: ${METADATA_TEZOSX_DIPDUP_INDEX:-metadata_tezosx}
       DipDupResolver__Sources__1__Network: ${METADATA_TEZOSX_DIPDUP_NETWORK:-tezosx}
     ports:
-      - "${METADATA_PORT:-5003}:8080"
+      - "${METADATA_PORT:-5004}:8080"
     depends_on:
       db:
         condition: service_healthy

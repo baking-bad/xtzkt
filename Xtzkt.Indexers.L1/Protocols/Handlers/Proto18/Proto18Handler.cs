@@ -177,7 +177,7 @@ namespace Xtzkt.Indexers.L1.Protocols
                             break;
                         case "transaction":
                             var dst = content.RequiredString("destination");
-                            if (dst.StartsWith("tz") && content.Optional("parameters")?.RequiredString("entrypoint") is string entrypoint)
+                            if (dst.StartsWith("tz") && content.Optional("parameters")?.RequiredUnistring("entrypoint") is string entrypoint)
                             {
                                 if (StakingCommit.ValidateParameters(entrypoint, content.RequiredString("source"), dst))
                                 {

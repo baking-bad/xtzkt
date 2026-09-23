@@ -18,10 +18,11 @@ public class DbConfig
     public int CommandTimeout { get; set; } = 60;
 
     /// <summary>
-    /// Server-side limit (in seconds) for a single statement. Postgres enforces it itself, so unlike
-    /// <see cref="CommandTimeout"/> it also fires when the client is gone, or when a cancel request
-    /// can't reach the backend. It applies to every statement on the connection, migrations and
-    /// index builds included, so the indexers normally leave it at 0, which disables it.
+    /// Server-side limit (in seconds) for a single statement, 0 disables it. Postgres enforces it itself,
+    /// so unlike <see cref="CommandTimeout"/> it also fires when the client is gone, or when a cancel request
+    /// can't reach the backend. Keep it just below <see cref="CommandTimeout"/>, so that postgres aborts a
+    /// statement first. It applies to every statement on the connection, so operations that legitimately
+    /// run longer, such as migrations and index builds, lift it at their call site rather than in config.
     /// </summary>
     public int StatementTimeout { get; set; } = 58;
 

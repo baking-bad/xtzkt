@@ -439,17 +439,19 @@ public class EvmResolver(StoreService store, MetadataService metadata, IConfigur
 
     static bool IsFetchableIpfsPath(string path)
     {
-        // SSRF protection
+        // SSRF protection, and no NUL, which a text column can't store
         return path.Length > 0 &&
             path[0] != '/' &&
             path[0] != '\\' &&
+            !path.Contains('\0') &&
             !Uri.TryCreate(path, UriKind.Absolute, out _);
     }
 
     static bool IsValidHttpUrl(string url)
     {
-        // replacing placeholder for more accurate validation
-        return Uri.TryCreate(url.Replace("{id}", "0"), UriKind.Absolute, out var uri) &&
+        // replacing placeholder for more accurate validation, and no NUL, which a text column can't store.
+        return !url.Contains('\0') &&
+            Uri.TryCreate(url.Replace("{id}", "0"), UriKind.Absolute, out var uri) &&
             (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) &&
             !string.IsNullOrEmpty(uri.Host);
     }

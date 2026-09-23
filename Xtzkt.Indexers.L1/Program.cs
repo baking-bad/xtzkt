@@ -9,7 +9,6 @@ using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Services;
 using Xtzkt.Indexers.Common.Utils;
 using Xtzkt.Indexers.L1.Services;
-using Xtzkt.Indexers.L1.Services.Domains;
 using Xtzkt.Indexers.L1.Protocols;
 using Xtzkt.Utils;
 
@@ -39,9 +38,6 @@ builder.Services.AddTezosNode();
 builder.Services.AddTezosProtocols();
 builder.Services.AddQuotes(builder.Configuration);
 builder.Services.AddHostedService<ObserverService>();
-
-if (builder.Configuration.GetDomainsConfig().Enabled)
-    builder.Services.AddHostedService<DomainsService>();
 
 builder.Services.AddHealthChecks();
 
@@ -96,6 +92,7 @@ while (true)
         {
             logger.LogInformation("{cnt} pending migrations. Migrate database...", migrations.Count - applied.Count);
             db.Database.SetCommandTimeout(0);
+            db.Database.SetConnectionString(app.Configuration.GetDbConnectionString(statementTimeout: false));
             db.Database.Migrate();
         }
 
@@ -152,7 +149,6 @@ while (true)
                 VotingEpoch = -1,
                 VotingPeriod = -1,
                 QuoteLevel = -1,
-                DomainsNameRegistry = string.Empty,
             };
             db.Chains.Add(chain);
             await db.SaveChangesAsync();

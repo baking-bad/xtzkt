@@ -27,6 +27,8 @@ jobs:
         include:
           - image: api
             dockerfile: Xtzkt.Api/Dockerfile
+          - image: domains
+            dockerfile: Xtzkt.Services.Domains/Dockerfile
           - image: indexer-l1
             dockerfile: Xtzkt.Indexers.L1/Dockerfile
           - image: indexer-tezosx

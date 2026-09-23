@@ -80,9 +80,6 @@ public class L1Chain() : Chain(Layer.L1)
     public double QuoteKrw { get; set; }
     public double QuoteEth { get; set; }
     public double QuoteGbp { get; set; }
-
-    public required string DomainsNameRegistry { get; set; }
-    public int DomainsLevel { get; set; }
     #endregion 
 }
 

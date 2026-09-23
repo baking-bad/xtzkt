@@ -5,8 +5,9 @@ namespace Xtzkt.Data.Models
 {
     public class Domain
     {
-        public required int Id { get; set; }
+        public required long Id { get; set; }
         public required int ChainId { get; set; }
+        public required int RegistryId { get; set; }
         public required int Level { get; set; }
         public required string Name { get; set; }
         public required string Owner { get; set; }

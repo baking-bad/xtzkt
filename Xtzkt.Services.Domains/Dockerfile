@@ -1,7 +1,7 @@
-# Xtzkt.Indexers.TezosX container image.
+# Xtzkt.Services.Domains container image.
 #
 # The build context MUST be the repository root, not this directory:
-#     docker build -f Xtzkt.Indexers.TezosX/Dockerfile -t xtzkt-indexer-tezosx .
+#     docker build -f Xtzkt.Services.Domains/Dockerfile -t xtzkt-domains .
 #
 # or, for all five images at once:
 #     docker compose build
@@ -24,7 +24,6 @@ RUN apt-get update \
 USER $APP_UID
 WORKDIR /app
 
-# serves /version, /health and the App.Metrics endpoints (/metrics, /metrics-text)
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 
@@ -64,9 +63,8 @@ ARG TARGETARCH
 ARG BUILD_CONFIGURATION=Release
 COPY . .
 
-# --arch must match the restore above; it also drops the native assets of every other RID,
-# which for this project is ~34 MB of publish output down to ~20 MB
-RUN dotnet publish "Xtzkt.Indexers.TezosX/Xtzkt.Indexers.TezosX.csproj" \
+# --arch must match the restore above
+RUN dotnet publish "Xtzkt.Services.Domains/Xtzkt.Services.Domains.csproj" \
     --configuration $BUILD_CONFIGURATION \
     --arch $TARGETARCH \
     --no-restore \
@@ -80,4 +78,4 @@ RUN dotnet publish "Xtzkt.Indexers.TezosX/Xtzkt.Indexers.TezosX.csproj" \
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Xtzkt.Indexers.TezosX.dll"]
+ENTRYPOINT ["dotnet", "Xtzkt.Services.Domains.dll"]

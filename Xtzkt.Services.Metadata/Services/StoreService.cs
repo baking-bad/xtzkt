@@ -9,41 +9,32 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
 {
     public async Task EnsureEvmResolverIndexes(CancellationToken ct)
     {
-        await using var cmd = dataSource.CreateCommand($"""
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS "MX_Tokens_ChainId_MetadataStatus_Id:EvmResolver"
+        await EnsureIndexAsync("MX_Tokens_ChainId_MetadataStatus_Id:EvmResolver", $"""
             ON "Tokens" ("ChainId", "MetadataStatus", "Id")
             WHERE ("Tags" & {(int)TokenTags.Erc}) = {(int)TokenTags.Erc}
             AND "MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
             AND "MetadataLink" IS NULL
-            """);
-
-        await cmd.ExecuteNonQueryAsync(ct);
+            """, ct);
     }
 
     public async Task EnsureIpfsResolverIndexes(CancellationToken ct)
     {
-        await using var cmd = dataSource.CreateCommand($"""
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS "MX_Tokens_MetadataStatus_Id:IpfsResolver"
+        await EnsureIndexAsync("MX_Tokens_MetadataStatus_Id:IpfsResolver", $"""
             ON "Tokens" ("MetadataStatus", "Id")
             WHERE "MetadataLink" IS NOT NULL
             AND "MetadataLink" ^@ 'ipfs'
             AND "MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
-            """);
-
-        await cmd.ExecuteNonQueryAsync(ct);
+            """, ct);
     }
 
     public async Task EnsureHttpResolverIndexes(CancellationToken ct)
     {
-        await using var cmd = dataSource.CreateCommand($"""
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS "MX_Tokens_MetadataStatus_Id:HttpResolver"
+        await EnsureIndexAsync("MX_Tokens_MetadataStatus_Id:HttpResolver", $"""
             ON "Tokens" ("MetadataStatus", "Id")
             WHERE "MetadataLink" IS NOT NULL
             AND "MetadataLink" ^@ 'http'
             AND "MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
-            """);
-
-        await cmd.ExecuteNonQueryAsync(ct);
+            """, ct);
     }
 
     public async Task<List<ChainInfo>> GetChainsAsync(CancellationToken ct = default)
@@ -187,14 +178,11 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
     #region dipdup
     public async Task EnsureDipDupResolverIndexes(CancellationToken ct)
     {
-        await using var cmd = dataSource.CreateCommand($"""
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS "MX_Tokens_ChainId_MetadataStatus_Id:DipDupResolver"
+        await EnsureIndexAsync("MX_Tokens_ChainId_MetadataStatus_Id:DipDupResolver", $"""
             ON "Tokens" ("ChainId", "MetadataStatus", "Id")
             WHERE ("Tags" & {(int)TokenTags.Fa}) = {(int)TokenTags.Fa}
             AND "MetadataStatus" <= {(int)TokenMetadataStatus.MaxRetry}
-            """);
-
-        await cmd.ExecuteNonQueryAsync(ct);
+            """, ct);
     }
 
     public async Task<string?> GetDipDupResolverStateAsync(int chainId, CancellationToken ct = default)
@@ -375,6 +363,65 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         cmd.Parameters.AddWithValue("metas", metas);
 
         return await cmd.ExecuteNonQueryAsync(ct);
+    }
+    #endregion
+
+    #region indexes
+    async Task EnsureIndexAsync(string name, string definition, CancellationToken ct)
+    {
+        await using var conn = await dataSource.OpenConnectionAsync(ct);
+        await ExecuteAsync(conn, "SET statement_timeout = 0", ct);
+
+        var state = await GetIndexStateAsync(conn, name, ct);
+        if (state == IndexState.Valid)
+            return;
+
+        if (state == IndexState.Abandoned)
+            await ExecuteAsync(conn, $"""
+                DROP INDEX CONCURRENTLY IF EXISTS "{name}"
+                """, ct);
+
+        await ExecuteAsync(conn, $"""
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS "{name}"
+            {definition}
+            """, ct);
+    }
+
+    static async Task<IndexState> GetIndexStateAsync(NpgsqlConnection conn, string name, CancellationToken ct)
+    {
+        await using var cmd = new NpgsqlCommand("""
+            SELECT i.indisvalid,
+                   EXISTS (
+                       SELECT 1
+                       FROM pg_stat_progress_create_index AS p
+                       WHERE p.index_relid = i.indexrelid
+                   )
+            FROM pg_index AS i
+            INNER JOIN pg_class AS c ON c.oid = i.indexrelid
+            INNER JOIN pg_namespace AS n ON n.oid = c.relnamespace
+            WHERE n.nspname = current_schema()
+            AND c.relname = @name
+            """, conn);
+        cmd.Parameters.AddWithValue("name", name);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct)) return IndexState.Missing;
+        if (reader.GetBoolean(0)) return IndexState.Valid;
+        return reader.GetBoolean(1) ? IndexState.Building : IndexState.Abandoned;
+    }
+
+    static async Task ExecuteAsync(NpgsqlConnection conn, string sql, CancellationToken ct)
+    {
+        await using var cmd = new NpgsqlCommand(sql, conn) { CommandTimeout = 0 };
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    enum IndexState
+    {
+        Missing,
+        Valid,
+        Building,
+        Abandoned
     }
     #endregion
 }

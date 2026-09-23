@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Services.Metadata.Models;
@@ -55,23 +56,15 @@ public class MetadataService(IConfiguration config, ILogger<MetadataService> log
         if (metadata is not JsonElement jsonElement)
             return (TokenMetadataStatus.InvalidJson, null, null, null, null);
 
-        var buffer = new ArrayBufferWriter<byte>();
-        try
-        {
-            using var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions { MaxDepth = _config.MaxDepth });
-            jsonElement.WriteTo(writer);
-        }
-        catch (InvalidOperationException)
-        {
-            return (TokenMetadataStatus.DepthLimitExceeded, null, null, null, null);
-        }
+        var bytes = JsonMarshal.GetRawUtf8Value(jsonElement);
 
-        if (buffer.WrittenCount > _config.MaxSize)
-        {
+        if (bytes.Length > _config.MaxSize)
             return (TokenMetadataStatus.SizeLimitExceeded, null, null, null, null);
-        }
 
-        var json = SanitizeJson(buffer.WrittenSpan);
+        if (Validate(bytes, null, out _) is TokenMetadataStatus errorStatus)
+            return (errorStatus, null, null, null, null);
+
+        var json = SanitizeJson(bytes);
         var (name, symbol, decimals) = ParseTokenIdentity(json);
         return (TokenMetadataStatus.Ok, name, symbol, decimals, json);
     }
@@ -140,7 +133,7 @@ public class MetadataService(IConfiguration config, ILogger<MetadataService> log
         var payloadLength = uri.Length - commaIndex - 1;
         if (isBase64 && payloadLength / 4 * 3 > _config.MaxSize + 3 || !isBase64 && payloadLength > _config.MaxSize)
         {
-            _logger.LogDebug("Failed to fetch #{id}, data uri (base64: {isBase64}) length: ", isBase64, payloadLength);
+            _logger.LogDebug("Failed to fetch #{id}, data uri (base64: {isBase64}) length: {len}", token.Id, isBase64, payloadLength);
             return new TokenMetadata(token.Id, TokenMetadataStatus.SizeLimitExceeded, syncedAt);
         }
 
@@ -169,38 +162,77 @@ public class MetadataService(IConfiguration config, ILogger<MetadataService> log
 
     TokenMetadata FromBytes(ReadOnlySpan<byte> bytes, long id, BigInteger tokenId, DateTime syncedAt, bool withPlaceholder)
     {
-        #region validate
-        var reader = new Utf8JsonReader(bytes, new JsonReaderOptions { MaxDepth = _config.MaxDepth });
-        var empty = true;
-        try
+        var bom = System.Text.Encoding.UTF8.Preamble;
+        if (bytes.StartsWith(bom))
+            bytes = bytes[bom.Length..];
+
+        var idReplacer = withPlaceholder ? Erc1155.TokenIdToHex64(tokenId) : null;
+        if (Validate(bytes, idReplacer, out var error) is TokenMetadataStatus errorStatus)
         {
-            while (reader.Read())
-                empty = false;
-
-            if (empty)
-            {
-                _logger.LogDebug("Failed to fetch #{id}, empty json", id);
-                return new TokenMetadata(id, TokenMetadataStatus.InvalidJson, syncedAt);
-            }
+            _logger.LogDebug(error, "Failed to fetch #{id}, {status}", id, errorStatus);
+            return new TokenMetadata(id, errorStatus, syncedAt);
         }
-        catch (Exception ex)
-        {
-            if (reader.CurrentDepth >= _config.MaxDepth)
-            {
-                _logger.LogDebug("Failed to fetch #{id}, json depth: {depth}", id, reader.CurrentDepth);
-                return new TokenMetadata(id, TokenMetadataStatus.DepthLimitExceeded, syncedAt);
-            }
 
-            _logger.LogDebug(ex, "Failed to fetch #{id}", id);
-            return new TokenMetadata(id, TokenMetadataStatus.InvalidJson, syncedAt);
-        }
-        #endregion
-
-        var json = SanitizeJson(bytes, withPlaceholder ? Erc1155.TokenIdToHex64(tokenId) : null);
+        var json = SanitizeJson(bytes, idReplacer);
         var (name, symbol, decimals) = ParseTokenIdentity(json);
         _logger.LogDebug("Metadata for #{id} fetched", id);
 
         return new TokenMetadata(id, TokenMetadataStatus.Ok, syncedAt, name, symbol, decimals, json);
+    }
+
+    /// <summary>
+    /// Returns null if the JSON can be stored as jsonb, parsed back within MaxDepth, and stays within MaxSize
+    /// with its id placeholders filled in and its numbers printed in full, or the error status otherwise.
+    /// </summary>
+    TokenMetadataStatus? Validate(ReadOnlySpan<byte> bytes, string? idReplacer, out Exception? error)
+    {
+        error = null;
+
+        // SanitizeJson puts the token id in place of every {id}, which makes 64 bytes out of 4
+        var size = (long)bytes.Length;
+        if (idReplacer != null)
+            size += (long)bytes.Count("{id}"u8) * (idReplacer.Length - "{id}".Length);
+
+        if (size > _config.MaxSize)
+            return TokenMetadataStatus.SizeLimitExceeded;
+
+        var reader = new Utf8JsonReader(bytes, new JsonReaderOptions { MaxDepth = _config.MaxDepth + 1 });
+        var empty = true;
+        try
+        {
+            while (reader.Read())
+            {
+                empty = false;
+
+                switch (reader.TokenType)
+                {
+                    case JsonTokenType.StartObject or JsonTokenType.StartArray when reader.CurrentDepth >= _config.MaxDepth:
+                        return TokenMetadataStatus.DepthLimitExceeded;
+
+                    // a well-formed escape can still make an invalid UTF-16 string (a lone surrogate), which jsonb rejects
+                    case JsonTokenType.String or JsonTokenType.PropertyName when reader.ValueIsEscaped && Jsonb.HasLoneSurrogate(reader.ValueSpan):
+                        return TokenMetadataStatus.InvalidJson;
+
+                    // so does a number out of the numeric range, which the JSON grammar doesn't limit
+                    case JsonTokenType.Number:
+                        if (!Jsonb.IsValidNumber(reader.ValueSpan, out var length))
+                            return TokenMetadataStatus.InvalidJson;
+
+                        // and jsonb prints it back without the exponent, so 8 bytes of 1e131071 come back as 131072 digits
+                        size += length - reader.ValueSpan.Length;
+                        if (size > _config.MaxSize)
+                            return TokenMetadataStatus.SizeLimitExceeded;
+                        break;
+                }
+            }
+
+            return empty ? TokenMetadataStatus.InvalidJson : null;
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+            return TokenMetadataStatus.InvalidJson;
+        }
     }
 
     static bool TryParseName(JsonElement json, out string? value)

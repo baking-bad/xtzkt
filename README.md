@@ -31,12 +31,13 @@ Not every service starts by default. Compose profiles select the set:
 | Command | Services |
 |---|---|
 | `docker compose up` | `db`, `api`, `indexer-tezosx` |
+| `docker compose --profile domains up` | + `domains` |
 | `docker compose --profile metadata up` | + `metadata` |
-| `docker compose --profile full up` | + `metadata`, `indexer-l1` |
+| `docker compose --profile full up` | + `domains`, `metadata`, `indexer-l1` |
 
 `COMPOSE_PROFILES` in `.env` fixes the choice so `--profile` need not be repeated. A single profiled service can also be started by name: `docker compose up indexer-l1`.
 
-Inside the containers everything listens on port 8080 (`ASPNETCORE_HTTP_PORTS`, set in the Dockerfiles). On the host, Compose publishes `api` on 5000, `indexer-l1` on 5001, `indexer-tezosx` on 5002 and `metadata` on 5003 — all overridable through `.env`.
+Inside the containers everything listens on port 8080 (`ASPNETCORE_HTTP_PORTS`, set in the Dockerfiles). On the host, Compose publishes `api` on 5000, `indexer-l1` on 5001, `indexer-tezosx` on 5002, `domains` on 5003 and `metadata` on 5004 — all overridable through `.env`.
 
 Configuration comes from `appsettings.json`. Everything in `appsettings.json` can be overridden by environment variable.
 For example, `DipDupResolver.Sources[0].Network` in `appsettings.json` can be overriden by `DipDupResolver__Sources__0__Network` env var (note double underscore `__` for nesting).

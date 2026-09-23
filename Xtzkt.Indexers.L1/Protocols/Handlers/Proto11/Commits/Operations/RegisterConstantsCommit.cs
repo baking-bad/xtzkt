@@ -65,8 +65,16 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto11
                 BurnFee(sender, burned);
 
                 registerConstant.Address = result.RequiredString("global_address");
-                registerConstant.Value = content.RequiredMicheline("value").ToBytes();
                 registerConstant.Refs = 0;
+
+                try
+                {
+                    registerConstant.Value = content.RequiredMicheline("value").ToBytes();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Failed to parse the value of global constant {address}", registerConstant.Address);
+                }
 
                 Cache.Chain.Get().ConstantsCount++;
             }

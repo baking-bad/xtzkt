@@ -17,7 +17,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
             IMicheline? rawParam;
             try
             {
-                rawEp = param.RequiredString("entrypoint");
+                rawEp = param.RequiredUnistring("entrypoint");
                 rawParam = Micheline.FromJson(param.Required("value"))!;
             }
             catch (Exception ex)
