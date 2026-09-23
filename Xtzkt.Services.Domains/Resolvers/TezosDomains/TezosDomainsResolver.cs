@@ -244,7 +244,9 @@ public class TezosDomainsResolver(StoreService store, IConfiguration config, ILo
             Expiration: row.Expiration,
             Data: row.Data is string data && data != "{}" ? ParseData(data) : null,
             FirstLevel: row.FirstLevel,
-            LastLevel: row.MaxLastLevel);
+            FirstTimestamp: row.FirstTimestamp,
+            LastLevel: row.MaxLastLevel,
+            LastTimestamp: row.MaxLastTimestamp);
     }
 
     static string ParseName(string hex)

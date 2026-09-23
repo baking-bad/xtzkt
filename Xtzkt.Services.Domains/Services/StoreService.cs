@@ -284,8 +284,10 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         return $$"""
             SELECT record."Id",
                    record."FirstLevel",
+                   record."FirstTimestamp",
                    record."LastLevel",
                    GREATEST(record."LastLevel", expiry."LastLevel", reverse."LastLevel"),
+                   GREATEST(record."LastTimestamp", expiry."LastTimestamp", reverse."LastTimestamp"),
                    record."JsonKey" #>> '{}',
                    record."JsonValue" ->> 'level',
                    record."JsonValue" ->> 'owner',
@@ -314,15 +316,17 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
             res.Add(new DomainRecord(
                 Id: reader.GetInt64(0),
                 FirstLevel: reader.GetInt32(1),
-                LastLevel: reader.GetInt32(2),
-                MaxLastLevel: reader.GetInt32(3),
-                NameHex: GetString(reader, 4),
-                Level: GetString(reader, 5),
-                Owner: GetString(reader, 6),
-                Address: GetString(reader, 7),
-                Data: GetString(reader, 8),
-                Expiration: reader.GetDateTime(9),
-                Reverse: reader.GetBoolean(10)));
+                FirstTimestamp: reader.GetDateTime(2),
+                LastLevel: reader.GetInt32(3),
+                MaxLastLevel: reader.GetInt32(4),
+                MaxLastTimestamp: reader.GetDateTime(5),
+                NameHex: GetString(reader, 6),
+                Level: GetString(reader, 7),
+                Owner: GetString(reader, 8),
+                Address: GetString(reader, 9),
+                Data: GetString(reader, 10),
+                Expiration: reader.GetDateTime(11),
+                Reverse: reader.GetBoolean(12)));
         }
 
         return res;
@@ -341,7 +345,9 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         var expirations = new DateTime[domains.Count];
         var datas = new string?[domains.Count];
         var firstLevels = new int[domains.Count];
+        var firstTimestamps = new DateTime[domains.Count];
         var lastLevels = new int[domains.Count];
+        var lastTimestamps = new DateTime[domains.Count];
 
         var i = 0;
         foreach (var d in domains)
@@ -355,15 +361,17 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
             expirations[i] = d.Expiration;
             datas[i] = d.Data;
             firstLevels[i] = d.FirstLevel;
+            firstTimestamps[i] = d.FirstTimestamp;
             lastLevels[i] = d.LastLevel;
+            lastTimestamps[i] = d.LastTimestamp;
             i++;
         }
 
         await using var cmd = new NpgsqlCommand("""
-            INSERT INTO "Domains" ("Id", "ChainId", "RegistryId", "Level", "Name", "Owner", "Address", "Reverse", "Expiration", "Data", "FirstLevel", "LastLevel")
-            SELECT v.id, @chainId, @registryId, v.level, v.name, v.owner, v.address, v.reverse, v.expiration, v.data::jsonb, v.firstLevel, v.lastLevel
-            FROM unnest(@ids, @levels, @names, @owners, @addresses, @reverses, @expirations, @datas, @firstLevels, @lastLevels)
-                AS v(id, level, name, owner, address, reverse, expiration, data, firstLevel, lastLevel)
+            INSERT INTO "Domains" ("Id", "ChainId", "RegistryId", "Level", "Name", "Owner", "Address", "Reverse", "Expiration", "Data", "FirstLevel", "FirstTimestamp", "LastLevel", "LastTimestamp")
+            SELECT v.id, @chainId, @registryId, v.level, v.name, v.owner, v.address, v.reverse, v.expiration, v.data::jsonb, v.firstLevel, v.firstTimestamp, v.lastLevel, v.lastTimestamp
+            FROM unnest(@ids, @levels, @names, @owners, @addresses, @reverses, @expirations, @datas, @firstLevels, @firstTimestamps, @lastLevels, @lastTimestamps)
+                AS v(id, level, name, owner, address, reverse, expiration, data, firstLevel, firstTimestamp, lastLevel, lastTimestamp)
             ON CONFLICT ("Id") DO UPDATE SET
                 "ChainId" = EXCLUDED."ChainId",
                 "RegistryId" = EXCLUDED."RegistryId",
@@ -375,7 +383,9 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
                 "Expiration" = EXCLUDED."Expiration",
                 "Data" = EXCLUDED."Data",
                 "FirstLevel" = EXCLUDED."FirstLevel",
-                "LastLevel" = EXCLUDED."LastLevel"
+                "FirstTimestamp" = EXCLUDED."FirstTimestamp",
+                "LastLevel" = EXCLUDED."LastLevel",
+                "LastTimestamp" = EXCLUDED."LastTimestamp"
             """, conn);
         cmd.Parameters.AddWithValue("chainId", chainId);
         cmd.Parameters.AddWithValue("registryId", registryId);
@@ -388,7 +398,9 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         cmd.Parameters.AddWithValue("expirations", expirations);
         cmd.Parameters.AddWithValue("datas", datas);
         cmd.Parameters.AddWithValue("firstLevels", firstLevels);
+        cmd.Parameters.AddWithValue("firstTimestamps", firstTimestamps);
         cmd.Parameters.AddWithValue("lastLevels", lastLevels);
+        cmd.Parameters.AddWithValue("lastTimestamps", lastTimestamps);
 
         return await cmd.ExecuteNonQueryAsync(ct);
     }
@@ -399,15 +411,18 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         await using var cmd = new NpgsqlCommand($$"""
             UPDATE "Domains" AS target
             SET "Expiration" = updates.expiration,
-                "LastLevel" = GREATEST(target."LastLevel", updates.level)
+                "LastLevel" = GREATEST(target."LastLevel", updates.level),
+                "LastTimestamp" = GREATEST(target."LastTimestamp", updates.timestamp)
             FROM (
                 SELECT domain."Id" AS id,
                        expiry.expiration AS expiration,
-                       expiry.level AS level
+                       expiry.level AS level,
+                       expiry.timestamp AS timestamp
                 FROM (
                     SELECT record."Id" AS id,
                            {{ExpirationSql}} AS expiration,
-                           GREATEST(expiry."LastLevel", record."LastLevel") AS level
+                           GREATEST(expiry."LastLevel", record."LastLevel") AS level,
+                           GREATEST(expiry."LastTimestamp", record."LastTimestamp") AS timestamp
                     FROM "BigMapKeys" AS expiry
                     INNER JOIN "BigMapKeys" AS record
                     ON record."BigMapId" = {{registry.RecordsBigMap}}
@@ -438,15 +453,18 @@ public sealed class StoreService(NpgsqlDataSource dataSource)
         await using var cmd = new NpgsqlCommand("""
             UPDATE "Domains" AS target
             SET "Reverse" = updates.reverse,
-                "LastLevel" = GREATEST(target."LastLevel", updates.level)
+                "LastLevel" = GREATEST(target."LastLevel", updates.level),
+                "LastTimestamp" = GREATEST(target."LastTimestamp", updates.timestamp)
             FROM (
                 SELECT domain."Id" AS id,
                        COALESCE(encode(convert_to(domain."Name", 'UTF8'), 'hex') = reverse.name, false) AS reverse,
-                       reverse.level AS level
+                       reverse.level AS level,
+                       reverse.timestamp AS timestamp
                 FROM (
                     SELECT reverse."JsonKey" #>> '{}' AS address,
                            CASE WHEN reverse."Active" THEN reverse."JsonValue" ->> 'name' END AS name,
-                           reverse."LastLevel" AS level
+                           reverse."LastLevel" AS level,
+                           reverse."LastTimestamp" AS timestamp
                     FROM "BigMapKeys" AS reverse
                     WHERE reverse."ChainId" = @chain
                     AND reverse."BigMapId" = @reverse

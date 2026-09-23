@@ -18,7 +18,9 @@ namespace Xtzkt.Data.Models
         public JsonElement? Data { get; set; }
 
         public required int FirstLevel { get; set; }
+        public required DateTime FirstTimestamp { get; set; }
         public required int LastLevel { get; set; }
+        public required DateTime LastTimestamp { get; set; }
     }
 
     public static class DomainModel

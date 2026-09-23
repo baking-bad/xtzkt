@@ -13,7 +13,9 @@ public sealed record DomainInfo(
     DateTime Expiration,
     string? Data,
     int FirstLevel,
-    int LastLevel);
+    DateTime FirstTimestamp,
+    int LastLevel,
+    DateTime LastTimestamp);
 
 /// <summary>
 /// A row of the `records` big map, as it comes out of the DB.
@@ -21,8 +23,10 @@ public sealed record DomainInfo(
 public sealed record DomainRecord(
     long Id,
     int FirstLevel,
+    DateTime FirstTimestamp,
     int LastLevel,
     int MaxLastLevel,
+    DateTime MaxLastTimestamp,
     string? NameHex,
     string? Level,
     string? Owner,

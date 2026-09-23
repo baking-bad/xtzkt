@@ -29,6 +29,20 @@ namespace Xtzkt.Data.Migrations
                 .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+            migrationBuilder.AddColumn<DateTime>(
+                name: "FirstTimestamp",
+                table: "Domains",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "LastTimestamp",
+                table: "Domains",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
             migrationBuilder.AddColumn<int>(
                 name: "RegistryId",
                 table: "Domains",
@@ -40,6 +54,14 @@ namespace Xtzkt.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropColumn(
+                name: "FirstTimestamp",
+                table: "Domains");
+
+            migrationBuilder.DropColumn(
+                name: "LastTimestamp",
+                table: "Domains");
+
             migrationBuilder.DropColumn(
                 name: "RegistryId",
                 table: "Domains");

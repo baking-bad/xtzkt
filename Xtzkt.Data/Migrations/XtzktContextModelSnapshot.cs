@@ -1513,8 +1513,14 @@ namespace Xtzkt.Data.Migrations
                     b.Property<int>("FirstLevel")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("FirstTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("LastLevel")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastTimestamp")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
