@@ -1,5 +1,6 @@
 using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
+using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
@@ -109,7 +110,8 @@ partial class ProtoHelpers
                     if (!evmFrameEntered) evmFrameEntered = true;
                     else if (op.Depth == evmDepth) return;
 
-                    if (EvmRuntime.IsCracCall(op.To, op.Trace))
+                    // in a static context the gateway rejects a stateful call before it reaches the other side
+                    if (op.StaticRootStatus == null && EvmRuntime.IsCracCall(op.To, op.Trace))
                     {
                         if (parentQueue is null)
                         {
@@ -218,6 +220,12 @@ partial class ProtoHelpers
                                 evmOp.From == EvmRuntime.GetAlias(op.From) &&
                                 evmOp.To is string to)
                             {
+                                #region debug
+                                // incoming static calls are pruned from the traces, so this is a mismatch
+                                if (evmOp.Trace.IsStaticCall())
+                                    throw new Exception("Unexpected static crac target");
+                                #endregion
+
                                 var crac = new CracOperation { GatewayCall = op, TargetCall = evmOp };
                                 dest.Operations.Add(crac);
                                 queue.Dequeue();
@@ -294,6 +302,12 @@ partial class ProtoHelpers
                                     (evmOp.From == EvmRuntime.GetAlias(op.From) || MichelsonRuntime.GetAlias(evmOp.From) == op.From) &&
                                     evmOp.To is string to)
                                 {
+                                    #region debug
+                                    // incoming static calls are pruned from the traces, so this is a mismatch
+                                    if (evmOp.Trace.IsStaticCall())
+                                        throw new Exception("Unexpected static crac target");
+                                    #endregion
+
                                     var crac = new InternalCracOperation { GatewayCall = op, TargetCall = evmOp, CracParent = cracParent };
                                     dest.Operations[^1].Internals.Add(crac);
                                     queue.Dequeue();
@@ -329,6 +343,12 @@ partial class ProtoHelpers
                                 (evmOp.From == EvmRuntime.GetAlias(op.From) || MichelsonRuntime.GetAlias(evmOp.From) == op.From) &&
                                 evmOp.To is string to)
                             {
+                                #region debug
+                                // incoming static calls are pruned from the traces, so this is a mismatch
+                                if (evmOp.Trace.IsStaticCall())
+                                    throw new Exception("Unexpected static crac target");
+                                #endregion
+
                                 var crac = new InternalCracOperation { GatewayCall = op, TargetCall = evmOp, CracParent = cracParent };
                                 dest.Operations[^1].Internals.Add(crac);
                                 queue.Dequeue();

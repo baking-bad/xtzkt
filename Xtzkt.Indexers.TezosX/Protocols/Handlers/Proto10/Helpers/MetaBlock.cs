@@ -183,7 +183,7 @@ partial class ProtoHelpers
 
     protected override List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
     {
-        return [.. EnumerateTraces(op.Trace).Skip(1).Select(x => new EvmInternalOperation
+        return [.. EnumerateTraces(op.Trace, IsEvmCrac(op, out _)).Skip(1).Select(x => new EvmInternalOperation
         {
             Operation = op,
             Depth = x.Depth,
@@ -197,8 +197,8 @@ partial class ProtoHelpers
         })];
     }
 
-    protected static IEnumerable<TraceFrame> EnumerateTraces(
-        JsonElement trace, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied, OperationStatus? staticRootStatus = null)
+    protected IEnumerable<TraceFrame> EnumerateTraces(
+        JsonElement trace, bool isEvmCrac, int depth = 0, OperationStatus parentStatus = OperationStatus.Applied, OperationStatus? staticRootStatus = null)
     {
         var status = trace.TraceStatus(parentStatus);
 
@@ -214,9 +214,51 @@ partial class ProtoHelpers
             StaticRootStatus = staticRootStatus,
         };
 
-        foreach (var subtrace in trace.OptionalArray("calls")?.EnumerateArray() ?? [])
-            foreach (var item in EnumerateTraces(subtrace, depth + 1, status, staticRootStatus))
+        if (trace.OptionalArray("calls") is not JsonElement subtraces)
+            yield break;
+
+        // calls right below the root of an evm crac or below a crac gateway call come from the michelson side
+        var isCracFrameRoot = (depth == 0 && isEvmCrac) || EvmRuntime.IsCracCall(trace.OptionalString("to"), trace);
+
+        foreach (var subtrace in subtraces.EnumerateArray())
+        {
+            if (isCracFrameRoot)
+            {
+                // skip incoming cross-runtime static trees as they have no gateway call to be matched with
+                if (subtrace.IsStaticCall())
+                {
+                    #region debug
+                    if (HasLogs(subtrace))
+                        throw new Exception("Unexpected logs in a static call");
+                    #endregion
+                    continue;
+                }
+
+                // skip alias materializations
+                if (subtrace.RequiredString("from") == EvmRuntime.TezosXCaller && !HasCalls(subtrace))
+                    continue;
+            }
+
+            foreach (var item in EnumerateTraces(subtrace, false, depth + 1, status, staticRootStatus))
                 yield return item;
+        }
+    }
+
+    static bool HasCalls(JsonElement trace)
+    {
+        return trace.OptionalArray("calls") is JsonElement calls && calls.GetArrayLength() != 0;
+    }
+
+    static bool HasLogs(JsonElement trace)
+    {
+        if (trace.OptionalArray("logs") is JsonElement logs && logs.GetArrayLength() != 0)
+            return true;
+
+        foreach (var subtrace in trace.OptionalArray("calls")?.EnumerateArray() ?? [])
+            if (HasLogs(subtrace))
+                return true;
+
+        return false;
     }
 
     protected readonly struct TraceFrame
