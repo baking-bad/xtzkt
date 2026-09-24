@@ -48,7 +48,7 @@ public class TicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?ticket=123`, `?ticket.ticketer=KT1...`.
+    /// Examples: `?ticket=123`, `?ticket.ticketer.hash=KT1...`.
     /// </summary>
     public TicketInfoParameter? Ticket { get; set; }
 
@@ -68,7 +68,7 @@ public class TicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?from=tz1...`, `?from=null`.
+    /// Examples: `?from.hash=tz1...`, `?from=null`.
     /// </summary>
     public AddressInfoNullParameter? From { get; set; }
 
@@ -77,7 +77,7 @@ public class TicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?to=tz1...`, `?to=null`.
+    /// Examples: `?to.hash=tz1...`, `?to=null`.
     /// </summary>
     public AddressInfoNullParameter? To { get; set; }
 

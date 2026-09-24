@@ -68,7 +68,7 @@ public class BridgeTicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?from=0x...`, `?from=null`.
+    /// Examples: `?from.hash=0x...`, `?from=null`.
     /// </summary>
     public AddressInfoNullParameter? From { get; set; }
 
@@ -77,7 +77,7 @@ public class BridgeTicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?to=0x...`, `?to=null`.
+    /// Examples: `?to.hash=0x...`, `?to=null`.
     /// </summary>
     public AddressInfoNullParameter? To { get; set; }
 

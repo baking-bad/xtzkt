@@ -25,6 +25,7 @@ static class SwaggerExtension
         { typeof(Models.BridgeTicketBalance),  Repositories.BridgeTicketBalanceRepository.SortSpec.Keys },
         { typeof(Models.BridgeTicketTransfer), Repositories.BridgeTicketTransferRepository.SortSpec.Keys },
         { typeof(Models.Chain),                [Repositories.ChainRepository.SortField] },
+        { typeof(Models.Domain),               Repositories.DomainRepository.SortSpec.Keys },
         { typeof(Models.Eip7702Delegation),    Repositories.Eip7702DelegationRepository.SortSpec.Keys },
         { typeof(Models.Log),                  Repositories.LogRepository.SortSpec.Keys },
         { typeof(Models.Protocol),             Repositories.ProtocolRepository.SortSpec.Keys },

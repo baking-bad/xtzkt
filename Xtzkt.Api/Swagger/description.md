@@ -74,7 +74,7 @@ GET /v1/tokens/balances?sort=balance.desc,id&limit=100&cursor=1000,1234
 
 ### Lists
 
-Most filters take a list: `?level.in=100,200,300` matches any of the values, `?sender.ni=tz1...,tz1...`
+Most filters take a list: `?level.in=100,200,300` matches any of the values, `?sender.hash.ni=tz1...,tz1...`
 excludes all of them. This is also how to fetch a batch of items by known keys, `?hash.in=...` or
 `?id.in=1,2,3`, instead of one request per item.
 

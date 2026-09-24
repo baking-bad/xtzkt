@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Xtzkt.Api.Extensions;
 using Xtzkt.Api.Filters.Parameters;
+using Xtzkt.Api.Utils;
 
 namespace Xtzkt.Api.Filters.Binders;
 
@@ -80,21 +81,13 @@ public class JsonBinder : IModelBinder
                         if (HasWildcard(ctx, key, path) || !ctx.TryGetString(key, out var @as))
                             return Task.CompletedTask;
                         res.As ??= [];
-                        res.As.Add((path[..^1], @as
-                            .Replace("%", "\\%")
-                            .Replace("\\*", "ъуъ")
-                            .Replace("*", "%")
-                            .Replace("ъуъ", "*")));
+                        res.As.Add((path[..^1], LikePattern.FromTemplate(@as)));
                         break;
                     case "un":
                         if (HasWildcard(ctx, key, path) || !ctx.TryGetString(key, out var un))
                             return Task.CompletedTask;
                         res.Un ??= [];
-                        res.Un.Add((path[..^1], un
-                            .Replace("%", "\\%")
-                            .Replace("\\*", "ъуъ")
-                            .Replace("*", "%")
-                            .Replace("ъуъ", "*")));
+                        res.Un.Add((path[..^1], LikePattern.FromTemplate(un)));
                         break;
                     case "in":
                         if (!ctx.TryGetJsonArray(key, out var @in))

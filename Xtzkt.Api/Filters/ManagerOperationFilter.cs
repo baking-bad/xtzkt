@@ -19,7 +19,7 @@ public class ManagerOperationFilter : BaseOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?sender=tz1...`, `?sender.in=tz1...,0x...`.
+    /// Examples: `?sender.hash=tz1...`, `?sender.hash.in=tz1...,0x...`.
     /// </summary>
     public AddressInfoParameter? Sender { get; set; }
 

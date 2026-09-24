@@ -29,7 +29,7 @@ public class TokenBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?address=tz1...`, `?address.in=tz1...,0x...`.
+    /// Examples: `?address.hash=tz1...`, `?address.hash.in=tz1...,0x...`.
     /// </summary>
     public AddressInfoParameter? Address { get; set; }
 
@@ -38,7 +38,7 @@ public class TokenBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?token=123`, `?token.contract=KT1...&amp;token.tokenId=0`.
+    /// Examples: `?token=123`, `?token.contract.hash=KT1...&amp;token.tokenId=0`.
     /// </summary>
     public TokenInfoParameter? Token { get; set; }
 

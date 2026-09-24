@@ -56,7 +56,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?sender=tz1...`, `?sender.in=tz1...,0x...`.
+    /// Examples: `?sender.hash=tz1...`, `?sender.hash.in=tz1...,0x...`.
     /// </summary>
     public AddressInfoParameter? Sender { get; set; }
 
@@ -65,7 +65,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?authority=0x...`.
+    /// Example: `?authority.hash=0x...`.
     /// </summary>
     public AddressInfoParameter? Authority { get; set; }
 
@@ -92,7 +92,7 @@ public class Eip7702DelegationFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?delegate=0x...`, `?delegate=null`.
+    /// Examples: `?delegate.hash=0x...`, `?delegate=null`.
     /// </summary>
     public AddressInfoNullParameter? Delegate { get; set; }
 

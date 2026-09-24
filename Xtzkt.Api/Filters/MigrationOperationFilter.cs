@@ -29,7 +29,7 @@ public class MigrationOperationFilter : BaseOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?account=tz1...`.
+    /// Example: `?account.hash=tz1...`.
     /// </summary>
     public AddressInfoParameter? Account { get; set; }
 

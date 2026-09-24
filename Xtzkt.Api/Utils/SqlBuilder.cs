@@ -867,6 +867,45 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
+    public SqlBuilder Where(string column, AddressHashNullParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+        {
+            if (value.Eq == AddressHashNullParameter.Null)
+                _filters.Add($"{column} IS NULL");
+            else
+                _filters.Add($"{column} = {Param(value.Eq)}");
+        }
+
+        if (value.Ne != null)
+        {
+            if (value.Ne == AddressHashNullParameter.Null)
+                _filters.Add($"{column} IS NOT NULL");
+            else
+                _filters.Add($"({column} IS NULL OR {column} != {Param(value.Ne)})");
+        }
+
+        if (value.In != null)
+        {
+            if (value.In.Contains(AddressHashNullParameter.Null))
+                _filters.Add($"({column} IS NULL OR {column} = ANY ({Param(value.In.Where(x => x != AddressHashNullParameter.Null).ToArray())}))");
+            else
+                _filters.Add($"{column} = ANY ({Param(value.In)})");
+        }
+
+        if (value.Ni != null)
+        {
+            if (value.Ni.Contains(AddressHashNullParameter.Null))
+                _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x != AddressHashNullParameter.Null).ToArray())})))");
+            else
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
+        }
+
+        return this;
+    }
+
     public SqlBuilder Where(string column, OperationHashParameter? value)
     {
         if (value == null) return this;
@@ -1072,6 +1111,12 @@ public class SqlBuilder(SqlBuilder? _root = null)
 
         if (value.Ne != null)
             _filters.Add($"{column} != {Param(value.Ne)}");
+
+        if (value.As != null)
+            _filters.Add($"{column} ILIKE {Param(value.As)}");
+
+        if (value.Un != null)
+            _filters.Add($"NOT ({column} ILIKE {Param(value.Un)})");
 
         if (value.In != null)
             _filters.Add($"{column} = ANY ({Param(value.In)})");

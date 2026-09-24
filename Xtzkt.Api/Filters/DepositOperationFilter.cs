@@ -49,7 +49,7 @@ public class DepositOperationFilter : BaseOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?receiver=0x...`.
+    /// Example: `?receiver.hash=0x...`.
     /// </summary>
     public AddressInfoParameter? Receiver { get; set; }
 
@@ -58,7 +58,7 @@ public class DepositOperationFilter : BaseOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?proxy=0x...`.
+    /// Example: `?proxy.hash=0x...`.
     /// </summary>
     public AddressInfoParameter? Proxy { get; set; }
 

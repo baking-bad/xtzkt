@@ -69,6 +69,7 @@ builder.Services.AddTransient<ChainRepository>();
 builder.Services.AddTransient<BlockRepository>();
 builder.Services.AddTransient<ProtocolRepository>();
 builder.Services.AddTransient<AddressRepository>();
+builder.Services.AddTransient<DomainRepository>();
 builder.Services.AddTransient<SoftwareRepository>();
 builder.Services.AddTransient<TransactionRepository>();
 builder.Services.AddTransient<RevealRepository>();

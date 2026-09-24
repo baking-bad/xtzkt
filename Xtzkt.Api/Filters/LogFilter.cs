@@ -56,7 +56,7 @@ public class LogFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?address=tz1...`, `?address.in=tz1...,0x...`.
+    /// Examples: `?address.hash=tz1...`, `?address.hash.in=tz1...,0x...`.
     /// </summary>
     public AddressInfoParameter? Address { get; set; }
 

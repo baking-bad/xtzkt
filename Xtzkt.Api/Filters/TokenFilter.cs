@@ -29,7 +29,7 @@ public class TokenFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?contract=KT1...`.
+    /// Example: `?contract.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Contract { get; set; }
 

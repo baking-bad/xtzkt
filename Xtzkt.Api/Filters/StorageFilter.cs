@@ -29,7 +29,7 @@ public class StorageFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?contract=KT1...`, `?contract.codeHash=123456`.
+    /// Examples: `?contract.hash=KT1...`, `?contract.codeHash=123456`.
     /// </summary>
     public ContractInfoParameter? Contract { get; set; }
 

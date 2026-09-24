@@ -31,7 +31,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?target=KT1...`.
+    /// Example: `?target.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Target { get; set; }
 
@@ -49,7 +49,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?initiator=tz1...`.
+    /// Example: `?initiator.hash=tz1...`.
     /// </summary>
     public AddressInfoNullParameter? Initiator { get; set; }
 
@@ -87,7 +87,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?alias=KT1...`.
+    /// Example: `?alias.hash=KT1...`.
     /// </summary>
     public AddressInfoNullParameter? Alias { get; set; }
 
@@ -96,7 +96,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?gateway=0x...`.
+    /// Example: `?gateway.hash=0x...`.
     /// </summary>
     public AddressInfoNullParameter? Gateway { get; set; }
 

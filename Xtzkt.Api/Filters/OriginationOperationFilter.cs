@@ -31,7 +31,7 @@ public class OriginationOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?initiator=tz1...`.
+    /// Example: `?initiator.hash=tz1...`.
     /// </summary>
     public AddressInfoParameter? Initiator { get; set; }
 
@@ -40,7 +40,7 @@ public class OriginationOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?contract=KT1...`.
+    /// Example: `?contract.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Contract { get; set; }
 
@@ -58,7 +58,7 @@ public class OriginationOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?baker=tz1...`.
+    /// Example: `?baker.hash=tz1...`.
     /// </summary>
     public AddressInfoParameter? Baker { get; set; }
 

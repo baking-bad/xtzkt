@@ -4,16 +4,16 @@ using Xtzkt.Api.Services.ResponseCache;
 
 namespace Xtzkt.Api.Filters;
 
-public class BigMapFilter : INormalizable
+public class DomainFilter : INormalizable
 {
     /// <summary>
-    /// Filters by internal unique id.
+    /// Filters by internal unique id. Within a chain ids grow over time, so sorting by id sorts chronologically.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?id=123`, `?id.in=1,2,3`.
+    /// Examples: `?id=123`, `?id.in=123,456`.
     /// </summary>
-    public Int32Parameter? Id { get; set; }
+    public Int64Parameter? Id { get; set; }
 
     /// <summary>
     /// Filters by chain the item belongs to.
@@ -25,38 +25,74 @@ public class BigMapFilter : INormalizable
     public ChainInfoParameter? Chain { get; set; }
 
     /// <summary>
-    /// Filters by bigmap pointer, also known as bigmap id.
+    /// Filters by name registry contract.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?ptr=123`.
+    /// Example: `?registry.hash=KT1...`.
     /// </summary>
-    public Int32Parameter? Ptr { get; set; }
+    public AddressInfoParameter? Registry { get; set; }
 
     /// <summary>
-    /// Filters by contract the bigmap belongs to.
+    /// Filters by domain level: `1` for top-level domains, `2` for `alice.tez`, and so on.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?contract.hash=KT1...`, `?contract.codeHash=123456`.
+    /// Example: `?level=2`.
     /// </summary>
-    public ContractInfoParameter? Contract { get; set; }
+    public Int32Parameter? Level { get; set; }
 
     /// <summary>
-    /// Filters by path to the bigmap in the contract storage.
+    /// Filters by domain name.
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?storagePath=ledger`.
+    /// Examples: `?name=alice.tez`, `?name.as=*.alice.tez`.
     /// </summary>
-    public StringParameter? StoragePath { get; set; }
+    public StringParameter? Name { get; set; }
 
     /// <summary>
-    /// Filters by status: `true` for allocated bigmaps, `false` for removed ones.
+    /// Filters by owner address.
     ///
-    /// Example: `?active=true`.
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?owner=tz1...`.
     /// </summary>
-    public bool? Active { get; set; }
+    public AddressHashParameter? Owner { get; set; }
+
+    /// <summary>
+    /// Filters by address the domain resolves to.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Examples: `?address=tz1...`, `?address=null`.
+    /// </summary>
+    public AddressHashNullParameter? Address { get; set; }
+
+    /// <summary>
+    /// Filters by reverse record: `true` for domains that are the primary name of their address.
+    ///
+    /// Example: `?reverse=true`.
+    /// </summary>
+    public bool? Reverse { get; set; }
+
+    /// <summary>
+    /// Filters by expiration time.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?expiration.gt=2024-01-01T00:00:00Z`.
+    /// </summary>
+    public DateTimeParameter? Expiration { get; set; }
+
+    /// <summary>
+    /// Filters by domain data.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?data.twitter:handle=alice`.
+    /// </summary>
+    public JsonParameter? Data { get; set; }
 
     /// <summary>
     /// Filters by level of the block where the item first appeared.
@@ -94,38 +130,19 @@ public class BigMapFilter : INormalizable
     /// </summary>
     public DateTimeParameter? LastTimestamp { get; set; }
 
-    /// <summary>
-    /// Filters by tags (`persistent`, `metadata`, `token_metadata`, `ledger`).
-    ///
-    /// Click on the parameter to expand more details.
-    ///
-    /// Examples: `?tags=ledger`, `?tags.any=ledger,token_metadata`.
-    /// </summary>
-    public BigMapTagsParameter? Tags { get; set; }
-
-    public bool IsEmpty() =>
-        Id == null &&
-        Chain == null &&
-        Ptr == null &&
-        Contract == null &&
-        StoragePath == null &&
-        Active == null &&
-        FirstLevel == null &&
-        FirstTimestamp == null &&
-        LastLevel == null &&
-        LastTimestamp == null &&
-        Tags == null;
-
     public string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
         ($"{name}.chain", Chain),
-        ($"{name}.ptr", Ptr),
-        ($"{name}.contract", Contract),
-        ($"{name}.storagePath", StoragePath),
-        ($"{name}.active", Active),
+        ($"{name}.registry", Registry),
+        ($"{name}.level", Level),
+        ($"{name}.name", Name),
+        ($"{name}.owner", Owner),
+        ($"{name}.address", Address),
+        ($"{name}.reverse", Reverse),
+        ($"{name}.expiration", Expiration),
+        ($"{name}.data", Data),
         ($"{name}.firstLevel", FirstLevel),
         ($"{name}.firstTimestamp", FirstTimestamp),
         ($"{name}.lastLevel", LastLevel),
-        ($"{name}.lastTimestamp", LastTimestamp),
-        ($"{name}.tags", Tags));
+        ($"{name}.lastTimestamp", LastTimestamp));
 }

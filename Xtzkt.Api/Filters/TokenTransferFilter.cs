@@ -48,7 +48,7 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?token=123`, `?token.contract=KT1...&amp;token.tokenId=0`.
+    /// Examples: `?token=123`, `?token.contract.hash=KT1...&amp;token.tokenId=0`.
     /// </summary>
     public TokenInfoParameter? Token { get; set; }
 
@@ -68,7 +68,7 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?from=tz1...`, `?from=null`.
+    /// Examples: `?from.hash=tz1...`, `?from=null`.
     /// </summary>
     public AddressInfoNullParameter? From { get; set; }
 
@@ -86,7 +86,7 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?to=tz1...`, `?to=null`.
+    /// Examples: `?to.hash=tz1...`, `?to=null`.
     /// </summary>
     public AddressInfoNullParameter? To { get; set; }
 

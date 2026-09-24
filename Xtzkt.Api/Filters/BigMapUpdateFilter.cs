@@ -29,7 +29,7 @@ public class BigMapUpdateFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?bigMap=123`, `?bigMap.contract=KT1...`.
+    /// Examples: `?bigMap=123`, `?bigMap.contract.hash=KT1...`.
     /// </summary>
     public BigMapInfoParameter? BigMap { get; set; }
 

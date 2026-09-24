@@ -29,7 +29,7 @@ public class TicketBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?ticket=123`, `?ticket.ticketer=KT1...`.
+    /// Examples: `?ticket=123`, `?ticket.ticketer.hash=KT1...`.
     /// </summary>
     public TicketInfoParameter? Ticket { get; set; }
 
@@ -38,7 +38,7 @@ public class TicketBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?address=tz1...`, `?address.in=tz1...,0x...`.
+    /// Examples: `?address.hash=tz1...`, `?address.hash.in=tz1...,0x...`.
     /// </summary>
     public AddressInfoParameter? Address { get; set; }
 

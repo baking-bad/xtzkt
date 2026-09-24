@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Xtzkt.Api.Extensions;
 using Xtzkt.Api.Filters.Parameters;
+using Xtzkt.Api.Utils;
 
 namespace Xtzkt.Api.Filters.Binders;
 
@@ -20,6 +21,12 @@ public class StringBinder : IModelBinder
         if (!bindingContext.TryGetString($"{param}.ne", ref hasValue, out var ne))
             return Task.CompletedTask;
 
+        if (!bindingContext.TryGetString($"{param}.as", ref hasValue, out var @as))
+            return Task.CompletedTask;
+
+        if (!bindingContext.TryGetString($"{param}.un", ref hasValue, out var un))
+            return Task.CompletedTask;
+
         if (!bindingContext.TryGetStringList($"{param}.in", ref hasValue, out var @in))
             return Task.CompletedTask;
 
@@ -30,6 +37,8 @@ public class StringBinder : IModelBinder
         {
             Eq = value ?? eq,
             Ne = ne,
+            As = LikePattern.FromTemplate(@as),
+            Un = LikePattern.FromTemplate(un),
             In = @in,
             Ni = ni
         });

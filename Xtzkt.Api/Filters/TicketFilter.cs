@@ -29,7 +29,7 @@ public class TicketFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?ticketer=KT1...`.
+    /// Example: `?ticketer.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Ticketer { get; set; }
 
@@ -38,7 +38,7 @@ public class TicketFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?firstMinter=KT1...`.
+    /// Example: `?firstMinter.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? FirstMinter { get; set; }
 

@@ -38,7 +38,7 @@ public class BridgeTicketBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?address=0x...`, `?address.in=0x...,0x...`.
+    /// Examples: `?address.hash=0x...`, `?address.hash.in=0x...,0x...`.
     /// </summary>
     public AddressInfoParameter? Address { get; set; }
 

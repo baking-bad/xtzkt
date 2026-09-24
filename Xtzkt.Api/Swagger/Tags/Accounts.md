@@ -15,3 +15,6 @@ to the same party (note that in classic TzKT these two were the same thing).
 
 - `/v1/accounts/{address}` accepts any address of the account, including aliases, and returns all of them at once.
 - `/v1/addresses` works with individual addresses. Use the `chain` filter when a hash exists on more than one chain.
+- `/v1/domains` resolves Tezos Domains names: `?name=alice.tez` gives the address a name points to, and
+  `?address=tz1...&reverse=true` gives the primary name of an address.
+  

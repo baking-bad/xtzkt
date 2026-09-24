@@ -25,6 +25,22 @@ public class StringParameter : INormalizable
     public string? Ne { get; set; }
 
     /// <summary>
+    /// **Same as** mode.
+    /// Returns items where 'param' matches the 'template', ignoring case. Use `*` as a wildcard and `\*` for a literal `*`.
+    ///
+    /// Example: `?entrypoint.as=*transfer*`.
+    /// </summary>
+    public string? As { get; set; }
+
+    /// <summary>
+    /// **Unlike** mode.
+    /// Returns items where 'param' doesn't match the 'template', ignoring case. Use `*` as a wildcard and `\*` for a literal `*`.
+    ///
+    /// Example: `?entrypoint.un=*transfer*`.
+    /// </summary>
+    public string? Un { get; set; }
+
+    /// <summary>
     /// **In list** mode.
     /// Returns items where 'param' is equal to any of comma-separated 'values'.
     ///
@@ -51,6 +67,12 @@ public class StringParameter : INormalizable
 
         if (Ne != null)
             sb.Append($"{name}.ne={Uri.EscapeDataString(Ne)}&");
+
+        if (As != null)
+            sb.Append($"{name}.as={Uri.EscapeDataString(As)}&");
+
+        if (Un != null)
+            sb.Append($"{name}.un={Uri.EscapeDataString(Un)}&");
 
         if (In?.Count > 0)
             sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x).Select(Uri.EscapeDataString))}&");

@@ -22,7 +22,7 @@ public class TransferTicketOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?target=KT1...`.
+    /// Example: `?target.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Target { get; set; }
 
@@ -31,7 +31,7 @@ public class TransferTicketOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?ticketer=KT1...`.
+    /// Example: `?ticketer.hash=KT1...`.
     /// </summary>
     public AddressInfoParameter? Ticketer { get; set; }
 
