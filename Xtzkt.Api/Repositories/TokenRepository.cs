@@ -238,6 +238,9 @@ public class TokenRepository(
                 case "contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
                     break;
+                case "contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Domain;
+                    break;
                 case "tokenId":
                     foreach (var row in rows) result[j++][i] = row.TokenId;
                     break;
@@ -258,6 +261,9 @@ public class TokenRepository(
                     break;
                 case "firstMinter.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Alias;
+                    break;
+                case "firstMinter.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Domain;
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;

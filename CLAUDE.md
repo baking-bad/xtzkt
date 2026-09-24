@@ -107,7 +107,7 @@ So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actuall
 
 ### DB notifications
 
-`Xtzkt.Api` keeps its caches fresh via postgres `LISTEN`/`NOTIFY`: the indexers just write, and `pg_notify` triggers on the written tables turn those writes into notifications. The triggers live in migrations (`Triggers` migration + its `AddNotificationTrigger` helper).
+`Xtzkt.Api` keeps its caches fresh via postgres `LISTEN`/`NOTIFY`: the indexers just write, and `pg_notify` triggers on the written tables turn those writes into notifications. The triggers live in migrations (`Triggers` migration + its `AddNotificationTrigger` helper; `domain_changed`, which the domains service's writes fire, is in the `Domains` migration).
 
 Rules that keep this working:
 - The channel name, the watched columns and the **payload format are a contract** between the trigger and `DbListenerService` — the two must be changed together.

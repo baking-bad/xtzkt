@@ -342,6 +342,9 @@ public class BigMapUpdateRepository(
                 case "bigMap.contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Alias;
                     break;
+                case "bigMap.contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Domain;
+                    break;
                 case "bigMap.contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).CodeHash;
                     break;
@@ -359,6 +362,9 @@ public class BigMapUpdateRepository(
                     break;
                 case "bigMap.contract.creator.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Alias;
+                    break;
+                case "bigMap.contract.creator.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Domain;
                     break;
                 case "bigMap.storagePath":
                     foreach (var row in rows) result[j++][i] = row.BigMap_StoragePath;

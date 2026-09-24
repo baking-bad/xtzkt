@@ -239,6 +239,9 @@ public class IncreasePaidStorageRepository(
                 case "sender.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
                     break;
+                case "sender.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
                 case "contract":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.ContractId);
                     break;
@@ -253,6 +256,9 @@ public class IncreasePaidStorageRepository(
                     break;
                 case "contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
+                    break;
+                case "contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Domain;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

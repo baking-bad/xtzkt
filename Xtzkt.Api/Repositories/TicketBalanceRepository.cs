@@ -287,6 +287,9 @@ public class TicketBalanceRepository(
                 case "address.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
                     break;
+                case "address.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;
                     break;
@@ -333,6 +336,9 @@ public class TicketBalanceRepository(
                     break;
                 case "ticket.ticketer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Alias;
+                    break;
+                case "ticket.ticketer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Domain;
                     break;
                 case "ticket.rawType":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.Ticket_RawType);

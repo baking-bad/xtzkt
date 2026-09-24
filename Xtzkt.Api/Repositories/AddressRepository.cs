@@ -1487,6 +1487,9 @@ public class AddressRepository(
                 case "baker.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Alias;
                     break;
+                case "baker.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Domain;
+                    break;
                 case "delegationLevel":
                     foreach (var row in rows) result[j++][i] = row.DelegationLevel;
                     break;
@@ -1579,6 +1582,9 @@ public class AddressRepository(
                     break;
                 case "unstakedBaker.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Alias;
+                    break;
+                case "unstakedBaker.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Domain;
                     break;
                 case "stakingUpdatesCount":
                     foreach (var row in rows) result[j++][i] = row.StakingUpdatesCount;
@@ -1736,6 +1742,9 @@ public class AddressRepository(
                 case "creator.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Alias;
                     break;
+                case "creator.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Domain;
+                    break;
                 case "logsCount":
                     foreach (var row in rows) result[j++][i] = row.LogsCount;
                     break;
@@ -1802,6 +1811,9 @@ public class AddressRepository(
                 case "eip7702Delegate.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Alias;
                     break;
+                case "eip7702Delegate.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Domain;
+                    break;
                 case "owner":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.OwnerId);
                     break;
@@ -1816,6 +1828,9 @@ public class AddressRepository(
                     break;
                 case "owner.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Alias;
+                    break;
+                case "owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Domain;
                     break;
             }
         }

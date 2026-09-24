@@ -328,6 +328,9 @@ public class BlockRepository(
                 case "proposer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Alias;
                     break;
+                case "proposer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Domain;
+                    break;
                 case "producer":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ProducerId);
                     break;
@@ -342,6 +345,9 @@ public class BlockRepository(
                     break;
                 case "producer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Alias;
+                    break;
+                case "producer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Domain;
                     break;
                 case "lBToggle":
                     foreach (var row in rows) result[j++][i] = row.LBToggle;
@@ -376,6 +382,9 @@ public class BlockRepository(
                     break;
                 case "sequencerPool.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Alias;
+                    break;
+                case "sequencerPool.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Domain;
                     break;
                 case "michelsonHash":
                     foreach (var row in rows) result[j++][i] = row.MichelsonHash is byte[] mh2 ? Hashes.FormatMichelsonBlockHash(mh2) : null;

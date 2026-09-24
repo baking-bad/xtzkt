@@ -8,7 +8,7 @@ namespace Xtzkt.Data.Migrations
     public partial class Triggers : Migration
     {
         #region static
-        public static void AddNotificationTrigger(MigrationBuilder builder, string name, string table, string[] columns, string payload)
+        public static void AddNotificationTrigger(MigrationBuilder builder, string name, string table, string[] columns, string payload, bool updatesOnly = false)
         {
             builder.Sql($@"
                 CREATE OR REPLACE FUNCTION notify_{name}() RETURNS TRIGGER AS $$
@@ -24,10 +24,20 @@ namespace Xtzkt.Data.Migrations
                     FOR EACH ROW
                     WHEN ({string.Join(" OR ", columns.Select(x => $@"OLD.""{x}"" IS DISTINCT FROM NEW.""{x}"""))})
                     EXECUTE FUNCTION notify_{name}();");
+
+            if (!updatesOnly)
+                builder.Sql($@"
+                    CREATE TRIGGER {name}_insert_delete
+                        AFTER INSERT OR DELETE ON ""{table}""
+                        FOR EACH ROW
+                        EXECUTE FUNCTION notify_{name}();");
         }
 
-        public static void RemoveNotificationTrigger(MigrationBuilder builder, string name, string table)
+        public static void RemoveNotificationTrigger(MigrationBuilder builder, string name, string table, bool updatesOnly = false)
         {
+            if (!updatesOnly)
+                builder.Sql($@"DROP TRIGGER IF EXISTS {name}_insert_delete ON ""{table}"" CASCADE");
+
             builder.Sql($@"DROP TRIGGER IF EXISTS {name} ON ""{table}"" CASCADE");
             builder.Sql($@"DROP FUNCTION IF EXISTS notify_{name} CASCADE");
         }
@@ -40,20 +50,22 @@ namespace Xtzkt.Data.Migrations
                 name: "chain_state_changed",
                 table: "Chains",
                 columns: ["Hash"],
-                payload: @"NEW.""Id"" || ':' || NEW.""Level""");
+                payload: @"NEW.""Id"" || ':' || NEW.""Level""",
+                updatesOnly: true);
 
             AddNotificationTrigger(migrationBuilder,
                 name: "chain_sync_state_changed",
                 table: "Chains",
                 columns: ["KnownLevel", "SyncedAt"],
-                payload: @"NEW.""Id"" || ':' || NEW.""KnownLevel"" || ':' || NEW.""SyncedAt"""); // ISO 8601 (1997-12-17 07:37:16)
+                payload: @"NEW.""Id"" || ':' || NEW.""KnownLevel"" || ':' || NEW.""SyncedAt""", // ISO 8601 (1997-12-17 07:37:16)
+                updatesOnly: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            RemoveNotificationTrigger(migrationBuilder, "chain_state_changed", "Chains");
-            RemoveNotificationTrigger(migrationBuilder, "chain_sync_state_changed", "Chains");
+            RemoveNotificationTrigger(migrationBuilder, "chain_state_changed", "Chains", updatesOnly: true);
+            RemoveNotificationTrigger(migrationBuilder, "chain_sync_state_changed", "Chains", updatesOnly: true);
         }
     }
 }

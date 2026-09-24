@@ -293,6 +293,9 @@ public class TransferTicketRepository(
                 case "sender.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
                     break;
+                case "sender.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
                 case "target":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TargetId);
                     break;
@@ -308,6 +311,9 @@ public class TransferTicketRepository(
                 case "target.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Alias;
                     break;
+                case "target.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Domain;
+                    break;
                 case "ticketer":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TicketerId);
                     break;
@@ -322,6 +328,9 @@ public class TransferTicketRepository(
                     break;
                 case "ticketer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Alias;
+                    break;
+                case "ticketer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Domain;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

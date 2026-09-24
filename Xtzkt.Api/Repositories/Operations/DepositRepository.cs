@@ -248,6 +248,9 @@ public class DepositRepository(
                 case "receiver.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Alias;
                     break;
+                case "receiver.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Domain;
+                    break;
                 case "type":
                     foreach (var row in rows) result[j++][i] = DepositTypes.ToString((int)row.Type);
                     break;
@@ -276,6 +279,9 @@ public class DepositRepository(
                     break;
                 case "proxy.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Alias;
+                    break;
+                case "proxy.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Domain;
                     break;
                 case "depositId":
                     foreach (var row in rows) result[j++][i] = row.DepositId;

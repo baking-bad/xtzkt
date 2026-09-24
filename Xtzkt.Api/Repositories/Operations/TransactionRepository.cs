@@ -492,6 +492,9 @@ public class TransactionRepository(
                 case "sender.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
                     break;
+                case "sender.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
                 case "senderCodeHash":
                     foreach (var row in rows) result[j++][i] = row.SenderCodeHash;
                     break;
@@ -510,6 +513,9 @@ public class TransactionRepository(
                 case "initiator.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Alias;
                     break;
+                case "initiator.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Domain;
+                    break;
                 case "target":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TargetId);
                     break;
@@ -524,6 +530,9 @@ public class TransactionRepository(
                     break;
                 case "target.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Alias;
+                    break;
+                case "target.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Domain;
                     break;
                 case "targetCodeHash":
                     foreach (var row in rows) result[j++][i] = row.TargetCodeHash;
@@ -688,6 +697,9 @@ public class TransactionRepository(
                 case "alias.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Alias;
                     break;
+                case "alias.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Domain;
+                    break;
                 case "gateway":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.GatewayId);
                     break;
@@ -702,6 +714,9 @@ public class TransactionRepository(
                     break;
                 case "gateway.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Alias;
+                    break;
+                case "gateway.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Domain;
                     break;
                 case "gatewayEntrypoint":
                     foreach (var row in rows) result[j++][i] = row.GatewayEntrypoint;

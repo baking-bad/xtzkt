@@ -228,6 +228,9 @@ public class RevealRepository(
                 case "sender.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
                     break;
+                case "sender.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
                 case "counter":
                     foreach (var row in rows) result[j++][i] = row.Counter;
                     break;

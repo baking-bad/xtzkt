@@ -49,11 +49,19 @@ namespace Xtzkt.Data.Migrations
                 type: "integer",
                 nullable: false,
                 defaultValue: 0);
+
+            Triggers.AddNotificationTrigger(migrationBuilder,
+                name: "domain_changed",
+                table: "Domains",
+                columns: ["ChainId", "Name", "Address", "Reverse", "Expiration"],
+                payload: @"COALESCE(NEW.""Id"", OLD.""Id"")::text");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            Triggers.RemoveNotificationTrigger(migrationBuilder, "domain_changed", "Domains");
+
             migrationBuilder.DropColumn(
                 name: "FirstTimestamp",
                 table: "Domains");

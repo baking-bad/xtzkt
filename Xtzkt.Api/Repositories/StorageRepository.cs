@@ -213,6 +213,9 @@ public class StorageRepository(
                 case "contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
                     break;
+                case "contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Domain;
+                    break;
                 case "contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).CodeHash;
                     break;
@@ -230,6 +233,9 @@ public class StorageRepository(
                     break;
                 case "contract.creator.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Alias;
+                    break;
+                case "contract.creator.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Domain;
                     break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;

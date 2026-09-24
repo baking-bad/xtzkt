@@ -291,6 +291,9 @@ public class LogRepository(
                 case "address.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
                     break;
+                case "address.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
                 case "contractCodeHash":
                     foreach (var row in rows) result[j++][i] = row.ContractCodeHash;
                     break;

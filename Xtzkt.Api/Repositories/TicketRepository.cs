@@ -234,6 +234,9 @@ public class TicketRepository(
                 case "ticketer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Alias;
                     break;
+                case "ticketer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Domain;
+                    break;
                 case "firstMinter":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.FirstMinterId);
                     break;
@@ -248,6 +251,9 @@ public class TicketRepository(
                     break;
                 case "firstMinter.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Alias;
+                    break;
+                case "firstMinter.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Domain;
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;

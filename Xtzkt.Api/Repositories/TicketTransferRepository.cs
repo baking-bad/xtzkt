@@ -283,6 +283,9 @@ public class TicketTransferRepository(
                 case "from.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Alias;
                     break;
+                case "from.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Domain;
+                    break;
                 case "to":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ToId);
                     break;
@@ -297,6 +300,9 @@ public class TicketTransferRepository(
                     break;
                 case "to.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Alias;
+                    break;
+                case "to.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Domain;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;
@@ -338,6 +344,9 @@ public class TicketTransferRepository(
                     break;
                 case "ticket.ticketer.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Alias;
+                    break;
+                case "ticket.ticketer.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Domain;
                     break;
                 case "ticket.rawType":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.Ticket_RawType);

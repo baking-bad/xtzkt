@@ -11,6 +11,7 @@ public class AddressCache
     #region cache
     readonly ChainCache ChainCache;
     readonly AliasCache AliasCache;
+    readonly DomainCache DomainCache;
     readonly IDbContextFactory<XtzktContext> DbFactory;
     readonly ILogger Logger;
     readonly int HardLimit;
@@ -24,12 +25,14 @@ public class AddressCache
     public AddressCache(
         ChainCache chainCache,
         AliasCache aliasCache,
+        DomainCache domainCache,
         IDbContextFactory<XtzktContext> dbFactory,
         IConfiguration config,
         ILogger<AddressCache> logger)
     {
         ChainCache = chainCache;
         AliasCache = aliasCache;
+        DomainCache = domainCache;
         DbFactory = dbFactory;
         Logger = logger;
 
@@ -109,6 +112,7 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Alias = AliasCache.Get(_id),
+            Domain = DomainCache.Get(address.ChainId, address.Hash),
         };
     }
 
@@ -123,6 +127,7 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Alias = AliasCache.Get(_id),
+            Domain = DomainCache.Get(address.ChainId, address.Hash),
         };
     }
 
@@ -137,6 +142,7 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Alias = AliasCache.Get(id),
+            Domain = DomainCache.Get(address.ChainId, address.Hash),
         };
     }
 
@@ -151,6 +157,7 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Alias = AliasCache.Get(id),
+            Domain = DomainCache.Get(address.ChainId, address.Hash),
         };
     }
 
@@ -186,6 +193,7 @@ public class AddressCache
         Hash = address.Hash,
         Type = Models.Enums.AddressTypes.ToString((int)address.Type),
         Alias = AliasCache.Get(address.Id),
+        Domain = DomainCache.Get(address.ChainId, address.Hash),
         CodeHash = codeHash,
         Creator = creator,
     };

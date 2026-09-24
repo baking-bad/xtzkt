@@ -323,6 +323,9 @@ public class TokenTransferRepository(
                 case "from.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Alias;
                     break;
+                case "from.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Domain;
+                    break;
                 case "fromEntrypoint":
                     foreach (var row in rows) result[j++][i] = Decode.ToUtf8((byte[]?)row.FromEntrypoint);
                     break;
@@ -340,6 +343,9 @@ public class TokenTransferRepository(
                     break;
                 case "to.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Alias;
+                    break;
+                case "to.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Domain;
                     break;
                 case "toEntrypoint":
                     foreach (var row in rows) result[j++][i] = Decode.ToUtf8((byte[]?)row.ToEntrypoint);
@@ -387,6 +393,9 @@ public class TokenTransferRepository(
                     break;
                 case "token.contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Alias;
+                    break;
+                case "token.contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Domain;
                     break;
                 case "token.tokenId":
                     foreach (var row in rows) result[j++][i] = row.Token_TokenId;

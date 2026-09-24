@@ -60,6 +60,7 @@ builder.Services.AddSingleton<AliasCache>();
 builder.Services.AddSingleton<AssetCache>();
 builder.Services.AddSingleton<BlockCache>();
 builder.Services.AddSingleton<ChainCache>();
+builder.Services.AddSingleton<DomainCache>();
 builder.Services.AddSingleton<ProtocolCache>();
 builder.Services.AddSingleton<SoftwareCache>();
 builder.Services.AddSingleton<ResponseCacheService>();

@@ -51,17 +51,17 @@ public class FuzzyMatcher
     }
 
     /// <summary>Jaccard index of two trigram sets, i.e. `pg_trgm.similarity()`.</summary>
-    static double Similarity(HashSet<string> left, HashSet<string> right)
+    static double Similarity(HashSet<string> query, string[] target)
     {
-        if (left.Count == 0 || right.Count == 0)
+        if (query.Count == 0 || target.Length == 0)
             return 0.0;
 
         var intersection = 0;
-        foreach (var trigram in left)
-            if (right.Contains(trigram))
+        foreach (var trigram in target)
+            if (query.Contains(trigram))
                 intersection++;
 
-        return (double)intersection / (left.Count + right.Count - intersection);
+        return (double)intersection / (query.Count + target.Length - intersection);
     }
 
     /// <summary>Splits the value into trigrams the way `pg_trgm.show_trgm()` does.</summary>
@@ -99,13 +99,14 @@ public class FuzzyString
     /// <summary>Lowercased <see cref="Original"/>.</summary>
     public string Lowered { get; }
 
-    /// <summary>Trigrams of <see cref="Lowered"/>.</summary>
-    public HashSet<string> Trigrams { get; }
+    /// <summary>Distinct trigrams of <see cref="Lowered"/>, as an array, which takes several times less memory than a set.</summary>
+    public string[] Trigrams { get; }
 
     public FuzzyString(string value)
     {
         Original = value;
         Lowered = value.ToLowerInvariant();
-        Trigrams = FuzzyMatcher.Trigrams(Lowered);
+        // the same few thousand trigrams repeat across all the strings, so each one is stored once
+        Trigrams = [.. FuzzyMatcher.Trigrams(Lowered).Select(string.Intern)];
     }
 }

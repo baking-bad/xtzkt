@@ -18,6 +18,7 @@ public class SearchRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
     AliasCache _aliasCache,
+    DomainCache _domainCache,
     DbInitService _dbInit,
     NpgsqlDataSource _dataSource)
 {
@@ -125,7 +126,7 @@ public class SearchRepository(
         else
         {
             if (scopes.Contains(SearchScopes.Address))
-                results.AddRange(await SearchAddressesByAlias(chains, query, filter.Limit));
+                results.AddRange(await SearchAddressesByName(chains, query, filter.Limit));
 
             if (scopes.Contains(SearchScopes.Token))
                 results.AddRange(await SearchTokensByNameOrSymbol(db, chains, query, filter.Limit));
@@ -155,6 +156,7 @@ public class SearchRepository(
                     Hash = address.Hash,
                     Type = AddressTypes.ToString((int)address.Type),
                     Alias = _aliasCache.Get(address.Id),
+                    Domain = _domainCache.Get(address.ChainId, address.Hash),
                 }));
 
                 if (address is Data.Models.L1Contract l1c && l1c.TokensCount != 0)
@@ -180,26 +182,62 @@ public class SearchRepository(
         return (searchResults, contractIds);
     }
 
-    async Task<IEnumerable<(double, SearchResult)>> SearchAddressesByAlias(int[] chains, string query, int limit)
+    async Task<IEnumerable<(double, SearchResult)>> SearchAddressesByName(int[] chains, string query, int limit)
     {
-        var idsWithScores = _aliasCache.Search(chains, query, limit);
-        if (idsWithScores.Length == 0)
-            return [];
+        var res = new Dictionary<(int, string), (double Score, AddressSearchResult Result)>();
 
+        var idsWithScores = _aliasCache.Search(chains, query, limit);
         await _addressCache.PreloadAsync(idsWithScores.Select(x => x.Id));
 
-        var res = new List<(double, SearchResult)>(idsWithScores.Length);
         foreach (var (id, score) in idsWithScores)
             if (await _addressCache.GetAsync(id) is Data.Models.Address address)
-                res.Add((score, new AddressSearchResult
+                res[(address.ChainId, address.Hash)] = (score, new AddressSearchResult
                 {
                     Chain = _chainCache.GetInfo(address.ChainId),
                     Hash = address.Hash,
                     Type = AddressTypes.ToString((int)address.Type),
                     Alias = _aliasCache.Get(address.Id),
-                }));
+                    Domain = _domainCache.Get(address.ChainId, address.Hash),
+                });
 
-        return res;
+        foreach (var (hash, name, score) in _domainCache.Search(query, limit))
+        {
+            var domainAddressExists = false;
+
+            foreach (var chainId in chains)
+            {
+                if (await _addressCache.GetAsync(chainId, hash) is not Data.Models.Address address)
+                    continue;
+
+                domainAddressExists = true;
+                if (res.TryGetValue((chainId, hash), out var found) && found.Score >= score)
+                    continue;
+
+                res[(chainId, hash)] = (score, new AddressSearchResult
+                {
+                    Chain = _chainCache.GetInfo(chainId),
+                    Hash = hash,
+                    Type = AddressTypes.ToString((int)address.Type),
+                    Alias = _aliasCache.Get(address.Id),
+                    Domain = name,
+                });
+            }
+
+            if (!domainAddressExists)
+            {
+                var defaultChainId = chains[0];
+                var defaultChain = _chainCache.GetInfo(defaultChainId);
+                res[(defaultChainId, hash)] = (score, new AddressSearchResult
+                {
+                    Chain = defaultChain,
+                    Hash = hash,
+                    Type = defaultChain.Layer == Layers.L1 ? AddressTypes.L1User : AddressTypes.XMichelsonUser,
+                    Domain = name,
+                });
+            }
+        }
+
+        return res.Values.Select(x => (x.Score, (SearchResult)x.Result));
     }
     #endregion
 

@@ -238,6 +238,9 @@ public class BridgeTicketTransferRepository(
                 case "from.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Alias;
                     break;
+                case "from.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Domain;
+                    break;
                 case "to":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ToId);
                     break;
@@ -252,6 +255,9 @@ public class BridgeTicketTransferRepository(
                     break;
                 case "to.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Alias;
+                    break;
+                case "to.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Domain;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

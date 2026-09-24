@@ -218,6 +218,9 @@ public class DomainRepository(
                 case "registry.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Alias;
                     break;
+                case "registry.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Domain;
+                    break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;
                     break;

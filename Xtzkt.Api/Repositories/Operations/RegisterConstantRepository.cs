@@ -236,6 +236,9 @@ public class RegisterConstantRepository(
                 case "sender.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
                     break;
+                case "sender.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
                 case "address":
                     foreach (var row in rows) result[j++][i] = row.Address;
                     break;

@@ -322,6 +322,9 @@ public class TokenBalanceRepository(
                 case "address.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
                     break;
+                case "address.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;
                     break;
@@ -374,6 +377,9 @@ public class TokenBalanceRepository(
                     break;
                 case "token.contract.alias":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Alias;
+                    break;
+                case "token.contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Domain;
                     break;
                 case "token.tokenId":
                     foreach (var row in rows) result[j++][i] = row.Token_TokenId;

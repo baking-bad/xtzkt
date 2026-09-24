@@ -15,4 +15,7 @@ public class AddressSearchResult : SearchResult
 
     /// <summary>Human-readable name of the address, if known.</summary>
     public string? Alias { get; init; }
+
+    /// <summary>Domain name of the address: the one matching the query, or its primary one.</summary>
+    public string? Domain { get; init; }
 }

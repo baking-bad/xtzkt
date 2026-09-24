@@ -13,5 +13,8 @@ namespace Xtzkt.Api.Models
 
         /// <summary>Human-readable name of the address, if it's a known one.</summary>
         public string? Alias { get; init; }
+
+        /// <summary>Primary domain name of the address, if it has one.</summary>
+        public string? Domain { get; init; }
     }
 }
