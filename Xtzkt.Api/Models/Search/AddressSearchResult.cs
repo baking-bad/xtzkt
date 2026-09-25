@@ -13,9 +13,9 @@ public class AddressSearchResult : SearchResult
     /// <summary>Address type.</summary>
     public required string Type { get; init; }
 
-    /// <summary>Human-readable name of the address, if known.</summary>
-    public string? Alias { get; init; }
-
     /// <summary>Domain name of the address: the one matching the query, or its primary one.</summary>
     public string? Domain { get; init; }
+
+    /// <summary>Name from the address's public off-chain profile, if it has one.</summary>
+    public string? Profile { get; init; }
 }

@@ -233,11 +233,11 @@ public class RegisterConstantRepository(
                 case "sender.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Type;
                     break;
-                case "sender.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
-                    break;
                 case "sender.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
+                case "sender.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
                 case "address":
                     foreach (var row in rows) result[j++][i] = row.Address;

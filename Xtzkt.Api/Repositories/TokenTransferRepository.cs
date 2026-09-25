@@ -320,11 +320,11 @@ public class TokenTransferRepository(
                 case "from.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Type;
                     break;
-                case "from.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Alias;
-                    break;
                 case "from.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Domain;
+                    break;
+                case "from.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Profile;
                     break;
                 case "fromEntrypoint":
                     foreach (var row in rows) result[j++][i] = Decode.ToUtf8((byte[]?)row.FromEntrypoint);
@@ -341,11 +341,11 @@ public class TokenTransferRepository(
                 case "to.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Type;
                     break;
-                case "to.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Alias;
-                    break;
                 case "to.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Domain;
+                    break;
+                case "to.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Profile;
                     break;
                 case "toEntrypoint":
                     foreach (var row in rows) result[j++][i] = Decode.ToUtf8((byte[]?)row.ToEntrypoint);
@@ -391,11 +391,11 @@ public class TokenTransferRepository(
                 case "token.contract.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Type;
                     break;
-                case "token.contract.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Alias;
-                    break;
                 case "token.contract.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Domain;
+                    break;
+                case "token.contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Profile;
                     break;
                 case "token.tokenId":
                     foreach (var row in rows) result[j++][i] = row.Token_TokenId;

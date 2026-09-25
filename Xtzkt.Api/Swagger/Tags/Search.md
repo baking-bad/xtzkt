@@ -1,13 +1,13 @@
-A single entry point that takes whatever a user typed — an address, a hash, a level, an alias —
+A single entry point that takes whatever a user typed — an address, a hash, a level, a name —
 and returns the entities it can refer to, best match first. Meant for a search box, where you don't
 know in advance what kind of thing the input is.
 
 ### Good to know
 
 - The query is interpreted by its shape, and the modes are exclusive: something that looks like a hash
-  is only looked up by hash, never treated as an alias.
-- A number is treated as a block level. Anything else is matched against address aliases and token
-  names and symbols, tolerating typos and partial words.
+  is only looked up by hash, never treated as a name.
+- A number is treated as a block level. Anything else is matched against profile and domain names
+  of addresses and names and symbols of tokens, tolerating typos and partial words.
 - Searching for a contract address also returns the tokens that contract issued, not just the address itself.
 - Results are identity records, not full entities — enough to render a suggestion list, not a whole page.
 - `limit` caps the total number of results, however many scopes were searched.

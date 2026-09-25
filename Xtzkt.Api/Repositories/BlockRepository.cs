@@ -325,11 +325,11 @@ public class BlockRepository(
                 case "proposer.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Type;
                     break;
-                case "proposer.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Alias;
-                    break;
                 case "proposer.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Domain;
+                    break;
+                case "proposer.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Profile;
                     break;
                 case "producer":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ProducerId);
@@ -343,11 +343,11 @@ public class BlockRepository(
                 case "producer.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Type;
                     break;
-                case "producer.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Alias;
-                    break;
                 case "producer.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Domain;
+                    break;
+                case "producer.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProducerId))?.Profile;
                     break;
                 case "lBToggle":
                     foreach (var row in rows) result[j++][i] = row.LBToggle;
@@ -380,11 +380,11 @@ public class BlockRepository(
                 case "sequencerPool.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Type;
                     break;
-                case "sequencerPool.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Alias;
-                    break;
                 case "sequencerPool.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Domain;
+                    break;
+                case "sequencerPool.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProposerId))?.Profile;
                     break;
                 case "michelsonHash":
                     foreach (var row in rows) result[j++][i] = row.MichelsonHash is byte[] mh2 ? Hashes.FormatMichelsonBlockHash(mh2) : null;

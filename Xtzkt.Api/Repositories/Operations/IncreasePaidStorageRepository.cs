@@ -236,11 +236,11 @@ public class IncreasePaidStorageRepository(
                 case "sender.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Type;
                     break;
-                case "sender.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
-                    break;
                 case "sender.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
+                case "sender.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
                 case "contract":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.ContractId);
@@ -254,11 +254,11 @@ public class IncreasePaidStorageRepository(
                 case "contract.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Type;
                     break;
-                case "contract.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
-                    break;
                 case "contract.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Domain;
+                    break;
+                case "contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Profile;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

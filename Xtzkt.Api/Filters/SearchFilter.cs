@@ -10,8 +10,8 @@ public class SearchFilter : INormalizable
     /// <summary>
     /// Search query. The search mode is derived from its value:
     /// a known hash (address, block or operation) searches the corresponding entities by hash,
-    /// a number searches blocks by level, and any other string searches addresses by alias
-    /// and tokens by name/symbol (fuzzy, tolerant to typos).
+    /// a number searches blocks by level, and any other string searches addresses by profile/domain
+    /// name and tokens by name/symbol (fuzzy, tolerant to typos).
     ///
     /// Examples: `?query=tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx`, `?query=1500000`, `?query=tezos domains`.
     /// </summary>

@@ -19,7 +19,7 @@ public class SearchController(SearchRepository _search, ResponseCacheService _re
     /// Returns entities matching the search query, best match first within each scope.
     /// The way the query is interpreted depends on its value: a known hash searches
     /// the corresponding entities by hash, a number searches blocks by level, and any other
-    /// string searches addresses by alias and tokens by name/symbol.
+    /// string searches addresses by profile/domain name and tokens by name/symbol.
     /// </remarks>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SearchResult>>> Get(SearchFilter filter)

@@ -196,11 +196,11 @@ public class MigrationRepository(
                 case "account.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Type;
                     break;
-                case "account.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
-                    break;
                 case "account.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
+                case "account.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
                 case "balanceChange":
                     foreach (var row in rows) result[j++][i] = (Data.Models.Runtime)(int)row.Runtime switch

@@ -231,11 +231,11 @@ public class TicketRepository(
                 case "ticketer.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Type;
                     break;
-                case "ticketer.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Alias;
-                    break;
                 case "ticketer.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Domain;
+                    break;
+                case "ticketer.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Profile;
                     break;
                 case "firstMinter":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.FirstMinterId);
@@ -249,11 +249,11 @@ public class TicketRepository(
                 case "firstMinter.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Type;
                     break;
-                case "firstMinter.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Alias;
-                    break;
                 case "firstMinter.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Domain;
+                    break;
+                case "firstMinter.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Profile;
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;

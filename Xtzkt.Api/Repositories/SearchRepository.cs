@@ -17,7 +17,7 @@ namespace Xtzkt.Api.Repositories;
 public class SearchRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
-    AliasCache _aliasCache,
+    ProfileCache _profileCache,
     DomainCache _domainCache,
     DbInitService _dbInit,
     NpgsqlDataSource _dataSource)
@@ -155,8 +155,8 @@ public class SearchRepository(
                     Chain = _chainCache.GetInfo(address.ChainId),
                     Hash = address.Hash,
                     Type = AddressTypes.ToString((int)address.Type),
-                    Alias = _aliasCache.Get(address.Id),
                     Domain = _domainCache.Get(address.ChainId, address.Hash),
+                    Profile = _profileCache.Get(address.Id),
                 }));
 
                 if (address is Data.Models.L1Contract l1c && l1c.TokensCount != 0)
@@ -186,7 +186,7 @@ public class SearchRepository(
     {
         var res = new Dictionary<(int, string), (double Score, AddressSearchResult Result)>();
 
-        var idsWithScores = _aliasCache.Search(chains, query, limit);
+        var idsWithScores = _profileCache.Search(chains, query, limit);
         await _addressCache.PreloadAsync(idsWithScores.Select(x => x.Id));
 
         foreach (var (id, score) in idsWithScores)
@@ -196,8 +196,8 @@ public class SearchRepository(
                     Chain = _chainCache.GetInfo(address.ChainId),
                     Hash = address.Hash,
                     Type = AddressTypes.ToString((int)address.Type),
-                    Alias = _aliasCache.Get(address.Id),
                     Domain = _domainCache.Get(address.ChainId, address.Hash),
+                    Profile = _profileCache.Get(address.Id),
                 });
 
         foreach (var (hash, name, score) in _domainCache.Search(query, limit))
@@ -218,8 +218,8 @@ public class SearchRepository(
                     Chain = _chainCache.GetInfo(chainId),
                     Hash = hash,
                     Type = AddressTypes.ToString((int)address.Type),
-                    Alias = _aliasCache.Get(address.Id),
                     Domain = name,
+                    Profile = _profileCache.Get(address.Id),
                 });
             }
 

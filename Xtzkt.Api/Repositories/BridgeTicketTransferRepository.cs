@@ -235,11 +235,11 @@ public class BridgeTicketTransferRepository(
                 case "from.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Type;
                     break;
-                case "from.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Alias;
-                    break;
                 case "from.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Domain;
+                    break;
+                case "from.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Profile;
                     break;
                 case "to":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ToId);
@@ -253,11 +253,11 @@ public class BridgeTicketTransferRepository(
                 case "to.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Type;
                     break;
-                case "to.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Alias;
-                    break;
                 case "to.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Domain;
+                    break;
+                case "to.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Profile;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

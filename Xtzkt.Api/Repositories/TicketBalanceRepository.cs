@@ -284,11 +284,11 @@ public class TicketBalanceRepository(
                 case "address.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Type;
                     break;
-                case "address.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
-                    break;
                 case "address.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
+                case "address.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;
@@ -334,11 +334,11 @@ public class TicketBalanceRepository(
                 case "ticket.ticketer.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Type;
                     break;
-                case "ticket.ticketer.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Alias;
-                    break;
                 case "ticket.ticketer.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Domain;
+                    break;
+                case "ticket.ticketer.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Profile;
                     break;
                 case "ticket.rawType":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.Ticket_RawType);

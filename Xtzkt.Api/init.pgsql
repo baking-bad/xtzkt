@@ -22,7 +22,7 @@ SET statement_timeout = 0;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_ChainId_LastLevel"
     ON "Addresses" ("ChainId", "LastLevel");
 
--- AliasCache loads every profile alias at startup
+-- ProfileCache loads every profile name at startup
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_Extras"
     ON "Addresses" USING gin ("Extras" jsonb_path_ops)
     WHERE "Extras" IS NOT NULL;

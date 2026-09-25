@@ -235,11 +235,11 @@ public class TokenRepository(
                 case "contract.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Type;
                     break;
-                case "contract.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Alias;
-                    break;
                 case "contract.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Domain;
+                    break;
+                case "contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Profile;
                     break;
                 case "tokenId":
                     foreach (var row in rows) result[j++][i] = row.TokenId;
@@ -259,11 +259,11 @@ public class TokenRepository(
                 case "firstMinter.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Type;
                     break;
-                case "firstMinter.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Alias;
-                    break;
                 case "firstMinter.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Domain;
+                    break;
+                case "firstMinter.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Profile;
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;

@@ -290,11 +290,11 @@ public class TransferTicketRepository(
                 case "sender.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Type;
                     break;
-                case "sender.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Alias;
-                    break;
                 case "sender.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Domain;
+                    break;
+                case "sender.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
                 case "target":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TargetId);
@@ -308,11 +308,11 @@ public class TransferTicketRepository(
                 case "target.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Type;
                     break;
-                case "target.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Alias;
-                    break;
                 case "target.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Domain;
+                    break;
+                case "target.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Profile;
                     break;
                 case "ticketer":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TicketerId);
@@ -326,11 +326,11 @@ public class TransferTicketRepository(
                 case "ticketer.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Type;
                     break;
-                case "ticketer.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Alias;
-                    break;
                 case "ticketer.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Domain;
+                    break;
+                case "ticketer.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Profile;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

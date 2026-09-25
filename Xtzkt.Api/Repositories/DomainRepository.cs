@@ -215,11 +215,11 @@ public class DomainRepository(
                 case "registry.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Type;
                     break;
-                case "registry.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Alias;
-                    break;
                 case "registry.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Domain;
+                    break;
+                case "registry.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Profile;
                     break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;

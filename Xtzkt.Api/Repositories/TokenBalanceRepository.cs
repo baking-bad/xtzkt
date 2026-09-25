@@ -319,11 +319,11 @@ public class TokenBalanceRepository(
                 case "address.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Type;
                     break;
-                case "address.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
-                    break;
                 case "address.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
+                case "address.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;
@@ -375,11 +375,11 @@ public class TokenBalanceRepository(
                 case "token.contract.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Type;
                     break;
-                case "token.contract.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Alias;
-                    break;
                 case "token.contract.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Domain;
+                    break;
+                case "token.contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Profile;
                     break;
                 case "token.tokenId":
                     foreach (var row in rows) result[j++][i] = row.Token_TokenId;

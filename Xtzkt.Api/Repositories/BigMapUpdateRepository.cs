@@ -339,11 +339,11 @@ public class BigMapUpdateRepository(
                 case "bigMap.contract.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Type;
                     break;
-                case "bigMap.contract.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Alias;
-                    break;
                 case "bigMap.contract.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Domain;
+                    break;
+                case "bigMap.contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Profile;
                     break;
                 case "bigMap.contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).CodeHash;
@@ -360,11 +360,11 @@ public class BigMapUpdateRepository(
                 case "bigMap.contract.creator.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Type;
                     break;
-                case "bigMap.contract.creator.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Alias;
-                    break;
                 case "bigMap.contract.creator.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Domain;
+                    break;
+                case "bigMap.contract.creator.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Profile;
                     break;
                 case "bigMap.storagePath":
                     foreach (var row in rows) result[j++][i] = row.BigMap_StoragePath;

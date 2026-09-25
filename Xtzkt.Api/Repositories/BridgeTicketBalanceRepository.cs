@@ -244,11 +244,11 @@ public class BridgeTicketBalanceRepository(
                 case "address.type":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Type;
                     break;
-                case "address.alias":
-                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Alias;
-                    break;
                 case "address.domain":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Domain;
+                    break;
+                case "address.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;

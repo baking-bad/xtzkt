@@ -10,7 +10,7 @@ public class AddressCache
 {
     #region cache
     readonly ChainCache ChainCache;
-    readonly AliasCache AliasCache;
+    readonly ProfileCache ProfileCache;
     readonly DomainCache DomainCache;
     readonly IDbContextFactory<XtzktContext> DbFactory;
     readonly ILogger Logger;
@@ -24,14 +24,14 @@ public class AddressCache
 
     public AddressCache(
         ChainCache chainCache,
-        AliasCache aliasCache,
+        ProfileCache profileCache,
         DomainCache domainCache,
         IDbContextFactory<XtzktContext> dbFactory,
         IConfiguration config,
         ILogger<AddressCache> logger)
     {
         ChainCache = chainCache;
-        AliasCache = aliasCache;
+        ProfileCache = profileCache;
         DomainCache = domainCache;
         DbFactory = dbFactory;
         Logger = logger;
@@ -111,8 +111,8 @@ public class AddressCache
             Id = address.Id,
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
-            Alias = AliasCache.Get(_id),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
+            Profile = ProfileCache.Get(_id),
         };
     }
 
@@ -126,8 +126,8 @@ public class AddressCache
             Id = address.Id,
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
-            Alias = AliasCache.Get(_id),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
+            Profile = ProfileCache.Get(_id),
         };
     }
 
@@ -141,8 +141,8 @@ public class AddressCache
             Id = address.Id,
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
-            Alias = AliasCache.Get(id),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
+            Profile = ProfileCache.Get(id),
         };
     }
 
@@ -156,8 +156,8 @@ public class AddressCache
             Id = address.Id,
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
-            Alias = AliasCache.Get(id),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
+            Profile = ProfileCache.Get(id),
         };
     }
 
@@ -192,8 +192,8 @@ public class AddressCache
         Id = address.Id,
         Hash = address.Hash,
         Type = Models.Enums.AddressTypes.ToString((int)address.Type),
-        Alias = AliasCache.Get(address.Id),
         Domain = DomainCache.Get(address.ChainId, address.Hash),
+        Profile = ProfileCache.Get(address.Id),
         CodeHash = codeHash,
         Creator = creator,
     };
@@ -311,7 +311,7 @@ public class AddressCache
         HashSet<int> missed;
         lock (Crit)
         {
-            missed = ids.Where(x => !CachedById.ContainsKey(x)).ToHashSet();
+            missed = [.. ids.Where(x => !CachedById.ContainsKey(x))];
         }
 
         if (missed.Count != 0)
@@ -331,7 +331,7 @@ public class AddressCache
         HashSet<int?> missed;
         lock (Crit)
         {
-            missed = ids.Where(x => x is int id && !CachedById.ContainsKey(id)).ToHashSet();
+            missed = [.. ids.Where(x => x is int id && !CachedById.ContainsKey(id))];
         }
 
         if (missed.Count != 0)

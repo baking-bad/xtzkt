@@ -4,40 +4,40 @@ using Xtzkt.Api.Utils;
 
 namespace Xtzkt.Api.Services.Cache;
 
-public class AliasCache
+public class ProfileCache
 {
     readonly NpgsqlDataSource DataSource;
     readonly ILogger Logger;
 
     readonly Lock Crit = new();
     readonly Dictionary<int, string> CachedById;
-    readonly List<(int Id, int ChainId, FuzzyString Alias)> CachedForSearch;
+    readonly List<(int Id, int ChainId, FuzzyString Name)> CachedForSearch;
 
-    public AliasCache(NpgsqlDataSource _dataSource, ILogger<AliasCache> logger)
+    public ProfileCache(NpgsqlDataSource _dataSource, ILogger<ProfileCache> logger)
     {
         DataSource = _dataSource;
         Logger = logger;
 
-        Logger.LogDebug("Initializing alias cache...");
+        Logger.LogDebug("Initializing profile cache...");
 
         using var db = DataSource.OpenConnection();
-        var aliases = db.Query("""
-            SELECT "Id", "ChainId", "Extras"#>>'{profile,alias}' as "Alias"
+        var profiles = db.Query("""
+            SELECT "Id", "ChainId", "Extras"#>>'{profile,alias}' as "Name"
             FROM "Addresses"
             WHERE "Extras"@>'{"profile":{}}' AND "Extras"#>>'{profile,alias}' IS NOT NULL
             """);
 
-        var cap = (int)(aliases.Count() * 1.1);
+        var cap = (int)(profiles.Count() * 1.1);
         CachedById = new(cap);
         CachedForSearch = new(cap);
 
-        foreach (var alias in aliases)
+        foreach (var profile in profiles)
         {
-            CachedById.Add((int)alias.Id, (string)alias.Alias);
-            CachedForSearch.Add(((int)alias.Id, (int)alias.ChainId, new FuzzyString((string)alias.Alias)));
+            CachedById.Add((int)profile.Id, (string)profile.Name);
+            CachedForSearch.Add(((int)profile.Id, (int)profile.ChainId, new FuzzyString((string)profile.Name)));
         }
 
-        Logger.LogInformation("Alias cache initialized with {cnt} items", CachedById.Count);
+        Logger.LogInformation("Profile cache initialized with {cnt} items", CachedById.Count);
     }
 
     public string? Get(int id)
@@ -53,14 +53,14 @@ public class AliasCache
         var matcher = new FuzzyMatcher(query);
         var matches = new List<(int Id, double Score, int Length)>();
         
-        foreach (var (id, chainId, alias) in CachedForSearch)
+        foreach (var (id, chainId, name) in CachedForSearch)
         {
             if (!chains.Contains(chainId))
                 continue;
 
-            var score = matcher.Score(alias);
+            var score = matcher.Score(name);
             if (score > 0)
-                matches.Add((id, score, alias.Original.Length));
+                matches.Add((id, score, name.Original.Length));
         }
 
         matches.Sort((x, y) =>
