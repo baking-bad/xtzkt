@@ -270,11 +270,21 @@ partial class ProtoHelpers
                 case MichelsonInternalOperation op:
                     if (op.From == MichelsonRuntime.CracOrigin && op.Content.RequiredString("kind") == "event")
                     {
-                        if (op.Content.RequiredString("tag") != "cross_runtime_call_end")
-                            throw new Exception("Unexpected crac event");
+                        var tag = op.Content.RequiredString("tag");
+                        if (tag == "cross_runtime_call_end")
+                        {
+                            queue.Dequeue();
+                            return;
+                        }
 
-                        queue.Dequeue();
-                        return;
+                        if (tag == "cross_runtime_call" &&
+                            op.Operation.Content.Required("metadata").Required("operation_result").RequiredString("status") != "applied")
+                        {
+                            SkipCracFrame(queue, op.Operation);
+                            break;
+                        }
+
+                        throw new Exception("Unexpected crac event");
                     }
 
                     if (MichelsonRuntime.IsCracCall(op.To, op.Content))
@@ -376,6 +386,32 @@ partial class ProtoHelpers
                     throw new InvalidOperationException();
             }
         }
+    }
+
+    // TODO: remove this cratch when kernel is fixed
+    void SkipCracFrame(Queue<MetaContent> queue, MichelsonOperation parent)
+    {
+        var depth = 0;
+        while (queue.TryPeek(out var next) && next is MichelsonInternalOperation iop && iop.Operation == parent)
+        {
+            queue.Dequeue();
+
+            if (iop.From != MichelsonRuntime.CracOrigin || iop.Content.RequiredString("kind") != "event")
+                continue;
+
+            switch (iop.Content.RequiredString("tag"))
+            {
+                case "cross_runtime_call":
+                    depth++;
+                    break;
+                case "cross_runtime_call_end":
+                    if (--depth == 0) return;
+                    break;
+                default:
+                    throw new Exception("Unexpected crac event");
+            }
+        }
+        throw new Exception("Incomplete crac frame");
     }
 
     // TODO: remove this cratch for balance forwarding when previewnet is reset
