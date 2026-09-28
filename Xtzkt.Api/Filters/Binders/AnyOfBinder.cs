@@ -9,7 +9,8 @@ public class AnyOfBinder(AddressCache _addressCache) : IModelBinder
 {
     public async Task BindModelAsync(ModelBindingContext bindingContext)
     {
-        var key = bindingContext.HttpContext.Request.Query.Keys.FirstOrDefault(x => x.StartsWith("anyof."));
+        var root = $"{bindingContext.ModelName}.";
+        var key = bindingContext.HttpContext.Request.Query.Keys.FirstOrDefault(x => x.StartsWith(root, StringComparison.OrdinalIgnoreCase));
         if (key == null)
         {
             bindingContext.Result = ModelBindingResult.Success(null);

@@ -9,13 +9,13 @@ public class JsonBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext ctx)
     {
-        var model = ctx.ModelName.ToLower();
+        var model = ctx.ModelName;
         var modelRoot = $"{model}.";
         JsonParameter? res = null;
 
         foreach (var key in ctx.HttpContext.Request.Query.Keys)
         {
-            if (key == model)
+            if (key.Equals(model, StringComparison.OrdinalIgnoreCase))
             {
                 if (!ctx.TryGetJson(key, out var val))
                     return Task.CompletedTask;
@@ -23,7 +23,7 @@ public class JsonBinder : IModelBinder
                 res.Eq ??= [];
                 res.Eq.Add(([], val));
             }
-            else if (key.StartsWith(modelRoot))
+            else if (key.StartsWith(modelRoot, StringComparison.OrdinalIgnoreCase))
             {
                 if (!JsonPath.TryParse(key[modelRoot.Length..], out var path))
                 {
