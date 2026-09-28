@@ -296,6 +296,24 @@ public class TransferTicketRepository(
                 case "sender.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
+                case "sender.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner;
+                    break;
+                case "sender.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Id;
+                    break;
+                case "sender.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Hash;
+                    break;
+                case "sender.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Type;
+                    break;
+                case "sender.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Domain;
+                    break;
+                case "sender.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
+                    break;
                 case "target":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TargetId);
                     break;
@@ -314,6 +332,24 @@ public class TransferTicketRepository(
                 case "target.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Profile;
                     break;
+                case "target.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner;
+                    break;
+                case "target.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Id;
+                    break;
+                case "target.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Hash;
+                    break;
+                case "target.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Type;
+                    break;
+                case "target.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Domain;
+                    break;
+                case "target.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Profile;
+                    break;
                 case "ticketer":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TicketerId);
                     break;
@@ -331,6 +367,24 @@ public class TransferTicketRepository(
                     break;
                 case "ticketer.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Profile;
+                    break;
+                case "ticketer.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner;
+                    break;
+                case "ticketer.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Id;
+                    break;
+                case "ticketer.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Hash;
+                    break;
+                case "ticketer.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Type;
+                    break;
+                case "ticketer.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Domain;
+                    break;
+                case "ticketer.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Profile;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;

@@ -2111,6 +2111,30 @@ namespace Xtzkt.Data.Migrations
                     b.ToTable("PreattestationOps");
                 });
 
+            modelBuilder.Entity("Xtzkt.Data.Models.Profile", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Profiles");
+
+                    b.HasDiscriminator<int>("Type");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Xtzkt.Data.Models.Proposal", b =>
                 {
                     b.Property<int>("Id")
@@ -5290,6 +5314,84 @@ namespace Xtzkt.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.AddressProfile", b =>
+                {
+                    b.HasBaseType("Xtzkt.Data.Models.Profile");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Discord")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Facebook")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Github")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Gitlab")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Instagram")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Logo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoDark")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mailchain")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reddit")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Slack")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Support")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Telegram")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("text");
+
+                    b.Property<string>("X")
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue(0);
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.ProtocolProfile", b =>
+                {
+                    b.HasBaseType("Xtzkt.Data.Models.Profile");
+
+                    b.Property<string>("Docs")
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.SoftwareProfile", b =>
+                {
+                    b.HasBaseType("Xtzkt.Data.Models.Profile");
+
+                    b.Property<DateTime?>("CommitDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CommitHash")
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue(2);
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.L1Protocol", b =>

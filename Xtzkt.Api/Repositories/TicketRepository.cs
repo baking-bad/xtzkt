@@ -237,6 +237,24 @@ public class TicketRepository(
                 case "ticketer.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Profile;
                     break;
+                case "ticketer.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner;
+                    break;
+                case "ticketer.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Id;
+                    break;
+                case "ticketer.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Hash;
+                    break;
+                case "ticketer.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Type;
+                    break;
+                case "ticketer.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Domain;
+                    break;
+                case "ticketer.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TicketerId)).Owner?.Profile;
+                    break;
                 case "firstMinter":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.FirstMinterId);
                     break;
@@ -254,6 +272,24 @@ public class TicketRepository(
                     break;
                 case "firstMinter.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Profile;
+                    break;
+                case "firstMinter.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner;
+                    break;
+                case "firstMinter.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner?.Id;
+                    break;
+                case "firstMinter.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner?.Hash;
+                    break;
+                case "firstMinter.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner?.Type;
+                    break;
+                case "firstMinter.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner?.Domain;
+                    break;
+                case "firstMinter.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.FirstMinterId)).Owner?.Profile;
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;

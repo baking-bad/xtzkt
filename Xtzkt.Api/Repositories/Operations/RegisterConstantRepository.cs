@@ -239,6 +239,24 @@ public class RegisterConstantRepository(
                 case "sender.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
+                case "sender.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner;
+                    break;
+                case "sender.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Id;
+                    break;
+                case "sender.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Hash;
+                    break;
+                case "sender.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Type;
+                    break;
+                case "sender.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Domain;
+                    break;
+                case "sender.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
+                    break;
                 case "address":
                     foreach (var row in rows) result[j++][i] = row.Address;
                     break;

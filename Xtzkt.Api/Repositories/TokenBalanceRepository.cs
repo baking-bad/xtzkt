@@ -325,6 +325,24 @@ public class TokenBalanceRepository(
                 case "address.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
+                case "address.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner;
+                    break;
+                case "address.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Id;
+                    break;
+                case "address.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Hash;
+                    break;
+                case "address.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Type;
+                    break;
+                case "address.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Domain;
+                    break;
+                case "address.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Profile;
+                    break;
                 case "balance":
                     foreach (var row in rows) result[j++][i] = row.Balance;
                     break;
@@ -380,6 +398,24 @@ public class TokenBalanceRepository(
                     break;
                 case "token.contract.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Profile;
+                    break;
+                case "token.contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner;
+                    break;
+                case "token.contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner?.Id;
+                    break;
+                case "token.contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner?.Hash;
+                    break;
+                case "token.contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner?.Type;
+                    break;
+                case "token.contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner?.Domain;
+                    break;
+                case "token.contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Token_ContractId)).Owner?.Profile;
                     break;
                 case "token.tokenId":
                     foreach (var row in rows) result[j++][i] = row.Token_TokenId;

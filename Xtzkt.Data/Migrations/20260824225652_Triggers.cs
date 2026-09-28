@@ -18,11 +18,16 @@ namespace Xtzkt.Data.Migrations
                     END;
                 $$ LANGUAGE plpgsql;");
 
+            var of = columns == null ? "" : $@" OF {string.Join(", ", columns.Select(x => $@"""{x}"""))}";
+            var when = columns == null
+                ? "OLD.* IS DISTINCT FROM NEW.*"
+                : string.Join(" OR ", columns.Select(x => $@"OLD.""{x}"" IS DISTINCT FROM NEW.""{x}"""));
+
             builder.Sql($@"
                 CREATE TRIGGER {name}
-                    AFTER UPDATE OF {string.Join(", ", columns.Select(x => $@"""{x}"""))} ON ""{table}""
+                    AFTER UPDATE{of} ON ""{table}""
                     FOR EACH ROW
-                    WHEN ({string.Join(" OR ", columns.Select(x => $@"OLD.""{x}"" IS DISTINCT FROM NEW.""{x}"""))})
+                    WHEN ({when})
                     EXECUTE FUNCTION notify_{name}();");
 
             if (!updatesOnly)

@@ -22,11 +22,6 @@ SET statement_timeout = 0;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_ChainId_LastLevel"
     ON "Addresses" ("ChainId", "LastLevel");
 
--- ProfileCache loads every profile name at startup
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AX_Addresses_Extras"
-    ON "Addresses" USING gin ("Extras" jsonb_path_ops)
-    WHERE "Extras" IS NOT NULL;
-
 -- Blocks
 
 -- BlockCache resolves a timestamp filter or cursor into a block's id window

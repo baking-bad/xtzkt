@@ -36,6 +36,27 @@ services:
       timeout: 5s
       retries: 5
 
+  admin:
+    profiles: ["admin", "full"]
+    <<: *defaults
+    build:
+      context: .
+      dockerfile: Xtzkt.Services.Admin/Dockerfile
+    image: xtzkt-admin
+    environment:
+      <<: *db
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:${ADMIN_PORT:-5003}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      indexer-tezosx:
+        condition: service_healthy
+        required: false
+      indexer-l1:
+        condition: service_healthy
+        required: false
+
   api:
     <<: *defaults
     build:
@@ -69,7 +90,7 @@ services:
       <<: *db
       TezosDomainsResolver__Sources__0__NameRegistry: ${DOMAINS_L1_NAME_REGISTRY:-KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS}
     ports:
-      - "${DOMAINS_PORT:-5003}:8080"
+      - "${DOMAINS_PORT:-5004}:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -130,7 +151,7 @@ services:
       DipDupResolver__Sources__1__IndexName: ${METADATA_TEZOSX_DIPDUP_INDEX:-metadata_tezosx}
       DipDupResolver__Sources__1__Network: ${METADATA_TEZOSX_DIPDUP_NETWORK:-tezosx}
     ports:
-      - "${METADATA_PORT:-5004}:8080"
+      - "${METADATA_PORT:-5005}:8080"
     depends_on:
       db:
         condition: service_healthy

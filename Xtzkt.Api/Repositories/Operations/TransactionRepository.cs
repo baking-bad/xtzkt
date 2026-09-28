@@ -495,6 +495,24 @@ public class TransactionRepository(
                 case "sender.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
+                case "sender.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner;
+                    break;
+                case "sender.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Id;
+                    break;
+                case "sender.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Hash;
+                    break;
+                case "sender.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Type;
+                    break;
+                case "sender.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Domain;
+                    break;
+                case "sender.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
+                    break;
                 case "senderCodeHash":
                     foreach (var row in rows) result[j++][i] = row.SenderCodeHash;
                     break;
@@ -516,6 +534,24 @@ public class TransactionRepository(
                 case "initiator.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Profile;
                     break;
+                case "initiator.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner;
+                    break;
+                case "initiator.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Id;
+                    break;
+                case "initiator.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Hash;
+                    break;
+                case "initiator.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Type;
+                    break;
+                case "initiator.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Domain;
+                    break;
+                case "initiator.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Profile;
+                    break;
                 case "target":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.TargetId);
                     break;
@@ -533,6 +569,24 @@ public class TransactionRepository(
                     break;
                 case "target.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Profile;
+                    break;
+                case "target.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner;
+                    break;
+                case "target.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Id;
+                    break;
+                case "target.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Hash;
+                    break;
+                case "target.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Type;
+                    break;
+                case "target.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Domain;
+                    break;
+                case "target.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.TargetId)).Owner?.Profile;
                     break;
                 case "targetCodeHash":
                     foreach (var row in rows) result[j++][i] = row.TargetCodeHash;
@@ -700,6 +754,24 @@ public class TransactionRepository(
                 case "alias.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Profile;
                     break;
+                case "alias.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner;
+                    break;
+                case "alias.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner?.Id;
+                    break;
+                case "alias.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner?.Hash;
+                    break;
+                case "alias.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner?.Type;
+                    break;
+                case "alias.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner?.Domain;
+                    break;
+                case "alias.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.AliasId))?.Owner?.Profile;
+                    break;
                 case "gateway":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.GatewayId);
                     break;
@@ -717,6 +789,24 @@ public class TransactionRepository(
                     break;
                 case "gateway.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Profile;
+                    break;
+                case "gateway.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner;
+                    break;
+                case "gateway.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner?.Id;
+                    break;
+                case "gateway.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner?.Hash;
+                    break;
+                case "gateway.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner?.Type;
+                    break;
+                case "gateway.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner?.Domain;
+                    break;
+                case "gateway.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.GatewayId))?.Owner?.Profile;
                     break;
                 case "gatewayEntrypoint":
                     foreach (var row in rows) result[j++][i] = row.GatewayEntrypoint;

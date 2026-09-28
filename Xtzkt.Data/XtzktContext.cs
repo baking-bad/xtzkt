@@ -91,6 +91,7 @@ namespace Xtzkt.Data
 
         #region plugins
         public DbSet<Domain> Domains { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
         public DbSet<Quote> Quotes { get; set; }
         #endregion
 
@@ -212,6 +213,7 @@ namespace Xtzkt.Data
 
             #region plugins
             modelBuilder.BuildDomainModel();
+            modelBuilder.BuildProfileModel();
             modelBuilder.BuildQuoteModel();
             #endregion
 

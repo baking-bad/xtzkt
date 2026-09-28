@@ -156,7 +156,8 @@ public class SearchRepository(
                     Hash = address.Hash,
                     Type = AddressTypes.ToString((int)address.Type),
                     Domain = _domainCache.Get(address.ChainId, address.Hash),
-                    Profile = _profileCache.Get(address.Id),
+                    Profile = _profileCache.GetAddressProfile(address.Hash),
+                    Owner = await _addressCache.GetOwnerInfoAsync(address),
                 }));
 
                 if (address is Data.Models.L1Contract l1c && l1c.TokensCount != 0)
@@ -186,19 +187,33 @@ public class SearchRepository(
     {
         var res = new Dictionary<(int, string), (double Score, AddressSearchResult Result)>();
 
-        var idsWithScores = _profileCache.Search(chains, query, limit);
-        await _addressCache.PreloadAsync(idsWithScores.Select(x => x.Id));
+        var matches = _profileCache.SearchAddressProfiles(query);
+        for (int offset = 0, chunk = 128; offset < matches.Length && res.Count < limit; offset += chunk, chunk *= 2)
+        {
+            var candidates = matches[offset..Math.Min(offset + chunk, matches.Length)];
+            var hashes = candidates.Select(x => x.Hash).ToList();
+            var addresses = new List<Data.Models.Address>();
+            foreach (var chainId in chains)
+                addresses.AddRange(await _addressCache.GetAsync(chainId, hashes));
 
-        foreach (var (id, score) in idsWithScores)
-            if (await _addressCache.GetAsync(id) is Data.Models.Address address)
-                res[(address.ChainId, address.Hash)] = (score, new AddressSearchResult
-                {
-                    Chain = _chainCache.GetInfo(address.ChainId),
-                    Hash = address.Hash,
-                    Type = AddressTypes.ToString((int)address.Type),
-                    Domain = _domainCache.Get(address.ChainId, address.Hash),
-                    Profile = _profileCache.Get(address.Id),
-                });
+            var byHash = addresses.ToLookup(x => x.Hash);
+            foreach (var (hash, name, score) in candidates)
+            {
+                foreach (var address in byHash[hash])
+                    res[(address.ChainId, hash)] = (score, new AddressSearchResult
+                    {
+                        Chain = _chainCache.GetInfo(address.ChainId),
+                        Hash = hash,
+                        Type = AddressTypes.ToString((int)address.Type),
+                        Domain = _domainCache.Get(address.ChainId, hash),
+                        Profile = name,
+                        Owner = await _addressCache.GetOwnerInfoAsync(address),
+                    });
+
+                if (res.Count >= limit)
+                    break;
+            }
+        }
 
         foreach (var (hash, name, score) in _domainCache.Search(query, limit))
         {
@@ -219,7 +234,8 @@ public class SearchRepository(
                     Hash = hash,
                     Type = AddressTypes.ToString((int)address.Type),
                     Domain = name,
-                    Profile = _profileCache.Get(address.Id),
+                    Profile = _profileCache.GetAddressProfile(hash),
+                    Owner = await _addressCache.GetOwnerInfoAsync(address),
                 });
             }
 
@@ -233,6 +249,7 @@ public class SearchRepository(
                     Hash = hash,
                     Type = defaultChain.Layer == Layers.L1 ? AddressTypes.L1User : AddressTypes.XMichelsonUser,
                     Domain = name,
+                    Profile = _profileCache.GetAddressProfile(hash),
                 });
             }
         }

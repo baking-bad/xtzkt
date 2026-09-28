@@ -335,6 +335,24 @@ public class OriginationRepository(
                 case "sender.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
+                case "sender.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner;
+                    break;
+                case "sender.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Id;
+                    break;
+                case "sender.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Hash;
+                    break;
+                case "sender.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Type;
+                    break;
+                case "sender.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Domain;
+                    break;
+                case "sender.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
+                    break;
                 case "senderCodeHash":
                     foreach (var row in rows) result[j++][i] = row.SenderCodeHash;
                     break;
@@ -355,6 +373,24 @@ public class OriginationRepository(
                     break;
                 case "initiator.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Profile;
+                    break;
+                case "initiator.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner;
+                    break;
+                case "initiator.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Id;
+                    break;
+                case "initiator.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Hash;
+                    break;
+                case "initiator.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Type;
+                    break;
+                case "initiator.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Domain;
+                    break;
+                case "initiator.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.InitiatorId))?.Owner?.Profile;
                     break;
                 case "counter":
                     foreach (var row in rows) result[j++][i] = row.Counter;
@@ -388,6 +424,24 @@ public class OriginationRepository(
                     break;
                 case "contract.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Profile;
+                    break;
+                case "contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner;
+                    break;
+                case "contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner?.Id;
+                    break;
+                case "contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner?.Hash;
+                    break;
+                case "contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner?.Type;
+                    break;
+                case "contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner?.Domain;
+                    break;
+                case "contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ContractId))?.Owner?.Profile;
                     break;
                 case "contractCodeHash":
                     foreach (var row in rows) result[j++][i] = row.ContractCodeHash;
@@ -440,6 +494,24 @@ public class OriginationRepository(
                     break;
                 case "baker.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Profile;
+                    break;
+                case "baker.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner;
+                    break;
+                case "baker.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Id;
+                    break;
+                case "baker.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Hash;
+                    break;
+                case "baker.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Type;
+                    break;
+                case "baker.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Domain;
+                    break;
+                case "baker.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Profile;
                     break;
                 case "daFee":
                     foreach (var row in rows) result[j++][i] = (Data.Models.Env)(int)row.Env switch

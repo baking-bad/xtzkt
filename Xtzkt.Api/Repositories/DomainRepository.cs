@@ -221,6 +221,24 @@ public class DomainRepository(
                 case "registry.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Profile;
                     break;
+                case "registry.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner;
+                    break;
+                case "registry.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner?.Id;
+                    break;
+                case "registry.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner?.Hash;
+                    break;
+                case "registry.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner?.Type;
+                    break;
+                case "registry.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner?.Domain;
+                    break;
+                case "registry.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.RegistryId)).Owner?.Profile;
+                    break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;
                     break;

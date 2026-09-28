@@ -26,6 +26,9 @@ dotnet run --project Xtzkt.Services.Metadata
 
 # Run the domains service
 dotnet run --project Xtzkt.Services.Domains
+
+# Run the admin service
+dotnet run --project Xtzkt.Services.Admin
 ```
 
 > The shell here is PowerShell on Windows. The `dotnet` commands above work as-is in both PowerShell and bash; use PowerShell syntax for any scripting around them.
@@ -37,15 +40,15 @@ Each runnable project has a `Dockerfile`, and **the build context is always the 
 ```bash
 docker build -f Xtzkt.Api/Dockerfile -t xtzkt-api .
 
-# or the whole stack
-docker compose build
-docker compose up -d
+# or the whole stack (without --profile, compose only builds and starts the unprofiled services)
+docker compose --profile full build
+docker compose --profile full up -d
 ```
 
 Things to keep intact when touching these files:
 - The `restore` stage copies **all** `.csproj` files and restores `Xtzkt.slnx`. Restoring a single project whose `ProjectReference` targets are missing does not fail — it logs `Skipping project ... because it was not found` and leaves them unrestored, so the restore silently repeats during publish.
 - `base` installs `curl` for the `HEALTHCHECK` probe, and that `RUN` has to stay **before** `USER $APP_UID` — apt needs root.
-- Those two blocks are byte-identical across the five Dockerfiles, so their layers are built once and reused; keep them that way.
+- Those two blocks are byte-identical across the six Dockerfiles, so their layers are built once and reused; keep them that way.
 - There is deliberately no `dotnet build` stage: `dotnet publish` recompiles anyway.
 - `base` must remain the first runtime stage — Visual Studio's `Container (Dockerfile)` launch profile runs it in fast mode.
 - The app `HEALTHCHECK`s are declared in the images, not in `docker-compose.yml`, which only consumes them through `depends_on: condition: service_healthy`. Don't add duplicates there.
@@ -71,6 +74,7 @@ This is an aggregated Tezos blockchain indexer, combining data from multiple cha
 | `Xtzkt.Api` | ASP.NET Core | REST-like API |
 | `Xtzkt.Services.Metadata` | ASP.NET Core | Standalone service that is the **single** home for all metadata indexing (token and contract, across all chains/layers). Indexers themselves no longer index metadata. |
 | `Xtzkt.Services.Domains` | ASP.NET Core | Standalone service that is the **single** home for domain name indexing (Tezos Domains, across all chains/layers). Indexers themselves no longer index domains. |
+| `Xtzkt.Services.Admin` | ASP.NET Core | Internal API through which the operator manages off-chain data (profiles). It has **no** authentication of its own — access control is left to the operator, so compose publishes it on loopback only. |
 
 ### Data models
 
@@ -80,7 +84,7 @@ All data models live in `Xtzkt.Data/Models`. Every model is configured via `Mode
 
 EF Core migrations live in `Xtzkt.Data/Migrations/`. The startup project for `dotnet ef` must be either `Xtzkt.Indexers.L1` or `Xtzkt.Indexers.TezosX` (both contain `DesignTimeDbContextFactory`). Indexers auto-migrate on startup and will refuse to start if the DB schema is ahead of the code.
 
-Non-indexer services (`Xtzkt.Api`, `Xtzkt.Services.Metadata`, `Xtzkt.Services.Domains`) do **not** apply migrations. The two services only verify schema compatibility on startup: they exit with an error if their code and the DB schema have diverged, and wait (retrying) for the indexer to apply any pending migrations before proceeding.
+Non-indexer services (`Xtzkt.Api`, `Xtzkt.Services.Metadata`, `Xtzkt.Services.Domains`, `Xtzkt.Services.Admin`) do **not** apply migrations. The three services only verify schema compatibility on startup: they exit with an error if their code and the DB schema have diverged, and wait (retrying) for the indexer to apply any pending migrations before proceeding.
 
 ```bash
 # Add a new migration
@@ -101,24 +105,25 @@ Indexes are split by consumer, and each consumer owns its own — an index decla
 | `IX_` | Indexers (`Xtzkt.Indexers.*`) | `HasIndex` in `Xtzkt.Data/Models`, shipped in migrations |
 | `MX_` | `Xtzkt.Services.Metadata` | `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in `StoreService.Ensure*ResolverIndexes`, run at startup |
 | `DX_` | `Xtzkt.Services.Domains` | `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in `StoreService.EnsureIndexesAsync`, run once a name registry resolves. |
+| `PX_` | `Xtzkt.Services.Admin` | `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in `StoreService.EnsureIndexesAsync`, run in the startup init loop |
 | `AX_` | `Xtzkt.Api` | `Db.InitScript`, run by `DbInitService` at startup, per deployment — **not** in migrations. The default `Xtzkt.Api/init.pgsql` is minimal: only what the caches and the level/timestamp translation need to function. `Xtzkt.Api/init.example.pgsql` is an example of a workable set — the access paths behind the main scenarios of every endpoint — which operators copy, adjust and point `Db.InitScript` at |
 
-So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actually uses. Before adding one there, find the query it serves; before removing one, check all four consumers. Write API queries as if their indexes existed rather than adding them to the models.
+So `Xtzkt.Data/Models` must carry **only** indexes that an indexer query actually uses. Before adding one there, find the query it serves; before removing one, check all five consumers. Write API queries as if their indexes existed rather than adding them to the models.
 
 ### DB notifications
 
-`Xtzkt.Api` keeps its caches fresh via postgres `LISTEN`/`NOTIFY`: the indexers just write, and `pg_notify` triggers on the written tables turn those writes into notifications. The triggers live in migrations (`Triggers` migration + its `AddNotificationTrigger` helper; `domain_changed`, which the domains service's writes fire, is in the `Domains` migration).
+`Xtzkt.Api` keeps its caches fresh via postgres `LISTEN`/`NOTIFY`: the writers (the indexers, the domains and admin services) just write, and `pg_notify` triggers on the written tables turn those writes into notifications. The triggers live in migrations, each created through the `AddNotificationTrigger` helper of the `Triggers` migration.
 
 Rules that keep this working:
 - The channel name, the watched columns and the **payload format are a contract** between the trigger and `DbListenerService` — the two must be changed together.
 
 ### Configuration
 
-Indexers and services read config in this order, each source overriding the previous one: `appsettings.json` → `appsettings.{Environment}.json` → environment variables → prefixed env vars (`XTZKT_L1_*` for L1, `XTZKT_TEZOSX_*` for TezosX, `XTZKT_API_*` for the API, `XTZKT_METADATA_*` for the metadata service, `XTZKT_DOMAINS_*` for the domains service) → `ASPNETCORE_*` env vars → command-line args.
+Indexers and services read config in this order, each source overriding the previous one: `appsettings.json` → `appsettings.{Environment}.json` → environment variables → prefixed env vars (`XTZKT_L1_*` for L1, `XTZKT_TEZOSX_*` for TezosX, `XTZKT_API_*` for the API, `XTZKT_METADATA_*` for the metadata service, `XTZKT_DOMAINS_*` for the domains service, `XTZKT_ADMIN_*` for the admin service) → `ASPNETCORE_*` env vars → command-line args.
 
 Every `Program.cs` builds that chain by hand after `builder.Configuration.Sources.Clear()`. The `AddEnvironmentVariables("ASPNETCORE_")` line is load-bearing and must not be dropped: `ASPNETCORE_URLS` / `ASPNETCORE_HTTP_PORTS` reach the `URLS` / `HTTP_PORTS` config keys only through that prefix, and without it the app silently ignores both and binds the default `localhost:5000` — which in a container means loopback-only, unreachable from outside.
 
-All five apps read their database settings from one shared `Db` section (`Xtzkt.Data/DbConfig.cs`, bound via `GetDbConfig()`): `ConnectionString` carries no timeouts of its own — `CommandTimeout` (client-side, enforced by Npgsql) and `StatementTimeout` (server-side, enforced by postgres, `0` = off) are separate settings that `GetConnectionString()` bakes into the string. Call it with `statementTimeout: false` for connections that legitimately run long: the API does that for its EF contexts (cache warm-up reads whole tables) and for the `LISTEN` connection. `DbInitService` shares the API's data source, which is why both init scripts start with `SET statement_timeout = 0` — a capped `CREATE INDEX CONCURRENTLY` leaves an INVALID index behind; the two services' index builds (`StoreService.EnsureIndexesAsync` in domains, `StoreService.Ensure*ResolverIndexes` in metadata) do the same on their own connection, with `CommandTimeout = 0` as well. `StatementTimeout` is kept just below `CommandTimeout` (58/60 in the API, 598/600 in the indexers and both services), so that postgres aborts a statement first and still does so when the client is gone; operations that legitimately run longer lift both at their call site rather than in config — the indexers' `Migrate()` (`SetCommandTimeout(0)` + a `statementTimeout: false` connection string, same as `DesignTimeDbContextFactory` for `dotnet ef database update`) and the index builds above.
+All six apps read their database settings from one shared `Db` section (`Xtzkt.Data/DbConfig.cs`, bound via `GetDbConfig()`): `ConnectionString` carries no timeouts of its own — `CommandTimeout` (client-side, enforced by Npgsql) and `StatementTimeout` (server-side, enforced by postgres, `0` = off) are separate settings that `GetConnectionString()` bakes into the string. Call it with `statementTimeout: false` for connections that legitimately run long: the API does that for its EF contexts (cache warm-up reads whole tables) and for the `LISTEN` connection. `DbInitService` shares the API's data source, which is why both init scripts start with `SET statement_timeout = 0` — a capped `CREATE INDEX CONCURRENTLY` leaves an INVALID index behind; the services' index builds (`StoreService.EnsureIndexesAsync` in domains and admin, `StoreService.Ensure*ResolverIndexes` in metadata) do the same on their own connection, with `CommandTimeout = 0` as well. `StatementTimeout` is kept just below `CommandTimeout` (58/60 in the API, 598/600 in the indexers and the three services), so that postgres aborts a statement first and still does so when the client is gone; operations that legitimately run longer lift both at their call site rather than in config — the indexers' `Migrate()` (`SetCommandTimeout(0)` + a `statementTimeout: false` connection string, same as `DesignTimeDbContextFactory` for `dotnet ef database update`) and the index builds above.
 
 `Chain.Id` setting must be an integer (0–7) and must be unique for every indexer instance.
 

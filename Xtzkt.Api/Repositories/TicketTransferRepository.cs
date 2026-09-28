@@ -286,6 +286,24 @@ public class TicketTransferRepository(
                 case "from.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Profile;
                     break;
+                case "from.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner;
+                    break;
+                case "from.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner?.Id;
+                    break;
+                case "from.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner?.Hash;
+                    break;
+                case "from.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner?.Type;
+                    break;
+                case "from.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner?.Domain;
+                    break;
+                case "from.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.FromId))?.Owner?.Profile;
+                    break;
                 case "to":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ToId);
                     break;
@@ -303,6 +321,24 @@ public class TicketTransferRepository(
                     break;
                 case "to.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Profile;
+                    break;
+                case "to.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner;
+                    break;
+                case "to.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner?.Id;
+                    break;
+                case "to.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner?.Hash;
+                    break;
+                case "to.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner?.Type;
+                    break;
+                case "to.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner?.Domain;
+                    break;
+                case "to.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ToId))?.Owner?.Profile;
                     break;
                 case "amount":
                     foreach (var row in rows) result[j++][i] = row.Amount;
@@ -347,6 +383,24 @@ public class TicketTransferRepository(
                     break;
                 case "ticket.ticketer.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Profile;
+                    break;
+                case "ticket.ticketer.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner;
+                    break;
+                case "ticket.ticketer.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner?.Id;
+                    break;
+                case "ticket.ticketer.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner?.Hash;
+                    break;
+                case "ticket.ticketer.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner?.Type;
+                    break;
+                case "ticket.ticketer.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner?.Domain;
+                    break;
+                case "ticket.ticketer.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.Ticket_TicketerId)).Owner?.Profile;
                     break;
                 case "ticket.rawType":
                     foreach (var row in rows) result[j++][i] = Micheline.FromBytes((byte[])row.Ticket_RawType);

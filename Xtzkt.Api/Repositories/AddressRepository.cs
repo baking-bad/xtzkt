@@ -14,6 +14,8 @@ namespace Xtzkt.Api.Repositories;
 public class AddressRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    DomainCache _domainCache,
+    ProfileCache _profileCache,
     SoftwareCache _softwareCache,
     NpgsqlDataSource _dataSource)
 {
@@ -80,6 +82,8 @@ public class AddressRepository(
                     case "hash":                        columns.Add(@"""Hash"""); break;
                     case "layer":                       columns.Add(@"""Layer"""); break;
                     case "runtime":                     columns.Add(@"""Runtime"""); break;
+                    case "domain":                      columns.Add(@"""ChainId"""); columns.Add(@"""Hash"""); break;
+                    case "profile":                     columns.Add(@"""Hash"""); break;
                     case "firstLevel":                  columns.Add(@"""FirstLevel"""); break;
                     case "firstTimestamp":              columns.Add(@"""FirstTimestamp"""); break;
                     case "lastLevel":                   columns.Add(@"""LastLevel"""); break;
@@ -267,6 +271,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.L1,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -363,6 +369,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.L1,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -422,6 +430,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.L1,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -476,6 +486,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.L1,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -536,6 +548,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.L1,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -583,6 +597,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Evm,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -616,6 +632,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Evm,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -650,6 +668,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Evm,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -687,6 +707,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -720,6 +742,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -749,6 +773,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -784,6 +810,8 @@ public class AddressRepository(
                 Hash = row.Hash,
                 Layer = Layers.TezosX,
                 Runtime = Runtimes.Michelson,
+                Domain = _domainCache.Get(row.ChainId, row.Hash),
+                Profile = _profileCache.GetAddressProfile(row.Hash),
                 FirstLevel = row.FirstLevel,
                 FirstTimestamp = row.FirstTimestamp,
                 LastLevel = row.LastLevel,
@@ -823,6 +851,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.L1,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -882,6 +912,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.L1,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -978,6 +1010,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.L1,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1032,6 +1066,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.L1,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1092,6 +1128,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.L1,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1139,6 +1177,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Evm,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1172,6 +1212,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Evm,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1206,6 +1248,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Evm,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1243,6 +1287,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1276,6 +1322,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1305,6 +1353,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1340,6 +1390,8 @@ public class AddressRepository(
                     Hash = row.Hash,
                     Layer = Layers.TezosX,
                     Runtime = Runtimes.Michelson,
+                    Domain = _domainCache.Get((int)row.ChainId, (string)row.Hash),
+                    Profile = _profileCache.GetAddressProfile((string)row.Hash),
                     FirstLevel = row.FirstLevel,
                     FirstTimestamp = row.FirstTimestamp,
                     LastLevel = row.LastLevel,
@@ -1405,6 +1457,12 @@ public class AddressRepository(
                     break;
                 case "runtime":
                     foreach (var row in rows) result[j++][i] = Runtimes.ToString((int)row.Runtime);
+                    break;
+                case "domain":
+                    foreach (var row in rows) result[j++][i] = _domainCache.Get((int)row.ChainId, (string)row.Hash);
+                    break;
+                case "profile":
+                    foreach (var row in rows) result[j++][i] = _profileCache.GetAddressProfile((string)row.Hash);
                     break;
                 case "firstLevel":
                     foreach (var row in rows) result[j++][i] = row.FirstLevel;
@@ -1489,6 +1547,24 @@ public class AddressRepository(
                     break;
                 case "baker.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Profile;
+                    break;
+                case "baker.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner;
+                    break;
+                case "baker.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Id;
+                    break;
+                case "baker.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Hash;
+                    break;
+                case "baker.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Type;
+                    break;
+                case "baker.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Domain;
+                    break;
+                case "baker.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.BakerId))?.Owner?.Profile;
                     break;
                 case "delegationLevel":
                     foreach (var row in rows) result[j++][i] = row.DelegationLevel;
@@ -1585,6 +1661,24 @@ public class AddressRepository(
                     break;
                 case "unstakedBaker.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Profile;
+                    break;
+                case "unstakedBaker.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner;
+                    break;
+                case "unstakedBaker.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner?.Id;
+                    break;
+                case "unstakedBaker.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner?.Hash;
+                    break;
+                case "unstakedBaker.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner?.Type;
+                    break;
+                case "unstakedBaker.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner?.Domain;
+                    break;
+                case "unstakedBaker.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.UnstakedBakerId))?.Owner?.Profile;
                     break;
                 case "stakingUpdatesCount":
                     foreach (var row in rows) result[j++][i] = row.StakingUpdatesCount;
@@ -1745,6 +1839,24 @@ public class AddressRepository(
                 case "creator.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Profile;
                     break;
+                case "creator.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner;
+                    break;
+                case "creator.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner?.Id;
+                    break;
+                case "creator.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner?.Hash;
+                    break;
+                case "creator.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner?.Type;
+                    break;
+                case "creator.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner?.Domain;
+                    break;
+                case "creator.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.CreatorId))?.Owner?.Profile;
+                    break;
                 case "logsCount":
                     foreach (var row in rows) result[j++][i] = row.LogsCount;
                     break;
@@ -1814,6 +1926,24 @@ public class AddressRepository(
                 case "eip7702Delegate.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Profile;
                     break;
+                case "eip7702Delegate.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner;
+                    break;
+                case "eip7702Delegate.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner?.Id;
+                    break;
+                case "eip7702Delegate.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner?.Hash;
+                    break;
+                case "eip7702Delegate.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner?.Type;
+                    break;
+                case "eip7702Delegate.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner?.Domain;
+                    break;
+                case "eip7702Delegate.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Eip7702DelegateId))?.Owner?.Profile;
+                    break;
                 case "owner":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.OwnerId);
                     break;
@@ -1831,6 +1961,24 @@ public class AddressRepository(
                     break;
                 case "owner.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Profile;
+                    break;
+                case "owner.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner;
+                    break;
+                case "owner.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner?.Id;
+                    break;
+                case "owner.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner?.Hash;
+                    break;
+                case "owner.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner?.Type;
+                    break;
+                case "owner.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner?.Domain;
+                    break;
+                case "owner.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.OwnerId))?.Owner?.Profile;
                     break;
             }
         }

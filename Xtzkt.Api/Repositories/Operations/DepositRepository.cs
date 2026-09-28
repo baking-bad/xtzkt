@@ -251,6 +251,24 @@ public class DepositRepository(
                 case "receiver.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Profile;
                     break;
+                case "receiver.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner;
+                    break;
+                case "receiver.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner?.Id;
+                    break;
+                case "receiver.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner?.Hash;
+                    break;
+                case "receiver.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner?.Type;
+                    break;
+                case "receiver.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner?.Domain;
+                    break;
+                case "receiver.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ReceiverId)).Owner?.Profile;
+                    break;
                 case "type":
                     foreach (var row in rows) result[j++][i] = DepositTypes.ToString((int)row.Type);
                     break;
@@ -282,6 +300,24 @@ public class DepositRepository(
                     break;
                 case "proxy.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Profile;
+                    break;
+                case "proxy.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner;
+                    break;
+                case "proxy.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner?.Id;
+                    break;
+                case "proxy.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner?.Hash;
+                    break;
+                case "proxy.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner?.Type;
+                    break;
+                case "proxy.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner?.Domain;
+                    break;
+                case "proxy.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.ProxyId))?.Owner?.Profile;
                     break;
                 case "depositId":
                     foreach (var row in rows) result[j++][i] = row.DepositId;

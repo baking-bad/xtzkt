@@ -193,6 +193,24 @@ public class Eip7702DelegationRepository(
                 case "sender.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Profile;
                     break;
+                case "sender.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner;
+                    break;
+                case "sender.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Id;
+                    break;
+                case "sender.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Hash;
+                    break;
+                case "sender.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Type;
+                    break;
+                case "sender.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Domain;
+                    break;
+                case "sender.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
+                    break;
                 case "authority":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int)row.AuthorityId);
                     break;
@@ -210,6 +228,24 @@ public class Eip7702DelegationRepository(
                     break;
                 case "authority.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Profile;
+                    break;
+                case "authority.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner;
+                    break;
+                case "authority.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner?.Id;
+                    break;
+                case "authority.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner?.Hash;
+                    break;
+                case "authority.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner?.Type;
+                    break;
+                case "authority.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner?.Domain;
+                    break;
+                case "authority.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AuthorityId)).Owner?.Profile;
                     break;
                 case "nonce":
                     foreach (var row in rows) result[j++][i] = row.Nonce;
@@ -232,6 +268,24 @@ public class Eip7702DelegationRepository(
                 case "prevDelegate.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Profile;
                     break;
+                case "prevDelegate.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner;
+                    break;
+                case "prevDelegate.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner?.Id;
+                    break;
+                case "prevDelegate.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner?.Hash;
+                    break;
+                case "prevDelegate.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner?.Type;
+                    break;
+                case "prevDelegate.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner?.Domain;
+                    break;
+                case "prevDelegate.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.PrevDelegateId))?.Owner?.Profile;
+                    break;
                 case "delegate":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.DelegateId);
                     break;
@@ -249,6 +303,24 @@ public class Eip7702DelegationRepository(
                     break;
                 case "delegate.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Profile;
+                    break;
+                case "delegate.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner;
+                    break;
+                case "delegate.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner?.Id;
+                    break;
+                case "delegate.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner?.Hash;
+                    break;
+                case "delegate.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner?.Type;
+                    break;
+                case "delegate.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner?.Domain;
+                    break;
+                case "delegate.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.DelegateId))?.Owner?.Profile;
                     break;
             }
         }

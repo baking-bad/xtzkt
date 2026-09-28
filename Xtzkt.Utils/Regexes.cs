@@ -28,6 +28,12 @@ public static partial class Regexes
     [GeneratedRegex("^0x[0-9A-Fa-f]{64}$")]
     public static partial Regex EvmHash();
 
+    [GeneratedRegex("^0x[0-9A-Fa-f]{66}$")]
+    public static partial Regex KernelHash();
+
+    [GeneratedRegex("^0x[0-9A-Fa-f]{8}$")]
+    public static partial Regex SoftwareHash();
+
     [GeneratedRegex("^[1-9A-HJ-NP-Za-km-z]+$")]
     public static partial Regex Base58();
 

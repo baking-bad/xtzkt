@@ -13,4 +13,9 @@ public class Account
     /// All the addresses the account owns, owners first, aliases last.
     /// </summary>
     public required List<Address> Addresses { get; set; }
+
+    /// <summary>
+    /// Public off-chain profile of the account (the one of its canonical hash), if it has one.
+    /// </summary>
+    public AccountProfile? Profile { get; set; }
 }

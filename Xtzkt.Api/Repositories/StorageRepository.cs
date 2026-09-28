@@ -216,6 +216,24 @@ public class StorageRepository(
                 case "contract.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Profile;
                     break;
+                case "contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner;
+                    break;
+                case "contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner?.Id;
+                    break;
+                case "contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner?.Hash;
+                    break;
+                case "contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner?.Type;
+                    break;
+                case "contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner?.Domain;
+                    break;
+                case "contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.ContractId)).Owner?.Profile;
+                    break;
                 case "contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).CodeHash;
                     break;
@@ -236,6 +254,24 @@ public class StorageRepository(
                     break;
                 case "contract.creator.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Profile;
+                    break;
+                case "contract.creator.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner;
+                    break;
+                case "contract.creator.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner?.Id;
+                    break;
+                case "contract.creator.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner?.Hash;
+                    break;
+                case "contract.creator.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner?.Type;
+                    break;
+                case "contract.creator.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner?.Domain;
+                    break;
+                case "contract.creator.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.ContractId)).Creator.Owner?.Profile;
                     break;
                 case "level":
                     foreach (var row in rows) result[j++][i] = row.Level;

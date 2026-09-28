@@ -322,6 +322,24 @@ public class BigMapKeyRepository(
                 case "bigMap.contract.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Profile;
                     break;
+                case "bigMap.contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner;
+                    break;
+                case "bigMap.contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner?.Id;
+                    break;
+                case "bigMap.contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner?.Hash;
+                    break;
+                case "bigMap.contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner?.Type;
+                    break;
+                case "bigMap.contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner?.Domain;
+                    break;
+                case "bigMap.contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.BigMap_ContractId)).Owner?.Profile;
+                    break;
                 case "bigMap.contract.codeHash":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).CodeHash;
                     break;
@@ -342,6 +360,24 @@ public class BigMapKeyRepository(
                     break;
                 case "bigMap.contract.creator.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Profile;
+                    break;
+                case "bigMap.contract.creator.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner;
+                    break;
+                case "bigMap.contract.creator.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner?.Id;
+                    break;
+                case "bigMap.contract.creator.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner?.Hash;
+                    break;
+                case "bigMap.contract.creator.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner?.Type;
+                    break;
+                case "bigMap.contract.creator.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner?.Domain;
+                    break;
+                case "bigMap.contract.creator.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetContractInfoAsync((int)row.BigMap_ContractId)).Creator.Owner?.Profile;
                     break;
                 case "bigMap.storagePath":
                     foreach (var row in rows) result[j++][i] = row.BigMap_StoragePath;

@@ -3,8 +3,8 @@
 # The build context MUST be the repository root, not this directory:
 #     docker build -f Xtzkt.Api/Dockerfile -t xtzkt-api .
 #
-# or, for all five images at once:
-#     docker compose build
+# or, for all six images at once:
+#     docker compose --profile full build
 #
 # Visual Studio builds this file too (see https://aka.ms/customizecontainer). Its
 # "Container (Dockerfile)" launch profile runs the `base` stage in fast mode, so `base`
@@ -40,7 +40,7 @@ FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
 ARG TARGETARCH
 WORKDIR /src
 
-# this stage is byte-identical in all five Dockerfiles, so Docker builds it once and reuses
+# this stage is byte-identical in all six Dockerfiles, so Docker builds it once and reuses
 # the cached layers for the other images
 COPY ["Xtzkt.slnx", "./"]
 COPY ["Xtzkt.Api/Xtzkt.Api.csproj", "Xtzkt.Api/"]
@@ -48,6 +48,7 @@ COPY ["Xtzkt.Data/Xtzkt.Data.csproj", "Xtzkt.Data/"]
 COPY ["Xtzkt.Indexers.Common/Xtzkt.Indexers.Common.csproj", "Xtzkt.Indexers.Common/"]
 COPY ["Xtzkt.Indexers.L1/Xtzkt.Indexers.L1.csproj", "Xtzkt.Indexers.L1/"]
 COPY ["Xtzkt.Indexers.TezosX/Xtzkt.Indexers.TezosX.csproj", "Xtzkt.Indexers.TezosX/"]
+COPY ["Xtzkt.Services.Admin/Xtzkt.Services.Admin.csproj", "Xtzkt.Services.Admin/"]
 COPY ["Xtzkt.Services.Domains/Xtzkt.Services.Domains.csproj", "Xtzkt.Services.Domains/"]
 COPY ["Xtzkt.Services.Metadata/Xtzkt.Services.Metadata.csproj", "Xtzkt.Services.Metadata/"]
 COPY ["Xtzkt.Utils/Xtzkt.Utils.csproj", "Xtzkt.Utils/"]

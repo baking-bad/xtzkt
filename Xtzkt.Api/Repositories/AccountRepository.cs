@@ -4,7 +4,10 @@ using Xtzkt.Utils;
 
 namespace Xtzkt.Api.Repositories;
 
-public class AccountRepository(AddressCache _addressCache, AddressRepository _addressRepo)
+public class AccountRepository(
+    AddressCache _addressCache,
+    ProfileCache _profileCache,
+    AddressRepository _addressRepo)
 {
     public async Task<Account?> Get(string hash)
     {
@@ -59,7 +62,8 @@ public class AccountRepository(AddressCache _addressCache, AddressRepository _ad
         return new Account
         {
             Hash = addresses[0].Hash,
-            Addresses = addresses
+            Addresses = addresses,
+            Profile = _profileCache.GetAccountProfile(addresses[0].Hash),
         };
     }
 }

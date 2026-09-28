@@ -16,5 +16,8 @@ namespace Xtzkt.Api.Models
 
         /// <summary>Name from the address's public off-chain profile, if it has one.</summary>
         public string? Profile { get; init; }
+
+        /// <summary>Owner of the address, if it's a runtime alias (`x_evm_alias` or `x_michelson_alias`).</summary>
+        public AddressInfo? Owner { get; init; }
     }
 }

@@ -112,7 +112,8 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
-            Profile = ProfileCache.Get(_id),
+            Profile = ProfileCache.GetAddressProfile(address.Hash),
+            Owner = GetOwnerInfo(address),
         };
     }
 
@@ -127,7 +128,8 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
-            Profile = ProfileCache.Get(_id),
+            Profile = ProfileCache.GetAddressProfile(address.Hash),
+            Owner = await GetOwnerInfoAsync(address),
         };
     }
 
@@ -142,7 +144,8 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
-            Profile = ProfileCache.Get(id),
+            Profile = ProfileCache.GetAddressProfile(address.Hash),
+            Owner = GetOwnerInfo(address),
         };
     }
 
@@ -157,7 +160,8 @@ public class AddressCache
             Hash = address.Hash,
             Type = Models.Enums.AddressTypes.ToString((int)address.Type),
             Domain = DomainCache.Get(address.ChainId, address.Hash),
-            Profile = ProfileCache.Get(id),
+            Profile = ProfileCache.GetAddressProfile(address.Hash),
+            Owner = await GetOwnerInfoAsync(address),
         };
     }
 
@@ -193,9 +197,26 @@ public class AddressCache
         Hash = address.Hash,
         Type = Models.Enums.AddressTypes.ToString((int)address.Type),
         Domain = DomainCache.Get(address.ChainId, address.Hash),
-        Profile = ProfileCache.Get(address.Id),
+        Profile = ProfileCache.GetAddressProfile(address.Hash),
         CodeHash = codeHash,
         Creator = creator,
+    };
+
+    Models.AddressInfo? GetOwnerInfo(Address address)
+    {
+        return GetOwnerId(address) is int ownerId ? GetInfo(ownerId) : null;
+    }
+
+    public async Task<Models.AddressInfo?> GetOwnerInfoAsync(Address address)
+    {
+        return GetOwnerId(address) is int ownerId ? await GetInfoAsync(ownerId) : null;
+    }
+
+    static int? GetOwnerId(Address address) => address switch
+    {
+        XEvmAlias alias => alias.OwnerId,
+        XMichelsonAlias alias => alias.OwnerId,
+        _ => null
     };
 
     public Address? Get(int id)
@@ -273,10 +294,39 @@ public class AddressCache
 
     public async Task<List<Address>> GetAsync(int chainId, List<string> hashes)
     {
-        var res = new List<Address>(hashes.Count);
+        var chain = ChainCache.Get(chainId);
+        var found = new Dictionary<string, Address>(hashes.Count);
+        var missed = new HashSet<string>();
+        lock (Crit)
+        {
+            foreach (var hash in hashes)
+            {
+                if (CachedByHash[chainId].TryGetValue(hash, out var address))
+                    found[hash] = address;
+                else if (Compatible(chain, hash))
+                    missed.Add(hash);
+            }
+        }
+
+        if (missed.Count != 0 && HardLimit != 0)
+        {
+            using var db = DbFactory.CreateDbContext();
+            var addresses = await db.Addresses
+                .Where(x => x.ChainId == chainId && missed.Contains(x.Hash))
+                .ToListAsync();
+
+            foreach (var address in addresses)
+            {
+                Add(address);
+                found[address.Hash] = address;
+            }
+        }
+
+        var res = new List<Address>(found.Count);
         foreach (var hash in hashes)
-            if (await GetAsync(chainId, hash) is Address address)
+            if (found.TryGetValue(hash, out var address))
                 res.Add(address);
+
         return res;
     }
 

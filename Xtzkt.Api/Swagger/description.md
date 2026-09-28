@@ -70,6 +70,20 @@ GET /v1/tokens/balances?sort=balance.desc,id&limit=100&cursor=1000,1234
   hit it, you're bulk-reading — which is exactly what `cursor` is for, and it's faster anyway.
 - All these caps are configured per instance; the numbers above are this instance's.
 
+## Selecting fields
+
+`?select=` names the fields to return instead of the default set: `?select=id,hash,balance`. Only the
+selected columns are read and serialized, so responses get noticeably smaller and faster — use it
+wherever a listing feeds a table or a chart rather than a details page.
+
+- Each item is `field`, or `field.path` to reach into a nested object, optionally followed by `as alias`
+  to rename the result: `?select=balance,sender.hash as from`.
+- A single selected field flattens the response into a plain array of values. `?select.values=a,b` does
+  the same for several fields at once, returning an array of arrays instead of objects.
+- An unknown top-level field is a `400` that names it. An unknown path inside a known object is either
+  a `400` too or comes back as `null`, depending on the object, so a typo there may show up as an
+  all-null column.
+
 ## Filtering
 
 ### Lists

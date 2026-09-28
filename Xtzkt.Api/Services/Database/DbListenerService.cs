@@ -4,6 +4,7 @@ using System.Data;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Services.ResponseCache;
 using Xtzkt.Data;
+using Xtzkt.Data.Models;
 
 namespace Xtzkt.Api.Services.Database;
 
@@ -11,6 +12,7 @@ public class DbListenerService(
     ChainCache _chainCache,
     AddressCache _addressCache,
     DomainCache _domainCache,
+    ProfileCache _profileCache,
     ProtocolCache _protocolCache,
     SoftwareCache _softwareCache,
     ResponseCacheService _responseCache,
@@ -21,6 +23,7 @@ public class DbListenerService(
     const string ChainStateChanged = "chain_state_changed";
     const string ChainSyncStateChanged = "chain_sync_state_changed";
     const string DomainChanged = "domain_changed";
+    const string ProfileChanged = "profile_changed";
     #endregion
 
     readonly Lock Crit = new();
@@ -29,6 +32,9 @@ public class DbListenerService(
     readonly HashSet<long> DomainChanges = [];
     bool DomainReset;
     Task DomainNotifying = Task.CompletedTask;
+    readonly HashSet<(ProfileType Type, string Id)> ProfileChanges = [];
+    bool ProfileReset;
+    Task ProfileNotifying = Task.CompletedTask;
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -53,6 +59,7 @@ public class DbListenerService(
                             LISTEN {ChainStateChanged};
                             LISTEN {ChainSyncStateChanged};
                             LISTEN {DomainChanged};
+                            LISTEN {ProfileChanged};
                             """);
                         _logger.LogInformation("Db listener connected");
 
@@ -145,9 +152,25 @@ public class DbListenerService(
                     DomainNotifying = Task.Run(NotifyDomainsAsync); // async run
             }
         }
-        else
+        else if (e.Channel == ProfileChanged)
         {
-            NotifyExtras(e.Channel, e.Payload);
+            // type:id
+            var ind = e.Payload.IndexOf(':');
+            if (ind == -1 || ind == e.Payload.Length - 1 ||
+                !int.TryParse(e.Payload[..ind], out var type) ||
+                !Enum.IsDefined((ProfileType)type))
+            {
+                _logger.LogCritical("Invalid {channel} trigger payload", e.Channel);
+                return;
+            }
+
+            lock (Crit)
+            {
+                ProfileChanges.Add(((ProfileType)type, e.Payload[(ind + 1)..]));
+
+                if (ProfileNotifying.IsCompleted)
+                    ProfileNotifying = Task.Run(NotifyProfilesAsync); // async run
+            }
         }
     }
 
@@ -282,34 +305,59 @@ public class DbListenerService(
         }
     }
 
-    void NotifyExtras(string channel, string payload)
+    async Task NotifyProfilesAsync()
     {
+        #region peek changes
+        bool reset;
+        (ProfileType Type, string Id)[] keys;
+        lock (Crit)
+        {
+            reset = ProfileReset;
+            ProfileReset = false;
+
+            keys = [.. ProfileChanges];
+            ProfileChanges.Clear();
+        }
+        #endregion
+
         try
         {
-            _logger.LogDebug("Processing extras notification...");
+            _logger.LogDebug("Processing profile notifications...");
 
-            var ind = payload.IndexOf(':');
-            if (ind == -1)
-            {
-                _logger.LogError("Invalid extras notification payload");
-                return;
-            }
+            if (reset)
+                await _profileCache.ReloadAsync();
+            else
+                await _profileCache.UpdateAsync(keys);
 
-            var key = payload[0..ind];
-            var value = payload[(ind + 1)..];
-            if (value.Length == 0) value = null;
+            _responseCache.Clear();
 
-            switch (channel)
-            {
-                default:
-                    break;
-            }
-
-            _logger.LogDebug("Extras notification processed");
+            _logger.LogDebug("Profile notifications processed");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process extras notification");
+            _logger.LogError(ex, "Failed to process profile notifications");
+
+            lock (Crit)
+            {
+                // retry
+                ProfileReset |= reset;
+                ProfileChanges.UnionWith(keys);
+            }
+
+            await Task.Delay(1000);
+        }
+
+        lock (Crit)
+        {
+            if (ProfileReset || ProfileChanges.Count != 0)
+            {
+                _logger.LogDebug("Handle pending profile notification");
+                ProfileNotifying = Task.Run(NotifyProfilesAsync); // async run
+            }
+            else
+            {
+                ProfileNotifying = Task.CompletedTask;
+            }
         }
     }
 
@@ -320,6 +368,10 @@ public class DbListenerService(
             DomainReset = true;
             if (DomainNotifying.IsCompleted)
                 DomainNotifying = Task.Run(NotifyDomainsAsync); // async run
+
+            ProfileReset = true;
+            if (ProfileNotifying.IsCompleted)
+                ProfileNotifying = Task.Run(NotifyProfilesAsync); // async run
         }
     }
 }

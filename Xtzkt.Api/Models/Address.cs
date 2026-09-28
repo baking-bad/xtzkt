@@ -34,6 +34,12 @@ public abstract class Address
     /// <summary>Runtime the address belongs to (`michelson` or `evm`).</summary>
     public required string Runtime { get; set; }
 
+    /// <summary>Primary domain name of the address, if it has one.</summary>
+    public string? Domain { get; set; }
+
+    /// <summary>Name from the address's public off-chain profile, if it has one.</summary>
+    public string? Profile { get; set; }
+
     /// <summary>Level of the block where the address first appeared.</summary>
     public int FirstLevel { get; set; }
 

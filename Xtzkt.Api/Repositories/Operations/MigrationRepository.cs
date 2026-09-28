@@ -202,6 +202,24 @@ public class MigrationRepository(
                 case "account.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Profile;
                     break;
+                case "account.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner;
+                    break;
+                case "account.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Id;
+                    break;
+                case "account.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Hash;
+                    break;
+                case "account.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Type;
+                    break;
+                case "account.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Domain;
+                    break;
+                case "account.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.AddressId)).Owner?.Profile;
+                    break;
                 case "balanceChange":
                     foreach (var row in rows) result[j++][i] = (Data.Models.Runtime)(int)row.Runtime switch
                     {
