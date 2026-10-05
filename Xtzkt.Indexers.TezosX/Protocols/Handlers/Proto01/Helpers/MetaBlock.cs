@@ -4,7 +4,7 @@ using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     public virtual async Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> rawBlueprintTask)
     {

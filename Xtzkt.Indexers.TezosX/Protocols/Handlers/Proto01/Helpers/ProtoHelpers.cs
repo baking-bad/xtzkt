@@ -4,7 +4,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers(ProtocolHandler protocol) : IHelpers
+public partial class ProtoHelpers(ProtocolHandler protocol) : IHelpers
 {
     protected readonly ProtocolHandler Proto = protocol;
     protected readonly XtzktContext Db = protocol.Db;

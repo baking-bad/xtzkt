@@ -4,7 +4,7 @@ using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto09.Helpers;
 
-class ProtoHelpers(ProtocolHandler protocol) : Proto07.Helpers.ProtoHelpers(protocol)
+public class ProtoHelpers(ProtocolHandler protocol) : Proto07.Helpers.ProtoHelpers(protocol)
 {
     #region fees
     protected override BigInteger GetDaFee(JsonElement tx)

@@ -12,8 +12,8 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
-// Tezos X, kernel 0.10
-class Proto10Handler(
+// Ganesha, 7.*
+public class Proto10Handler(
     EvmNode evmRpc,
     TezosNode michelsonRpc,
     XtzktContext db,

@@ -7,7 +7,7 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     protected virtual MetaBatch? TryReadOperation(MetaContext context, string hash, bool delayed)
     {

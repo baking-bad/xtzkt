@@ -4,7 +4,6 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Models;
 
 public sealed class MichelsonBatch
 {
-    public int Index { get; init; }
     public required string Hash { get; init; }
 }
 

@@ -3,7 +3,7 @@ using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto03.Helpers;
 
-class ProtoHelpers(ProtocolHandler protocol) : Proto02.Helpers.ProtoHelpers(protocol)
+public class ProtoHelpers(ProtocolHandler protocol) : Proto02.Helpers.ProtoHelpers(protocol)
 {
     protected override BlueprintChunk ParseChunk(byte[] payload)
     {

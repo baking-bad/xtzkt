@@ -5,7 +5,7 @@ using Xtzkt.Indexers.Common.Extensions;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     public BigInteger GetDaFee(JsonElement tx, bool isDelayedOp)
     {

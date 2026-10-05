@@ -1,429 +1,260 @@
+using System.Numerics;
+using System.Text.Json;
+using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Data.Utils;
-using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
-    protected override MetaBatch? TryReadOperation(MetaContext context, string hash, bool delayed)
+    MetaBatch? ReadOperation(MetaBlockContext context, string hash, bool delayed)
     {
-        // operation from blueprint can be dropped and not appear in the block at all
-        if (!context.QueuesByHash.TryGetValue(hash, out var queue))
-            return null;
-
-        var batch = new MetaBatch
+        MetaBatch batch;
+        if (context.EvmOps.Remove(hash, out var evmChain))
         {
-            Delayed = delayed,
-            Hash = Hashes.ParseOperationHash(hash),
-        };
-
-        ProcessQueue(context, queue, batch);
+            batch = new MetaBatch { Delayed = delayed, Hash = Hashes.ParseOperationHash(hash) };
+            ReadEvmOperation(context, evmChain, batch);
+        }
+        else if (context.MichelsonOps.Remove(hash, out var michelsonChain))
+        {
+            batch = new MetaBatch { Delayed = delayed, Hash = Hashes.ParseOperationHash(hash) };
+            ReadMichelsonOperation(context, michelsonChain, batch);
+        }
+        else
+        {
+            // operation from blueprint can be dropped and not appear in the block at all
+            return null;
+        }
         return batch;
     }
 
-    void ProcessQueue(
-        MetaContext context,
-        Queue<MetaContent> queue,
-        MetaBatch dest,
-        Queue<MetaContent>? parentQueue = null,
-        int evmDepth = 0,
-        bool evmFrameEntered = false,
-        MetaContent? cracParent = null)
+    void ReadEvmOperation(MetaBlockContext blockContext, EvmOpContext opContext, MetaBatch dest)
     {
-        while (queue.TryPeek(out var candidate))
+        var op = opContext.Operation;
+
+        if (opContext.RootFrame.MichelsonTarget is MichelsonCracFrameContent crac)
         {
-            switch (candidate)
+            var operation = new CracOperation { GatewayCall = op, TargetCall = crac.TargetCall };
+            dest.Operations.Add(operation);
+            ReadMichelsonCracContent(dest, crac, operation);
+        }
+        else if (op.From == EvmRuntime.DepositOrigin)
+        {
+            var deposit = blockContext.DelayedOps.FirstOrDefault(x => x.Hash == op.Batch.Hash);
+            if (deposit is not (DelayedXtzDeposit or DelayedFaDeposit))
+                throw new Exception("Operation from the deposit origin doesn't match any delayed deposit");
+
+            var bridgeCalls = EnumerateSubcalls(opContext.RootFrame);
+            dest.Operations.Add(new EvmDeposit { Deposit = deposit, FeederCall = op, BridgeCalls = [.. bridgeCalls] });
+        }
+        else
+        {
+            dest.Operations.Add(op);
+            ReadEvmFrameSubcalls(dest, opContext.RootFrame, null);
+        }
+    }
+
+    void ReadMichelsonOperation(MetaBlockContext blockContext, MichelsonOpContext opContext, MetaBatch dest)
+    {
+        foreach (var content in opContext.Contents)
+        {
+            var op = content.Op;
+
+            if (content.EvmTarget is EvmInternalFrame crac)
             {
-                case EvmOperation op:
-                    if (parentQueue != null)
-                        throw new InvalidOperationException("should never get here");
+                var operation = new CracOperation { GatewayCall = op, TargetCall = crac.Op };
+                dest.Operations.Add(operation);
+                ReadEvmCracFrame(dest, crac, operation);
+                ReadMichelsonInternalContent(dest, content.Internals, null);
+            }
+            else if (op.From == MichelsonRuntime.DepositOrigin)
+            {
+                var deposit = blockContext.DelayedOps.FirstOrDefault(x => x.Hash == op.Batch.Hash);
+                if (deposit is not (DelayedXtzDeposit or DelayedFaDeposit))
+                    throw new Exception("Operation from the deposit origin doesn't match any delayed deposit");
 
-                    if (EvmRuntime.IsCracCall(op.To, op.Trace))
-                    {
-                        if (context.QueuesByCracId.TryGetValue($"{EvmRuntime.RuntimeId}-{op.Batch.Index}", out var cracQueue))
-                        {
-                            if (cracQueue.TryPeek(out var cracRoot) &&
-                                cracRoot is MichelsonOperation)
-                                cracQueue.Dequeue(); // skip root operation
-
-                            if (cracQueue.TryPeek(out var cracIdEventOp) &&
-                                cracIdEventOp is MichelsonInternalOperation cracIdEvent &&
-                                cracIdEvent.Content.RequiredString("kind") == "event" &&
-                                cracIdEvent.Content.RequiredString("tag") == "cross_runtime_call" &&
-                                cracIdEvent.From == MichelsonRuntime.NullAddress)
-                                cracQueue.Dequeue(); // skip crac-id event
-                            else
-                                throw new Exception("crac-id event missed");
-
-                            while (cracQueue.TryPeek(out var aliasOrigOp) &&
-                                aliasOrigOp is MichelsonInternalOperation aliasOrig &&
-                                aliasOrig.Content.RequiredString("kind") == "origination" &&
-                                aliasOrig.From == MichelsonRuntime.NullAddress)
-                                cracQueue.Dequeue(); // skip aliases originations
-
-                            if (cracQueue.TryPeek(out var cracFirst) &&
-                                cracFirst is MichelsonInternalOperation micheOp &&
-                                micheOp.From == MichelsonRuntime.GetAlias(op.From) &&
-                                micheOp.To is string to)
-                            {
-                                var crac = new CracOperation { GatewayCall = op, TargetCall = micheOp };
-                                dest.Operations.Add(crac);
-                                queue.Dequeue();
-
-                                if (!MichelsonRuntime.IsCracCall(micheOp.To, micheOp.Content))
-                                    cracQueue.Dequeue();
-
-                                ProcessQueue(context, cracQueue, dest, queue, cracParent: crac);
-                                break;
-                            }
-                        }
-                    }
-
-                    if (op.From == EvmRuntime.DepositOrigin)
-                    {
-                        if (context.DelayedOps.FirstOrDefault(x => x.Hash == op.Batch.Hash) is DelayedOperation delayedEop &&
-                            delayedEop is DelayedXtzDeposit or DelayedFaDeposit)
-                        {
-                            var feederCall = op;
-                            queue.Dequeue();
-
-                            var bridgeCalls = new List<EvmInternalOperation>(4);
-
-                            while (queue.TryPeek(out var next) && next is EvmInternalOperation bc && bc.Operation == op)
-                                bridgeCalls.Add((queue.Dequeue() as EvmInternalOperation)!);
-
-                            dest.Operations.Add(new EvmDeposit { Deposit = delayedEop, FeederCall = feederCall, BridgeCalls = bridgeCalls });
-                            break;
-                        }
-                        // nothing but kernel-synthesized deposit feeders can come from this address
-                        throw new Exception("Operation from the deposit origin doesn't match any delayed deposit");
-                    }
-
-                    dest.Operations.Add(op);
-                    queue.Dequeue();
-
-                    break;
-                case EvmInternalOperation op:
-                    if (op.Depth < evmDepth) return;
-                    if (!evmFrameEntered) evmFrameEntered = true;
-                    else if (op.Depth == evmDepth) return;
-
-                    // in a static context the gateway rejects a stateful call before it reaches the other side
-                    if (op.StaticRootStatus == null && EvmRuntime.IsCracCall(op.To, op.Trace))
-                    {
-                        if (parentQueue is null)
-                        {
-                            if (context.QueuesByCracId.TryGetValue($"{EvmRuntime.RuntimeId}-{op.Operation.Batch.Index}", out var cracQueue))
-                            {
-                                if (cracQueue.TryPeek(out var cracRoot) &&
-                                    cracRoot is MichelsonOperation)
-                                    cracQueue.Dequeue(); // skip root operation
-
-                                if (cracQueue.TryPeek(out var cracIdEventOp) &&
-                                    cracIdEventOp is MichelsonInternalOperation cracIdEvent &&
-                                    cracIdEvent.Content.RequiredString("kind") == "event" &&
-                                    cracIdEvent.Content.RequiredString("tag") == "cross_runtime_call" &&
-                                    cracIdEvent.From == MichelsonRuntime.NullAddress)
-                                    cracQueue.Dequeue(); // skip crac-id event
-                                else
-                                    throw new Exception("crac-id event missed");
-
-                                while (cracQueue.TryPeek(out var aliasOrigOp) &&
-                                    aliasOrigOp is MichelsonInternalOperation aliasOrig &&
-                                    aliasOrig.Content.RequiredString("kind") == "origination" &&
-                                    aliasOrig.From == MichelsonRuntime.NullAddress)
-                                    cracQueue.Dequeue(); // skip aliases originations
-
-                                if (cracQueue.TryPeek(out var cracFirst) &&
-                                    cracFirst is MichelsonInternalOperation micheOp &&
-                                    (micheOp.From == MichelsonRuntime.GetAlias(op.From) || EvmRuntime.GetAlias(micheOp.From) == op.From) &&
-                                    micheOp.To is string to)
-                                {
-                                    var crac = new InternalCracOperation { GatewayCall = op, TargetCall = micheOp, CracParent = cracParent };
-                                    dest.Operations[^1].Internals.Add(crac);
-                                    queue.Dequeue();
-
-                                    if (!MichelsonRuntime.IsCracCall(micheOp.To, micheOp.Content))
-                                        cracQueue.Dequeue();
-
-                                    ProcessQueue(context, cracQueue, dest, queue, cracParent: crac);
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (parentQueue.TryPeek(out var cracIdEventOp) &&
-                                cracIdEventOp is MichelsonInternalOperation cracIdEvent &&
-                                cracIdEvent.Content.RequiredString("kind") == "event" &&
-                                cracIdEvent.Content.RequiredString("tag") == "cross_runtime_call" &&
-                                cracIdEvent.From == MichelsonRuntime.NullAddress)
-                                parentQueue.Dequeue(); // skip crac-id event
-                            else
-                                throw new Exception("crac-id event missed");
-
-                            while (parentQueue.TryPeek(out var aliasOrigOp) &&
-                                aliasOrigOp is MichelsonInternalOperation aliasOrig &&
-                                aliasOrig.Content.RequiredString("kind") == "origination" &&
-                                aliasOrig.From == MichelsonRuntime.NullAddress)
-                                parentQueue.Dequeue(); // skip aliases originations
-
-                            if (parentQueue.TryPeek(out var cracFirst) &&
-                                cracFirst is MichelsonInternalOperation micheOp &&
-                                (micheOp.From == MichelsonRuntime.GetAlias(op.From) || EvmRuntime.GetAlias(micheOp.From) == op.From) &&
-                                micheOp.To is string to)
-                            {
-                                var crac = new InternalCracOperation { GatewayCall = op, TargetCall = micheOp, CracParent = cracParent };
-                                dest.Operations[^1].Internals.Add(crac);
-                                queue.Dequeue();
-
-                                if (!MichelsonRuntime.IsCracCall(micheOp.To, micheOp.Content))
-                                    parentQueue.Dequeue();
-
-                                ProcessQueue(context, parentQueue, dest, cracParent: crac);
-                                break;
-                            }
-                        }
-                    }
-
-                    op.CracParent = cracParent;
-                    dest.Operations[^1].Internals.Add(op);
-                    queue.Dequeue();
-
-                    break;
-                case MichelsonOperation op:
-                    if (parentQueue != null)
-                        throw new InvalidOperationException("should never get here");
-
-                    if (MichelsonRuntime.IsCracCall(op.To, op.Content))
-                    {
-                        if (context.QueuesByCracId.TryGetValue($"{MichelsonRuntime.RuntimeId}-{op.Batch.Index}", out var cracQueue))
-                        {
-                            if (cracQueue.TryPeek(out var cracRoot) && cracRoot is EvmOperation)
-                                cracQueue.Dequeue(); // skip root operation
-
-                            // TODO: remove this cratch for balance forwarding when previewnet is reset
-                            var balanceForwards = new List<(Queue<MetaContent> Queue, int Depth)>();
-
-                            while (cracQueue.TryPeek(out var aliasOrigOp) &&
-                                aliasOrigOp is EvmInternalOperation aliasOrig &&
-                                aliasOrig.From == EvmRuntime.TezosXCaller)
-                            {
-                                cracQueue.Dequeue(); // skip aliases originations
-                                DequeueBalanceForward(cracQueue, aliasOrig, balanceForwards);
-                            }
-
-                            if (cracQueue.TryPeek(out var cracFirst) &&
-                                cracFirst is EvmInternalOperation evmOp &&
-                                evmOp.From == EvmRuntime.GetAlias(op.From) &&
-                                evmOp.To is string to)
-                            {
-                                #region debug
-                                // incoming static calls are pruned from the traces, so this is a mismatch
-                                if (evmOp.Trace.IsStaticCall())
-                                    throw new Exception("Unexpected static crac target");
-                                #endregion
-
-                                var crac = new CracOperation { GatewayCall = op, TargetCall = evmOp };
-                                dest.Operations.Add(crac);
-                                queue.Dequeue();
-
-                                var frameEntered = !EvmRuntime.IsCracCall(evmOp.To, evmOp.Trace);
-                                if (frameEntered)
-                                    cracQueue.Dequeue();
-
-                                // TODO: remove this cratch for balance forwarding when previewnet is reset
-                                foreach (var (bfQueue, bfDepth) in balanceForwards)
-                                    ProcessQueue(context, bfQueue, dest, queue, bfDepth, false, cracParent: crac);
-
-                                ProcessQueue(context, cracQueue, dest, queue, evmOp.Depth, frameEntered, cracParent: crac);
-                                break;
-                            }
-                        }
-                    }
-
-                    if (op.From == MichelsonRuntime.DepositOrigin)
-                    {
-                        if (context.DelayedOps.FirstOrDefault(x => x.Hash == op.Batch.Hash) is DelayedOperation delayedMop &&
-                            delayedMop is DelayedXtzDeposit or DelayedFaDeposit)
-                        {
-                            var feederCall = op;
-                            queue.Dequeue();
-
-                            var bridgeCalls = new List<MichelsonInternalOperation>(4);
-                            while (queue.TryPeek(out var next) && next is MichelsonInternalOperation bc && bc.Operation == op)
-                                bridgeCalls.Add((queue.Dequeue() as MichelsonInternalOperation)!);
-
-                            dest.Operations.Add(new MichelsonDeposit { Deposit = delayedMop, FeederCall = feederCall, BridgeCalls = bridgeCalls });
-                            break;
-                        }
-                        // nothing but kernel-synthesized deposit feeders can come from this address
-                        throw new Exception("Operation from the deposit origin doesn't match any delayed deposit");
-                    }
-
-                    dest.Operations.Add(op);
-                    queue.Dequeue();
-
-                    break;
-                case MichelsonInternalOperation op:
-                    if (op.From == MichelsonRuntime.CracOrigin && op.Content.RequiredString("kind") == "event")
-                    {
-                        var tag = op.Content.RequiredString("tag");
-                        if (tag == "cross_runtime_call_end")
-                        {
-                            queue.Dequeue();
-                            return;
-                        }
-
-                        if (tag == "cross_runtime_call" &&
-                            op.Operation.Content.Required("metadata").Required("operation_result").RequiredString("status") != "applied")
-                        {
-                            SkipCracFrame(queue, op.Operation);
-                            break;
-                        }
-
-                        throw new Exception("Unexpected crac event");
-                    }
-
-                    if (MichelsonRuntime.IsCracCall(op.To, op.Content))
-                    {
-                        if (parentQueue is null)
-                        {
-                            if (context.QueuesByCracId.TryGetValue($"{MichelsonRuntime.RuntimeId}-{op.Operation.Batch.Index}", out var cracQueue))
-                            {
-                                if (cracQueue.TryPeek(out var cracRoot) && cracRoot is EvmOperation)
-                                    cracQueue.Dequeue(); // skip root operation
-
-                                // TODO: remove this cratch for balance forwarding when previewnet is reset
-                                var balanceForwards = new List<(Queue<MetaContent> Queue, int Depth)>();
-
-                                while (cracQueue.TryPeek(out var aliasOrigOp) &&
-                                    aliasOrigOp is EvmInternalOperation aliasOrig &&
-                                    aliasOrig.From == EvmRuntime.TezosXCaller)
-                                {
-                                    cracQueue.Dequeue(); // skip aliases originations
-                                    DequeueBalanceForward(cracQueue, aliasOrig, balanceForwards);
-                                }
-
-                                if (cracQueue.TryPeek(out var cracFirst) &&
-                                    cracFirst is EvmInternalOperation evmOp &&
-                                    (evmOp.From == EvmRuntime.GetAlias(op.From) || MichelsonRuntime.GetAlias(evmOp.From) == op.From) &&
-                                    evmOp.To is string to)
-                                {
-                                    #region debug
-                                    // incoming static calls are pruned from the traces, so this is a mismatch
-                                    if (evmOp.Trace.IsStaticCall())
-                                        throw new Exception("Unexpected static crac target");
-                                    #endregion
-
-                                    var crac = new InternalCracOperation { GatewayCall = op, TargetCall = evmOp, CracParent = cracParent };
-                                    dest.Operations[^1].Internals.Add(crac);
-                                    queue.Dequeue();
-
-                                    var frameEntered = !EvmRuntime.IsCracCall(evmOp.To, evmOp.Trace);
-                                    if (frameEntered)
-                                        cracQueue.Dequeue();
-
-                                    // TODO: remove this cratch for balance forwarding when previewnet is reset
-                                    foreach (var (bfQueue, bfDepth) in balanceForwards)
-                                        ProcessQueue(context, bfQueue, dest, queue, bfDepth, false, cracParent: crac);
-
-                                    ProcessQueue(context, cracQueue, dest, queue, evmOp.Depth, frameEntered, cracParent: crac);
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // TODO: remove this cratch for balance forwarding when previewnet is reset
-                            var balanceForwards = new List<(Queue<MetaContent> Queue, int Depth)>();
-
-                            while (parentQueue.TryPeek(out var aliasOrigOp) &&
-                                aliasOrigOp is EvmInternalOperation aliasOrig &&
-                                aliasOrig.From == EvmRuntime.TezosXCaller)
-                            {
-                                parentQueue.Dequeue(); // skip aliases originations
-                                DequeueBalanceForward(parentQueue, aliasOrig, balanceForwards);
-                            }
-
-                            if (parentQueue.TryPeek(out var cracFirst) &&
-                                cracFirst is EvmInternalOperation evmOp &&
-                                (evmOp.From == EvmRuntime.GetAlias(op.From) || MichelsonRuntime.GetAlias(evmOp.From) == op.From) &&
-                                evmOp.To is string to)
-                            {
-                                #region debug
-                                // incoming static calls are pruned from the traces, so this is a mismatch
-                                if (evmOp.Trace.IsStaticCall())
-                                    throw new Exception("Unexpected static crac target");
-                                #endregion
-
-                                var crac = new InternalCracOperation { GatewayCall = op, TargetCall = evmOp, CracParent = cracParent };
-                                dest.Operations[^1].Internals.Add(crac);
-                                queue.Dequeue();
-
-                                var frameEntered = !EvmRuntime.IsCracCall(evmOp.To, evmOp.Trace);
-                                if (frameEntered)
-                                    parentQueue.Dequeue();
-
-                                // TODO: remove this cratch for balance forwarding when previewnet is reset
-                                foreach (var (bfQueue, bfDepth) in balanceForwards)
-                                    ProcessQueue(context, bfQueue, dest, null, bfDepth, false, cracParent: crac);
-
-                                ProcessQueue(context, parentQueue, dest, null, evmOp.Depth, frameEntered, cracParent: crac);
-                                break;
-                            }
-                        }
-                    }
-
-                    op.CracParent = cracParent;
-                    dest.Operations[^1].Internals.Add(op);
-                    queue.Dequeue();
-
-                    break;
-                default:
-                    throw new InvalidOperationException();
+                var bridgeCalls = content.Internals.Cast<MichelsonInternalOpContent>().Select(x => x.Op);
+                dest.Operations.Add(new MichelsonDeposit { Deposit = deposit, FeederCall = op, BridgeCalls = [.. bridgeCalls] });
+            }
+            else
+            {
+                dest.Operations.Add(op);
+                ReadMichelsonInternalContent(dest, content.Internals, null);
             }
         }
     }
 
-    // TODO: remove this cratch when kernel is fixed
-    void SkipCracFrame(Queue<MetaContent> queue, MichelsonOperation parent)
+    void ReadMichelsonCracContent(MetaBatch dest, MichelsonCracFrameContent cracContent, MetaContent cracOperation)
     {
-        var depth = 0;
-        while (queue.TryPeek(out var next) && next is MichelsonInternalOperation iop && iop.Operation == parent)
+        if (cracContent.EvmTarget is EvmInternalFrame target) // the target call is itself a call to the evm gateway
         {
-            queue.Dequeue();
+            var inner = new InternalCracOperation { GatewayCall = cracContent.TargetCall, TargetCall = target.Op, CracParent = cracOperation };
+            dest.Operations[^1].Internals.Add(inner);
+            ReadEvmCracFrame(dest, target, inner);
+        }
 
-            if (iop.From != MichelsonRuntime.CracOrigin || iop.Content.RequiredString("kind") != "event")
+        ReadMichelsonInternalContent(dest, cracContent.Internals, cracOperation);
+    }
+
+    void ReadMichelsonInternalContent(MetaBatch dest, List<MichelsonInternalContent> contents, MetaContent? cracParent)
+    {
+        foreach (var content in contents)
+        {
+            // crac frames are read along with the gateway calls that entered them, while the ones of a backtracked
+            // operation are skipped, as the kernel drops its evm side and there is nothing to match them with
+            // TODO: revisit once the kernel reworks the evm side of backtracked operations
+            if (content is not MichelsonInternalOpContent { Op: var op } opContent)
                 continue;
 
-            switch (iop.Content.RequiredString("tag"))
+            if (opContent.EvmTarget is EvmInternalFrame target)
             {
-                case "cross_runtime_call":
-                    depth++;
-                    break;
-                case "cross_runtime_call_end":
-                    if (--depth == 0) return;
-                    break;
-                default:
-                    throw new Exception("Unexpected crac event");
+                var operation = new InternalCracOperation { GatewayCall = op, TargetCall = target.Op, CracParent = cracParent };
+                dest.Operations[^1].Internals.Add(operation);
+                ReadEvmCracFrame(dest, target, operation);
+            }
+            else
+            {
+                op.CracParent = cracParent;
+                dest.Operations[^1].Internals.Add(op);
             }
         }
-        throw new Exception("Incomplete crac frame");
     }
 
-    // TODO: remove this cratch for balance forwarding when previewnet is reset
-    static void DequeueBalanceForward(Queue<MetaContent> queue, EvmInternalOperation aliasOrig, List<(Queue<MetaContent> Queue, int Depth)> dest)
+    void ReadEvmCracFrame(MetaBatch dest, EvmInternalFrame cracFrame, MetaContent operation)
     {
-        if (!queue.TryPeek(out var bfOp) || bfOp is not EvmInternalOperation bf || bf.Depth <= aliasOrig.Depth)
-            return;
-
-        var forwardQueue = new Queue<MetaContent>();
-        while (queue.TryPeek(out var next) && next is EvmInternalOperation op && op.Depth > aliasOrig.Depth)
-            forwardQueue.Enqueue(queue.Dequeue());
-
-        dest.Add((forwardQueue, bf.Depth));
+        if (cracFrame.MichelsonTarget != null) // the target is itself a call to the michelson gateway
+            ReadEvmFrame(dest, cracFrame, operation);
+        else
+            ReadEvmFrameSubcalls(dest, cracFrame, operation);
     }
+
+    void ReadEvmFrame(MetaBatch dest, EvmInternalFrame frame, MetaContent? cracParent)
+    {
+        var op = frame.Op;
+
+        if (frame.MichelsonTarget is MichelsonCracFrameContent crac)
+        {
+            var operation = new InternalCracOperation { GatewayCall = op, TargetCall = crac.TargetCall, CracParent = cracParent };
+            dest.Operations[^1].Internals.Add(operation);
+            ReadMichelsonCracContent(dest, crac, operation);
+        }
+        else
+        {
+            op.CracParent = cracParent;
+            dest.Operations[^1].Internals.Add(op);
+            ReadEvmFrameSubcalls(dest, frame, cracParent);
+        }
+    }
+
+    void ReadEvmFrameSubcalls(MetaBatch dest, EvmFrame frame, MetaContent? cracParent)
+    {
+        foreach (var call in frame.Calls)
+            ReadEvmFrame(dest, call, cracParent);
+    }
+
+    static IEnumerable<EvmInternalOperation> EnumerateSubcalls(EvmFrame frame)
+    {
+        foreach (var call in frame.Calls)
+        {
+            yield return call.Op;
+            foreach (var descendant in EnumerateSubcalls(call))
+                yield return descendant;
+        }
+    }
+
+    sealed class MetaBlockContext
+    {
+        public required List<DelayedOperation> DelayedOps { get; init; }
+        public required Dictionary<string, EvmOpContext> EvmOps { get; init; }
+        public required Dictionary<string, MichelsonOpContext> MichelsonOps { get; init; }
+    }
+
+    sealed class EvmOpContext
+    {
+        public required EvmOperation Operation { get; init; }
+        public required EvmRootFrame RootFrame { get; init; }
+
+        public List<MichelsonCracFrameContent>? MichelsonContents { get; set; }
+    }
+
+    sealed class MichelsonOpContext
+    {
+        public required MichelsonBatch Batch { get; init; }
+        public required List<MichelsonContent> Contents { get; init; }
+
+        public EvmRootFrame? EvmRoot { get; set; }
+    }
+
+    abstract class EvmFrame
+    {
+        public abstract string Hash { get; }
+        public abstract string From { get; }
+        public abstract string? To { get; }
+        public abstract JsonElement Trace { get; }
+        public abstract OperationStatus Status { get; }
+
+        public List<EvmInternalFrame> Calls { get; } = [];
+
+        // set for gateway calls
+        public MichelsonCracFrameContent? MichelsonTarget { get; set; }
+        public MichelsonCall? MichelsonCall { get; set; }
+        public bool IsMichelsonCallParsed { get; set; }
+    }
+
+    sealed class EvmRootFrame : EvmFrame
+    {
+        public required EvmOperation Op { get; init; }
+
+        public override string Hash => Op.Batch.Hash;
+        public override string From => Op.From;
+        public override string? To => Op.To;
+        public override JsonElement Trace => Op.Trace;
+        public override OperationStatus Status => Op.Trace.TraceStatus();
+    }
+
+    sealed class EvmInternalFrame : EvmFrame
+    {
+        public required EvmInternalOperation Op { get; init; }
+
+        public override string Hash => Op.Operation.Batch.Hash;
+        public override string From => Op.From;
+        public override string? To => Op.To;
+        public override JsonElement Trace => Op.Trace;
+        public override OperationStatus Status => Op.Status;
+    }
+
+    sealed class MichelsonContent
+    {
+        public required MichelsonOperation Op { get; init; }
+        public required List<MichelsonInternalContent> Internals { get; init; }
+
+        // set for gateway calls
+        public EvmInternalFrame? EvmTarget { get; set; }
+    }
+
+    abstract class MichelsonInternalContent;
+
+    sealed class MichelsonInternalOpContent : MichelsonInternalContent
+    {
+        public required MichelsonInternalOperation Op { get; init; }
+
+        // set for gateway calls
+        public EvmInternalFrame? EvmTarget { get; set; }
+    }
+
+    sealed class MichelsonCracFrameContent : MichelsonInternalContent
+    {
+        public required MichelsonInternalOperation Begin { get; init; }
+        public required MichelsonInternalOperation TargetCall { get; init; }
+        public required List<MichelsonInternalContent> Internals { get; init; }
+        public required bool HasFailure { get; init; }
+
+        // set for gateway calls
+        public EvmInternalFrame? EvmTarget { get; set; }
+    }
+
+    // the call to the michelson runtime made by a call to the michelson gateway
+    sealed record MichelsonCall(string Address, string Entrypoint, BigInteger Amount);
 }

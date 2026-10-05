@@ -8,7 +8,7 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     protected override BlueprintChunk ParseChunk(byte[] payload)
     {

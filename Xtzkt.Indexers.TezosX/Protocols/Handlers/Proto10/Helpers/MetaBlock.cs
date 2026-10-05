@@ -1,14 +1,18 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using Blake2Fast;
 using Xtzkt.Data.Models.Operations.Abstract;
+using Xtzkt.Data.Utils;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
 using Xtzkt.Indexers.TezosX.Protocols.Models;
 using Xtzkt.Indexers.TezosX.Utils;
+using Xtzkt.Utils.Crypto;
+using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     public override async Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> rawBlueprintTask)
     {
@@ -35,9 +39,15 @@ partial class ProtoHelpers
         if (michelsonBlock != null && michelsonBlock.Value.Required("header").RequiredDateTime("timestamp") != blueprint.Timestamp)
             throw new Exception("Inconsistent michlson inputs");
 
-        var _queuesByHash = new Dictionary<string, Queue<MetaContent>>();
-        var _queuesByCracId = new Dictionary<string, Queue<MetaContent>>();
+        var michelsonBatches = michelsonBlock?
+            .RequiredArray("operations", 4)[3]
+            .EnumerateArray()
+            .ToList()
+            ?? [];
 
+        HashSet<string>? syntheticHashes = null;
+
+        var evmOps = new Dictionary<string, EvmOpContext>();
         foreach (var tx in evmBlock.RequiredArray("transactions").EnumerateArray())
         {
             var hash = tx.RequiredString("hash");
@@ -50,64 +60,54 @@ partial class ProtoHelpers
             };
             var op = GetEvmOperation(batch, tx, receipt, trace);
 
-            var queue = new Queue<MetaContent>();
-            queue.Enqueue(op);
-            foreach (var internalOp in GetEvmInternalOperations(op))
-                queue.Enqueue(internalOp);
+            var isSynthetic = op.From == op.To &&
+                (syntheticHashes ??= [.. michelsonBatches.Select(x => GetEvmSyntheticHash(x.RequiredString("hash")))]).Contains(hash);
 
-            if (IsEvmCrac(op, out var cracId))
-                _queuesByCracId.Add(cracId, queue);
-            else
-                _queuesByHash.Add(batch.Hash, queue);
+            evmOps.Add(hash, new EvmOpContext
+            {
+                Operation = op,
+                RootFrame = GetEvmRootFrame(op, GetEvmInternalOperations(op, isSynthetic)),
+            });
         }
 
-        var michelsonBatches = michelsonBlock?
-            .RequiredArray("operations", 4)[3]
-            .EnumerateArray()
-            .ToList()
-            ?? [];
-
-        var index = 0;
+        var michelsonOpsList = new List<MichelsonOpContext>(michelsonBatches.Count);
         foreach (var opg in michelsonBatches)
         {
-            var batch = new MichelsonBatch
+            var batch = new MichelsonBatch { Hash = opg.RequiredString("hash") };
+
+            michelsonOpsList.Add(new MichelsonOpContext
             {
-                Index = index++,
-                Hash = opg.RequiredString("hash"),
-            };
-            var ops = GetMichelsonOperations(batch, opg);
+                Batch = batch,
+                Contents = [.. GetMichelsonOperations(batch, opg).Select(op => new MichelsonContent
+                {
+                    Op = op,
+                    Internals = GetMichelsonInternalContents(GetMichelsonInternalOperations(op)),
+                })],
+            });
+        }
 
-            var queue = new Queue<MetaContent>();
+        var michelsonOps = PairOpContexts(evmOps, michelsonOpsList);
 
-            queue.Enqueue(ops[0]);
-            var iops = GetMichelsonInternalOperations(ops[0]);
-            foreach (var internalOp in iops)
-                queue.Enqueue(internalOp);
+        var context = new MetaBlockContext
+        {
+            DelayedOps = blueprint.DelayedTransactions,
+            EvmOps = evmOps,
+            MichelsonOps = michelsonOps,
+        };
 
-            foreach (var op in ops.Skip(1))
-            {
-                queue.Enqueue(op);
-                foreach (var internalOp in GetMichelsonInternalOperations(op))
-                    queue.Enqueue(internalOp);
-            }
+        if (michelsonBlock != null)
+        {
+            foreach (var op in context.EvmOps.Values)
+                MatchEvmOp(op);
 
-            if (IsMichelsonCrac(ops[0], iops, out var cracId))
-                _queuesByCracId.Add(cracId, queue);
-            else
-                _queuesByHash.Add(batch.Hash, queue);
+            foreach (var op in context.MichelsonOps.Values)
+                MatchMichelsonOp(op);
         }
 
         var batches = new List<MetaBatch>();
-        var context = new MetaContext
-        {
-            DelayedOps = blueprint.DelayedTransactions,
-            QueuesByHash = _queuesByHash,
-            QueuesByCracId = _queuesByCracId,
-        };
-
         foreach (var hash in blueprint.DelayedTransactions.Select(x => x.Hash))
         {
-            if (TryReadOperation(context, hash, true) is not MetaBatch batch)
+            if (ReadOperation(context, hash, true) is not MetaBatch batch)
             {
                 Logger.LogWarning("Operation {hash} was dropped from block {level}", hash, level);
                 continue;
@@ -121,7 +121,7 @@ partial class ProtoHelpers
 
         foreach (var hash in blueprint.Transactions)
         {
-            if (TryReadOperation(context, hash, false) is not MetaBatch batch)
+            if (ReadOperation(context, hash, false) is not MetaBatch batch)
             {
                 Logger.LogWarning("Operation {hash} was dropped from block {level}", hash, level);
                 continue;
@@ -130,11 +130,8 @@ partial class ProtoHelpers
             batches.Add(batch);
         }
 
-        if (_queuesByHash.Values.Any(x => x.Count != 0))
+        if (context.EvmOps.Count != 0 || context.MichelsonOps.Count != 0)
             throw new Exception("Not all operations were consumed");
-
-        if (_queuesByCracId.Values.Any(x => x.Count != 0))
-            throw new Exception("Not all crac internals were consumed");
 
         return new MetaBlock
         {
@@ -183,7 +180,12 @@ partial class ProtoHelpers
 
     protected override List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op)
     {
-        return [.. EnumerateTraces(op.Trace, IsEvmCrac(op, out _)).Skip(1).Select(x => new EvmInternalOperation
+        return GetEvmInternalOperations(op, IsEvmCrac(op, out _));
+    }
+
+    List<EvmInternalOperation> GetEvmInternalOperations(EvmOperation op, bool isEvmCrac)
+    {
+        return [.. EnumerateTraces(op.Trace, isEvmCrac).Skip(1).Select(x => new EvmInternalOperation
         {
             Operation = op,
             Depth = x.Depth,
@@ -270,21 +272,177 @@ partial class ProtoHelpers
         public required OperationStatus? StaticRootStatus { get; init; }
     }
 
-    protected bool IsMichelsonCrac(MichelsonOperation op, List<MichelsonInternalOperation> iops, [NotNullWhen(true)] out string? cracId)
+    static EvmRootFrame GetEvmRootFrame(EvmOperation op, List<EvmInternalOperation> internals)
     {
-        if (iops.Count != 0 && op.From == MichelsonRuntime.NullAddress)
+        var root = new EvmRootFrame { Op = op };
+        var path = new List<EvmFrame> { root };
+        foreach (var iop in internals)
         {
-            var iop = iops[0];
-            if (iop.From == MichelsonRuntime.CracOrigin &&
-                iop.Content.RequiredString("kind") == "event" &&
-                iop.Content.RequiredString("tag") == "cross_runtime_call")
+            if (iop.Depth < 1 || iop.Depth > path.Count)
+                throw new Exception("Invalid call trace");
+
+            path.RemoveRange(iop.Depth, path.Count - iop.Depth);
+            var frame = new EvmInternalFrame { Op = iop };
+            path[^1].Calls.Add(frame);
+            path.Add(frame);
+        }
+        return root;
+    }
+
+    const string CracBeginTag = "cross_runtime_call";
+    const string CracEndTag = "cross_runtime_call_end";
+
+    List<MichelsonInternalContent> GetMichelsonInternalContents(List<MichelsonInternalOperation> iops)
+    {
+        var pos = 0;
+        var items = GetMichelsonInternalContents(iops, ref pos);
+        if (pos != iops.Count)
+            throw new Exception("Unexpected crac event");
+        return items;
+    }
+
+    List<MichelsonInternalContent> GetMichelsonInternalContents(List<MichelsonInternalOperation> iops, ref int pos)
+    {
+        var items = new List<MichelsonInternalContent>();
+        while (pos < iops.Count)
+        {
+            var iop = iops[pos];
+            switch (GetCracMarker(iop))
             {
-                cracId = iop.Content.Required("payload").RequiredString("string");
-                return true;
+                case CracBeginTag:
+                    items.Add(GetMichelsonCracContent(iops, ref pos));
+                    break;
+                case CracEndTag:
+                    return items;
+                default:
+                    items.Add(new MichelsonInternalOpContent { Op = iop });
+                    pos++;
+                    break;
             }
         }
-        cracId = null;
-        return false;
+        return items;
+    }
+
+    MichelsonCracFrameContent GetMichelsonCracContent(List<MichelsonInternalOperation> iops, ref int pos)
+    {
+        // skip crac begin event
+        var begin = iops[pos++];
+
+        // skip alias originations
+        while (pos < iops.Count &&
+            iops[pos].Content.RequiredString("kind") == "origination" &&
+            iops[pos].From == MichelsonRuntime.NullAddress)
+            pos++;
+
+        if (pos == iops.Count ||
+            iops[pos].Content.RequiredString("kind") != "transaction" ||
+            iops[pos].To == null)
+            throw new Exception("Crac frame target call missed");
+
+        // take target call
+        var targetCall = iops[pos++];
+
+        // take internal ops
+        var items = GetMichelsonInternalContents(iops, ref pos);
+
+        // skip crac end event
+        if (pos == iops.Count || GetCracMarker(iops[pos++]) != CracEndTag)
+            throw new Exception("Incomplete crac frame");
+
+        return new MichelsonCracFrameContent
+        {
+            Begin = begin,
+            TargetCall = targetCall,
+            Internals = items,
+            HasFailure = GetStatus(targetCall) == OperationStatus.Failed ||
+                items.Any(x => x is MichelsonInternalOpContent { Op: var op } && GetStatus(op) == OperationStatus.Failed),
+        };
+    }
+
+    string? GetCracMarker(MichelsonInternalOperation iop)
+    {
+        if (iop.From == MichelsonRuntime.CracOrigin && iop.Content.RequiredString("kind") == "event")
+        {
+            var tag = iop.Content.OptionalString("tag");
+            if (tag is CracBeginTag or CracEndTag)
+                return tag;
+        }
+        return null;
+    }
+
+    static string GetCracId(MichelsonInternalOperation marker)
+    {
+        return marker.Content.Required("payload").RequiredString("string");
+    }
+
+    Dictionary<string, MichelsonOpContext> PairOpContexts(Dictionary<string, EvmOpContext> evmOps, List<MichelsonOpContext> michelsonOpsList)
+    {
+        var michelsonOps = michelsonOpsList.ToDictionary(x => x.Batch.Hash);
+
+        var anyFromNullAddress = michelsonOpsList.Any(x => x.Contents.Any(y => y.Op.From == MichelsonRuntime.NullAddress));
+        foreach (var evmOp in evmOps.Values)
+        {
+            if (!anyFromNullAddress ||
+                !michelsonOps.Remove(GetMichelsonSyntheticHash(evmOp.Operation.Batch.Hash), out var synthetic))
+                continue;
+
+            if (synthetic.Contents is not [var content] ||
+                content.Op.From != MichelsonRuntime.NullAddress ||
+                content.Internals.Any(x => x is not MichelsonCracFrameContent))
+                throw new Exception($"Invalid synthetic operation {synthetic.Batch.Hash}");
+
+            #region debug
+            var cracId = $"{EvmRuntime.RuntimeId}-{evmOp.Operation.Batch.Index}";
+            if (content.Internals.Cast<MichelsonCracFrameContent>().Any(x => GetCracId(x.Begin) != cracId))
+                throw new Exception($"Unexpected crac id in synthetic operation {synthetic.Batch.Hash}");
+            #endregion
+
+            evmOp.MichelsonContents = [.. content.Internals.Cast<MichelsonCracFrameContent>()];
+        }
+
+        var nativeIndex = 0;
+        var anySelfAddressed = evmOps.Values.Any(x => x.Operation.From == x.Operation.To);
+        foreach (var michelsonOp in michelsonOpsList)
+        {
+            if (!michelsonOps.ContainsKey(michelsonOp.Batch.Hash))
+                continue;
+
+            var index = nativeIndex++;
+
+            if (!anySelfAddressed ||
+                !evmOps.Remove(GetEvmSyntheticHash(michelsonOp.Batch.Hash), out var synthetic))
+                continue;
+
+            if (synthetic.Operation.From != synthetic.Operation.To)
+                throw new Exception($"Invalid synthetic transaction {synthetic.Operation.Batch.Hash}");
+
+            #region debug
+            if (IsEvmCrac(synthetic.Operation, out var cracId) && cracId != $"{MichelsonRuntime.RuntimeId}-{index}")
+                throw new Exception($"Unexpected crac id in synthetic transaction {synthetic.Operation.Batch.Hash}");
+            #endregion
+
+            michelsonOp.EvmRoot = synthetic.RootFrame;
+        }
+
+        foreach (var michelsonOp in michelsonOps.Values)
+            if (michelsonOp.Contents is [{ Internals: [MichelsonCracFrameContent, ..] } content] && content.Op.From == MichelsonRuntime.NullAddress)
+                throw new Exception($"Synthetic operation {michelsonOp.Batch.Hash} has no pair");
+
+        foreach (var evmOp in evmOps.Values)
+            if (IsEvmCrac(evmOp.Operation, out _))
+                throw new Exception($"Synthetic operation {evmOp.Operation.Batch.Hash} has no pair");
+
+        return michelsonOps;
+    }
+
+    static string GetMichelsonSyntheticHash(string evmTransactionHash)
+    {
+        return Hashes.FormatMichelsonOperationHash(Blake2b.ComputeHash(32, [.. "michelson"u8, .. Hex.GetBytes(evmTransactionHash)]));
+    }
+
+    static string GetEvmSyntheticHash(string michelsonOperationHash)
+    {
+        return Keccak256.GetHash([.. "evm"u8, .. Hashes.ParseMichelsonOperationHash(michelsonOperationHash)]);
     }
 
     protected static List<MichelsonOperation> GetMichelsonOperations(MichelsonBatch batch, JsonElement opg)

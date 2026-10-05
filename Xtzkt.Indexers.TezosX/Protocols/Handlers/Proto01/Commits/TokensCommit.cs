@@ -219,7 +219,7 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             if (fromBalance.Balance == BigInteger.Zero)
             {
-                from.ActiveTokensCount--;
+                from.ActiveTokensCount--; 
                 token.HoldersCount--;
             }
             if (toBalance.Balance == amount)

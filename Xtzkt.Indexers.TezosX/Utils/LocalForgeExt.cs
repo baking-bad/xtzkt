@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Netezos.Encoding;
 using Netezos.Forging;
 using Xtzkt.Indexers.Common.Extensions;
 
@@ -12,6 +11,6 @@ public static class LocalForgeExt
         if (el.ValueKind == JsonValueKind.Object && el.OptionalHexBytes("unparsed-binary") is byte[] bin)
             return bin.Length;
 
-        return LocalForge.ForgeArray(LocalForge.ForgeMicheline(Micheline.FromJson(el)!)).Length;
+        return LocalForge.ForgeArray(LocalForge.ForgeMicheline(Netezos.Encoding.Micheline.FromJson(el)!)).Length;
     }
 }

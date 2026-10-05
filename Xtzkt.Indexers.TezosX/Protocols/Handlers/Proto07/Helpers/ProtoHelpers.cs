@@ -2,7 +2,7 @@ using Xtzkt.Indexers.TezosX.Protocols.Models;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto07.Helpers;
 
-class ProtoHelpers(ProtocolHandler protocol) : Proto06.Helpers.ProtoHelpers(protocol)
+public class ProtoHelpers(ProtocolHandler protocol) : Proto06.Helpers.ProtoHelpers(protocol)
 {
     #region meta reader
     protected override string ExpectedDepositSender(DelayedOperation deposit)

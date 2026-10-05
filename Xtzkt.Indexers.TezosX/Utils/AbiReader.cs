@@ -19,25 +19,35 @@ namespace Xtzkt.Indexers.TezosX.Utils
 
         public string ReadString(int slot)
         {
+            return Utf8.GetString(ReadDynamic(slot));
+        }
+
+        public byte[] ReadBytes(int slot)
+        {
+            return ReadDynamic(slot).ToArray();
+        }
+
+        ReadOnlySpan<byte> ReadDynamic(int slot)
+        {
             var offset = ReadInt32BE(slot * 32);
             var length = ReadInt32BE(offset);
             offset += 32;
 
-            if (offset + length > _data.Length)
+            if (length > _data.Length - offset)
                 throw new FormatException("Out of bounds");
 
-            return Encoding.UTF8.GetString(_data.AsSpan(offset, length));
+            return _data.AsSpan(offset, length);
         }
 
         int ReadInt32BE(int pos)
         {
-            if (pos + 32 > _data.Length)
+            if (pos < 0 || pos > _data.Length - 32)
                 throw new FormatException("Out of bounds");
 
             var offset = 0;
             while (_data[pos + offset] == 0 && ++offset < 32) ;
 
-            if (offset < 28)
+            if (offset < 28 || offset == 28 && _data[pos + 28] >= 0x80)
                 throw new FormatException("Int32 out of bounds");
 
             int res = 0;

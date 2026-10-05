@@ -9,7 +9,7 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     public Task<JsonElement> GetRawBlueprint(int level)
     {

@@ -6,7 +6,7 @@ using Xtzkt.Indexers.TezosX.Utils.Abi;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
-partial class ProtoHelpers
+public partial class ProtoHelpers
 {
     #region evm address
     public virtual async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)

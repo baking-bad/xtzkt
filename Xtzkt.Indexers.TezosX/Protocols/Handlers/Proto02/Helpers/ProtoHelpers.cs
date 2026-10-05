@@ -11,7 +11,7 @@ using Xtzkt.Utils.Encoding;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto02.Helpers;
 
-class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(protocol)
+public class ProtoHelpers(ProtocolHandler protocol) : Proto01.Helpers.ProtoHelpers(protocol)
 {
     #region addresses
     public override async Task<XEvmAddress> GetOrCreateXEvmAddress(string hash)

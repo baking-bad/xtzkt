@@ -71,9 +71,6 @@ class EvmRuntime : Proto01.EvmRuntime
 
     public override bool IsCracCall(string? to, JsonElement trace)
     {
-        // TODO: figure out how to exclude crac calls that failed before reaching the other side
-        // to not consume others' crac calls
-
         if (to != MichelsonGateway || trace.OptionalString("input") is not string input)
             return false;
 
@@ -89,7 +86,7 @@ class EvmRuntime : Proto01.EvmRuntime
         {
             const int methodOffset = 2 + 8 + 3 * 64; // 0x + selector + 3 first args pointers
             return input.Length >= methodOffset + 64
-                && input.AsSpan(methodOffset, 64).TrimStart('0') is ['1']; // 0 = GET (read-only), 1 = POST (stateful)
+                && input.AsSpan(methodOffset + 62, 2) is "01"; // 0 = GET (read-only), 1 = POST (stateful)
         }
 
         return false;

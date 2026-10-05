@@ -7,7 +7,7 @@ using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto06.Helpers;
 
-class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(protocol)
+public class ProtoHelpers(ProtocolHandler protocol) : Proto05.Helpers.ProtoHelpers(protocol)
 {
     #region fees
     public override int GetBilledGas(int receiptGas, int gasLimit, OperationStatus status, JsonElement trace)
