@@ -11,9 +11,9 @@ public class AccountActivityFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?address=tz1...`, `?address.in=tz1...,0x...`.
+    /// Examples: `?address=123`, `?address.in=123,456`, `?address.hash=tz1...`, `?address.hash.in=tz1...,0x...`.
     /// </summary>
-    public required AddressHashEqParameter Address { get; set; }
+    public required AddressInfoEqParameter Address { get; set; }
 
     /// <summary>
     /// Comma-separated list of activity types to return. If not specified, most types are returned,

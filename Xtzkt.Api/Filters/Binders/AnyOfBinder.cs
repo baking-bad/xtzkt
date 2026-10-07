@@ -17,83 +17,138 @@ public class AnyOfBinder(AddressCache _addressCache) : IModelBinder
             return;
         }
 
-        var ss = key.Split(".", StringSplitOptions.RemoveEmptyEntries);
-        var (mode, skip) = ss[^1] switch
+        // anyof.field1.field2[.id|.hash][.eq|.in]
+        var ss = key.Split('.');
+        if (ss.Contains(""))
         {
-            "eq" => (3, 1),
-            "in" => (3, 1),
-            _ => (0, 0)
-        };
-        key = key[..^mode];
+            bindingContext.ModelState.TryAddModelError(key, "Invalid syntax of `anyof` parameter. Field names must not be empty.");
+            return;
+        }
 
-        var fields = ss.Skip(1).SkipLast(skip);
-        if (fields.Count() < 2)
+        var fields = ss.Skip(1).ToList();
+        if (fields.Count != 0 && fields[^1] is "eq" or "in")
+            fields.RemoveAt(fields.Count - 1);
+        if (fields.Count != 0 && fields[^1] is "id" or "hash")
+            fields.RemoveAt(fields.Count - 1);
+
+        key = $"{ss[0]}.{string.Join('.', fields)}";
+
+        if (fields.Count < 2)
         {
             bindingContext.ModelState.TryAddModelError(key, "Invalid syntax of `anyof` parameter. At least two fields must be specified, e.g. `anyof.field1.field2=value`.");
             return;
         }
 
-        var hasValue = false;
-
-        if (!bindingContext.TryGetAddressHashNull($"{key}", ref hasValue, out var value))
+        var hasIds = false;
+        if (!TryGetIds(bindingContext, $"{key}.id", ref hasIds, out var ids))
             return;
 
-        if (!bindingContext.TryGetAddressHashNull($"{key}.eq", ref hasValue, out var eq))
+        if (!hasIds && !TryGetIds(bindingContext, key, ref hasIds, out ids))
             return;
 
-        if (!bindingContext.TryGetAddressHashNullList($"{key}.in", ref hasValue, out var @in))
+        var hasHashes = false;
+        if (!TryGetHashes(bindingContext, $"{key}.hash", ref hasHashes, out var hashes))
             return;
 
-        if (!hasValue)
+        if (!hasIds && !hasHashes)
         {
             bindingContext.Result = ModelBindingResult.Success(null);
             return;
         }
 
-        var anyof = new AnyOfParameter { Fields = fields };
+        if (hasHashes)
+        {
+            var resolved = new HashSet<int>();
+
+            if (hashes!.Remove(AddressHashNullParameter.Null))
+                resolved.Add(Int32NullParameter.Null);
+
+            if (hashes.Count != 0)
+                foreach (var address in await _addressCache.GetAsync([.. hashes]))
+                    resolved.Add(address.Id);
+
+            if (hasIds)
+                ids!.IntersectWith(resolved);
+            else
+                ids = resolved;
+        }
+
+        bindingContext.Result = ModelBindingResult.Success(new AnyOfParameter
+        {
+            Fields = fields,
+            Eq = ids!.Count switch
+            {
+                0 => -1, // nothing matches
+                1 => ids.First(),
+                _ => null,
+            },
+            In = ids.Count > 1 ? [.. ids] : null,
+        });
+    }
+
+    static bool TryGetIds(ModelBindingContext bindingContext, string name, ref bool hasValue, out HashSet<int>? result)
+    {
+        result = null;
+
+        if (!bindingContext.TryGetInt32Null(name, ref hasValue, out var value))
+            return false;
+
+        if (!bindingContext.TryGetInt32Null($"{name}.eq", ref hasValue, out var eq))
+            return false;
+
+        if (!bindingContext.TryGetInt32NullList($"{name}.in", ref hasValue, out var @in))
+            return false;
+
+        if (!hasValue)
+            return true;
+
+        if ((value ?? eq) is int _eq)
+        {
+            if (@in != null && !@in.Contains(_eq))
+            {
+                bindingContext.ModelState.TryAddModelError($"{name}.in", "Conflicts with `.eq`.");
+                return false;
+            }
+            result = [_eq];
+        }
+        else
+        {
+            result = [.. @in!];
+        }
+
+        return true;
+    }
+
+    static bool TryGetHashes(ModelBindingContext bindingContext, string name, ref bool hasValue, out HashSet<string>? result)
+    {
+        result = null;
+
+        if (!bindingContext.TryGetAddressHashNull(name, ref hasValue, out var value))
+            return false;
+
+        if (!bindingContext.TryGetAddressHashNull($"{name}.eq", ref hasValue, out var eq))
+            return false;
+
+        if (!bindingContext.TryGetAddressHashNullList($"{name}.in", ref hasValue, out var @in))
+            return false;
+
+        if (!hasValue)
+            return true;
 
         if ((value ?? eq) is string _eq)
         {
-            if (@in != null)
+            if (@in != null && !@in.Contains(_eq))
             {
-                if (!@in.Contains(_eq))
-                {
-                    bindingContext.ModelState.TryAddModelError($"{key}.in", "Conflicts with `.eq`.");
-                    return;
-                }
-                @in = null;
+                bindingContext.ModelState.TryAddModelError($"{name}.in", "Conflicts with `.eq`.");
+                return false;
             }
-
-            if (_eq == AddressHashNullParameter.Null)
-            {
-                anyof.Eq = Int32NullParameter.Null;
-            }
-            else
-            {
-                var addresses = await _addressCache.GetAsync(_eq);
-                if (addresses.Count == 0) anyof.Eq = -1;
-                else if (addresses.Count == 1) anyof.Eq = addresses[0].Id;
-                else anyof.In = [.. addresses.Select(x => x.Id)];
-            }
+            result = [_eq];
         }
-        
-        if (@in is List<string> _in)
+        else
         {
-            if (_in.Contains(AddressHashNullParameter.Null))
-            {
-                var addresses = await _addressCache.GetAsync([.. _in.Where(x => x != AddressHashNullParameter.Null)]);
-                if (addresses.Count == 0) anyof.Eq = Int32NullParameter.Null;
-                else anyof.In = [.. addresses.Select(x => x.Id).Append(Int32NullParameter.Null)];
-            }
-            else
-            {
-                var addresses = await _addressCache.GetAsync(_in);
-                if (addresses.Count == 0) anyof.Eq = -1;
-                else if (addresses.Count == 1) anyof.Eq = addresses[0].Id;
-                else anyof.In = [.. addresses.Select(x => x.Id)];
-            }
+            result = [.. @in!];
         }
 
-        bindingContext.Result = ModelBindingResult.Success(anyof);
+        return true;
     }
 }

@@ -12,8 +12,11 @@ public class AnyOfParameter : INormalizable
     /// <summary>
     /// **Equal** filter mode (optional, i.e. `param.eq=123` is the same as `param=123`).
     /// Specify a value to get items where any of the specified fields is equal to the specified value.
+    /// The value is an internal address id (default, so `.id` may be omitted), or `null` to match items
+    /// where any of the fields is not set. To specify an address hash instead, use the `.hash` form,
+    /// which matches that hash on every chain it exists on and accepts `null` the same way.
     ///
-    /// Example: `?anyof.sender.target=tz1...`.
+    /// Examples: `?anyof.sender.target=123`, `?anyof.sender.target.hash=tz1...`.
     /// </summary>
     public int? Eq { get; set; }
 
@@ -21,7 +24,7 @@ public class AnyOfParameter : INormalizable
     /// **In list** (any of) filter mode.
     /// Specify a comma-separated list of values to get items where any of the specified fields is equal to one of the specified values.
     ///
-    /// Example: `?anyof.sender.target.in=tz1...,KT1...,null`.
+    /// Examples: `?anyof.sender.target.in=123,456,null`, `?anyof.sender.target.hash.in=tz1...,KT1...,null`.
     /// </summary>
     public List<int>? In { get; set; }
 

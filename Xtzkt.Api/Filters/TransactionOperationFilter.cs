@@ -13,7 +13,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.sender.target=tz1...`, `?anyof.sender.target.initiator=tz1...`.
+    /// Examples: `?anyof.sender.target=123`, `?anyof.sender.target.initiator.hash=tz1...`.
     /// </summary>
     public AnyOfParameter? Anyof { get; set; }
 

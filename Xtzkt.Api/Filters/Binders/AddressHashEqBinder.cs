@@ -11,6 +11,10 @@ public class AddressHashEqBinder : IModelBinder
         var param = bindingContext.ModelName;
         var hasValue = false;
 
+        if (bindingContext.ThrowUnsupportedMode($"{param}.ne") ||
+            bindingContext.ThrowUnsupportedMode($"{param}.ni"))
+            return Task.CompletedTask;
+
         if (!bindingContext.TryGetAddressHash($"{param}", ref hasValue, out var value))
             return Task.CompletedTask;
 

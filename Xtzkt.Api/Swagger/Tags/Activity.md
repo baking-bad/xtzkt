@@ -9,6 +9,8 @@ so an entire flow can be reconstructed from one request.
   explicitly via `types` if you need them.
 - Account activity matches the address in any role by default: sender, target, initiator, or just
   mentioned somewhere in the operation. Narrow it down with `roles`.
+- `address` in account activity takes internal address ids, and an id pins an address to one chain.
+  `address.hash` matches a hash on every chain it exists on, so ids are the way to pick exact addresses.
 - These endpoints page by `cursor` rather than `offset`, which isn't supported here, and accept
   `id` and `timestamp` as the only sort fields.
 

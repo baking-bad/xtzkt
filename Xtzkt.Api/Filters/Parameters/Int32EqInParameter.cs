@@ -5,24 +5,24 @@ using Xtzkt.Api.Filters.Binders;
 
 namespace Xtzkt.Api.Filters.Parameters;
 
-[ModelBinder(BinderType = typeof(AddressHashEqBinder))]
-public class AddressHashEqParameter : INormalizable
+[ModelBinder(BinderType = typeof(Int32EqInBinder))]
+public class Int32EqInParameter : INormalizable
 {
     /// <summary>
     /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
     /// Returns items where 'param' is equal to 'value'.
     ///
-    /// Example: `?address.hash=tz1...`.
+    /// Example: `?address=123`.
     /// </summary>
-    public string? Eq { get; set; }
+    public int? Eq { get; set; }
 
     /// <summary>
     /// **In list** mode.
     /// Returns items where 'param' is equal to any of comma-separated 'values'.
     ///
-    /// Example: `?address.hash.in=tz1...,KT1...`.
+    /// Example: `?address.in=123,456`.
     /// </summary>
-    public List<string>? In { get; set; }
+    public List<int>? In { get; set; }
 
     public string Normalize(string name)
     {

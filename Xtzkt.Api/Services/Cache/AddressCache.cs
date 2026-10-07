@@ -441,6 +441,39 @@ public class AddressCache
     #endregion
 
     #region resolvers
+    public async Task<List<Address>> ResolveAddresses(AddressInfoEqParameter p, List<Chain> chains)
+    {
+        var byId = p.Id == null ? null : await ResolveAddresses(p.Id, chains);
+        var byHash = p.Hash == null ? null : await ResolveAddresses(p.Hash, chains);
+
+        if (byId != null && byHash != null)
+        {
+            var ids = byHash.Select(x => x.Id).ToHashSet();
+            byId.RemoveAll(x => !ids.Contains(x.Id));
+            return byId;
+        }
+
+        return byId ?? byHash ?? [];
+    }
+
+    public async Task<List<Address>> ResolveAddresses(Int32EqInParameter p, List<Chain> chains)
+    {
+        if (chains.Count == 0)
+            return [];
+
+        var minId = chains.Min(x => IdLayout.MinId32(x.Id));
+        var maxId = chains.Max(x => IdLayout.MaxId32(x.Id));
+
+        List<int> ids = p.Eq is int eq ? [eq] : p.In ?? [];
+        ids = [.. ids.Where(x => x >= minId && x <= maxId).Distinct()];
+        if (ids.Count == 0)
+            return [];
+
+        var addresses = await GetAsync(ids);
+        addresses.RemoveAll(x => !chains.Any(c => c.Id == x.ChainId));
+        return addresses;
+    }
+
     public async Task<List<Address>> ResolveAddresses(AddressHashEqParameter p, List<Chain> chains)
     {
         var res = new List<Address>();
@@ -452,7 +485,7 @@ public class AddressCache
         }
         else if (p.In?.Count > 0)
         {
-            var addresses = await GetAsync(chains, p.In);
+            var addresses = await GetAsync(chains, [.. p.In.Distinct()]);
             res.AddRange(addresses);
         }
 

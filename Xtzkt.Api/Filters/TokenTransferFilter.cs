@@ -59,7 +59,7 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.from.to=tz1...`, `?anyof.from.to.in=tz1...,0x...`.
+    /// Examples: `?anyof.from.to=123`, `?anyof.from.to.hash.in=tz1...,0x...`.
     /// </summary>
     public AnyOfParameter? Anyof { get; set; }
 

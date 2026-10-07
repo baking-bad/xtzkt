@@ -59,7 +59,7 @@ public class BridgeTicketTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.from.to=0x...`, `?anyof.from.to.in=0x...,0x...`.
+    /// Examples: `?anyof.from.to=123`, `?anyof.from.to.hash.in=0x...,0x...`.
     /// </summary>
     public AnyOfParameter? Anyof { get; set; }
 

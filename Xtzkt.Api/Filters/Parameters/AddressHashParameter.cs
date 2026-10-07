@@ -12,7 +12,7 @@ public class AddressHashParameter : INormalizable
     /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
     /// Returns items where 'param' is equal to 'value'.
     ///
-    /// Example: `?type=l1_baker`.
+    /// Example: `?address.hash=tz1...`.
     /// </summary>
     public string? Eq { get; set; }
 
@@ -20,7 +20,7 @@ public class AddressHashParameter : INormalizable
     /// **Not equal** mode.
     /// Returns items where 'param' is not equal to 'value'.
     ///
-    /// Example: `?type.ne=l1_ghost`.
+    /// Example: `?address.hash.ne=KT1...`.
     /// </summary>
     public string? Ne { get; set; }
 
@@ -28,7 +28,7 @@ public class AddressHashParameter : INormalizable
     /// **In list** mode.
     /// Returns items where 'param' is equal to any of comma-separated 'values'.
     ///
-    /// Example: `?type.in=l1_user,l1_baker`.
+    /// Example: `?address.hash.in=tz1...,0x...`.
     /// </summary>
     public List<string>? In { get; set; }
 
@@ -36,7 +36,7 @@ public class AddressHashParameter : INormalizable
     /// **Not in list** mode.
     /// Returns items where 'param' is not equal to any of comma-separated 'values'.
     ///
-    /// Example: `?type.ni=l1_ghost,x_michelson_ghost`.
+    /// Example: `?address.hash.ni=tz1...,KT1...`.
     /// </summary>
     public List<string>? Ni { get; set; }
 

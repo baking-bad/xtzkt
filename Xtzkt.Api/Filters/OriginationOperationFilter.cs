@@ -13,7 +13,7 @@ public class OriginationOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.sender.contract=tz1...`, `?anyof.sender.initiator=tz1...`.
+    /// Examples: `?anyof.sender.contract=123`, `?anyof.sender.initiator.hash=tz1...`.
     /// </summary>
     public AnyOfParameter? Anyof { get; set; }
 

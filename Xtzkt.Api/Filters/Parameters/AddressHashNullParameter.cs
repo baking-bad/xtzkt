@@ -17,7 +17,7 @@ public class AddressHashNullParameter : INormalizable
     /// **Equal** mode (default mode, so `param.eq=value` is the same as `param=value`).
     /// Returns items where 'param' is equal to 'value'. Use `null` to get items where 'param' is not set.
     ///
-    /// Example: `?target=KT1...` or `?target=null`.
+    /// Example: `?from.hash=tz1...` or `?from.hash=null`.
     /// </summary>
     public string? Eq { get; set; }
 
@@ -25,7 +25,7 @@ public class AddressHashNullParameter : INormalizable
     /// **Not equal** mode.
     /// Returns items where 'param' is not equal to 'value'. Use `null` to get items where 'param' is set.
     ///
-    /// Example: `?target.ne=KT1...` or `?target.ne=null`.
+    /// Example: `?from.hash.ne=tz1...` or `?from.hash.ne=null`.
     /// </summary>
     public string? Ne { get; set; }
 
@@ -33,7 +33,7 @@ public class AddressHashNullParameter : INormalizable
     /// **In list** mode.
     /// Returns items where 'param' is equal to any of comma-separated 'values'. Use `null` to include items where 'param' is not set.
     ///
-    /// Example: `?target.in=KT1...,tz1...` or `?target.in=KT1...,null`.
+    /// Example: `?from.hash.in=tz1...,KT1...` or `?from.hash.in=tz1...,null`.
     /// </summary>
     public List<string>? In { get; set; }
 
@@ -41,7 +41,7 @@ public class AddressHashNullParameter : INormalizable
     /// **Not in list** mode.
     /// Returns items where 'param' is not equal to any of comma-separated 'values'. Use `null` to exclude items where 'param' is not set.
     ///
-    /// Example: `?target.ni=KT1...,tz1...` or `?target.ni=KT1...,null`.
+    /// Example: `?from.hash.ni=tz1...,KT1...` or `?from.hash.ni=tz1...,null`.
     /// </summary>
     public List<string>? Ni { get; set; }
 

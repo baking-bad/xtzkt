@@ -13,7 +13,7 @@ public class TransferTicketOperationFilter : ManagerOperationFilter
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.sender.target=tz1...`, `?anyof.sender.target.ticketer=KT1...`.
+    /// Examples: `?anyof.sender.target=123`, `?anyof.sender.target.ticketer.hash=KT1...`.
     /// </summary>
     public AnyOfParameter? Anyof { get; set; }
 
