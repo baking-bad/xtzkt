@@ -68,13 +68,13 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             {
                 var to = await GetCachedOrCreateXAddress(tr.To);
                 var toBalance = GetOrCreateEvmTokenBalance(op, token, to);
-                MintOrBurnEvmTokens(op, token, to, toBalance, tr.Amount);
+                MintOrBurnEvmTokens(op, token, to, toBalance, tr.Amount, mint: true);
             }
             else if (isBurn)
             {
                 var from = await GetCachedOrCreateXAddress(tr.From);
                 var fromBalance = GetOrCreateEvmTokenBalance(op, token, from);
-                MintOrBurnEvmTokens(op, token, from, fromBalance, -tr.Amount);
+                MintOrBurnEvmTokens(op, token, from, fromBalance, tr.Amount, mint: false);
             }
             else
             {
@@ -219,13 +219,23 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             if (fromBalance.Balance == BigInteger.Zero)
             {
-                from.ActiveTokensCount--; 
+                from.ActiveTokensCount--;
                 token.HoldersCount--;
+            }
+            if (fromBalance.Balance == -amount)
+            {
+                from.ActiveTokensCount++;
+                token.HoldersCount++;
             }
             if (toBalance.Balance == amount)
             {
                 to.ActiveTokensCount++;
                 token.HoldersCount++;
+            }
+            if (toBalance.Balance == BigInteger.Zero)
+            {
+                to.ActiveTokensCount--;
+                token.HoldersCount--;
             }
             if (token.Tags.HasFlag(TokenTags.Erc721))
             {
@@ -257,8 +267,10 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
     void MintOrBurnEvmTokens(ISourceOperation op, Token token,
         XAddress address, TokenBalance balance,
-        BigInteger diff)
+        BigInteger amount, bool mint)
     {
+        var diff = mint ? amount : -amount;
+
         IncrementOpTransfers(op);
 
         Db.TryAttach(address);
@@ -273,31 +285,34 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         balance.LastTimestamp = op.Timestamp;
 
         token.TransfersCount++;
-        if (balance.Balance == BigInteger.Zero)
+        if (amount != BigInteger.Zero)
         {
-            address.ActiveTokensCount--;
-            token.HoldersCount--;
-
-            if (token.Tags.HasFlag(TokenTags.Erc721))
+            if (balance.Balance == BigInteger.Zero)
             {
-                token.OwnerId = null;
-                token.OwnerEntrypoint = null;
-            }
-        }
-        if (balance.Balance == diff)
-        {
-            address.ActiveTokensCount++;
-            token.HoldersCount++;
+                address.ActiveTokensCount--;
+                token.HoldersCount--;
 
-            if (token.Tags.HasFlag(TokenTags.Erc721))
-            {
-                token.OwnerId = address.Id;
-                token.OwnerEntrypoint = balance.Entrypoint;
+                if (token.Tags.HasFlag(TokenTags.Erc721))
+                {
+                    token.OwnerId = null;
+                    token.OwnerEntrypoint = null;
+                }
             }
+            if (balance.Balance == diff)
+            {
+                address.ActiveTokensCount++;
+                token.HoldersCount++;
+
+                if (token.Tags.HasFlag(TokenTags.Erc721))
+                {
+                    token.OwnerId = address.Id;
+                    token.OwnerEntrypoint = balance.Entrypoint;
+                }
+            }
+            if (mint) token.TotalMinted += amount;
+            else token.TotalBurned += amount;
+            token.TotalSupply += diff;
         }
-        if (diff > 0) token.TotalMinted += diff;
-        else token.TotalBurned += -diff;
-        token.TotalSupply += diff;
 
         var state = Cache.Chain.Get();
         state.TokenTransfersCount++;
@@ -306,10 +321,10 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         {
             Id = Cache.Chain.NextSubId(op),
             ChainId = op.ChainId,
-            Amount = diff > BigInteger.Zero ? diff : -diff,
-            FromId = diff < BigInteger.Zero ? address.Id : null,
+            Amount = amount,
+            FromId = mint ? null : address.Id,
             FromEntrypoint = null,
-            ToId = diff > BigInteger.Zero ? address.Id : null,
+            ToId = mint ? address.Id : null,
             ToEntrypoint = null,
             Level = op.Level,
             Timestamp = op.Timestamp,
@@ -441,10 +456,20 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                         from.ActiveTokensCount++;
                         token.HoldersCount++;
                     }
+                    if (fromBalance.Balance == BigInteger.Zero)
+                    {
+                        from.ActiveTokensCount--;
+                        token.HoldersCount--;
+                    }
                     if (toBalance.Balance == BigInteger.Zero)
                     {
                         to.ActiveTokensCount--;
                         token.HoldersCount--;
+                    }
+                    if (toBalance.Balance == -transfer.Amount)
+                    {
+                        to.ActiveTokensCount++;
+                        token.HoldersCount++;
                     }
 
                     if (isNft)
@@ -481,13 +506,18 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                 token.TransfersCount--;
                 if (transfer.Amount != BigInteger.Zero)
                 {
+                    if (toBalance.Balance == -transfer.Amount)
+                    {
+                        to.ActiveTokensCount++;
+                        token.HoldersCount++;
+                    }
                     if (toBalance.Balance == BigInteger.Zero)
                     {
                         to.ActiveTokensCount--;
                         token.HoldersCount--;
                     }
 
-                    if (isNft)
+                    if (isNft && (toBalance.Balance == -transfer.Amount || toBalance.Balance == BigInteger.Zero))
                     {
                         token.OwnerId = null;
                         token.OwnerEntrypoint = null;
@@ -529,11 +559,24 @@ class TokensCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
                         from.ActiveTokensCount++;
                         token.HoldersCount++;
                     }
+                    if (fromBalance.Balance == BigInteger.Zero)
+                    {
+                        from.ActiveTokensCount--;
+                        token.HoldersCount--;
+                    }
 
                     if (isNft)
                     {
-                        token.OwnerId = from.Id;
-                        token.OwnerEntrypoint = fromBalance.Entrypoint;
+                        if (fromBalance.Balance == transfer.Amount)
+                        {
+                            token.OwnerId = from.Id;
+                            token.OwnerEntrypoint = fromBalance.Entrypoint;
+                        }
+                        else if (fromBalance.Balance == BigInteger.Zero)
+                        {
+                            token.OwnerId = null;
+                            token.OwnerEntrypoint = null;
+                        }
                     }
 
                     token.TotalBurned -= transfer.Amount;

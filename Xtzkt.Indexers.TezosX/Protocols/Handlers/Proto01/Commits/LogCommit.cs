@@ -104,6 +104,9 @@ class LogCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             {
                 if (Erc.TryParseTransfers(topics, data, out var tokenType, out var tokenTransfers))
                 {
+                    if (op is not (TransactionOperation or OriginationOperation))
+                        throw new Exception("Only transactions and originations can emit token transfers");
+
                     foreach (var (tokenId, from, to, amount) in tokenTransfers)
                         Context.EvmTokenTransfers.Add(new(contract, tokenId, tokenType, from, to, amount, (op as ISourceOperation)!));
                 }

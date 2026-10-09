@@ -747,10 +747,20 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     from.ActiveTokensCount--;
                     token.HoldersCount--;
                 }
+                if (fromBalance.Balance == -amount)
+                {
+                    from.ActiveTokensCount++;
+                    token.HoldersCount++;
+                }
                 if (toBalance.Balance == amount)
                 {
                     to.ActiveTokensCount++;
                     token.HoldersCount++;
+                }
+                if (toBalance.Balance == BigInteger.Zero)
+                {
+                    to.ActiveTokensCount--;
+                    token.HoldersCount--;
                 }
                 if (contract.Tags.HasFlag(L1ContractTags.Nft))
                 {
@@ -946,10 +956,20 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                             from.ActiveTokensCount++;
                             token.HoldersCount++;
                         }
+                        if (fromBalance.Balance == BigInteger.Zero)
+                        {
+                            from.ActiveTokensCount--;
+                            token.HoldersCount--;
+                        }
                         if (toBalance.Balance == BigInteger.Zero)
                         {
                             to.ActiveTokensCount--;
                             token.HoldersCount--;
+                        }
+                        if (toBalance.Balance == -transfer.Amount)
+                        {
+                            to.ActiveTokensCount++;
+                            token.HoldersCount++;
                         }
 
                         if (contract.Tags.HasFlag(L1ContractTags.Nft))
@@ -983,13 +1003,18 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                     token.TransfersCount--;
                     if (transfer.Amount != BigInteger.Zero)
                     {
+                        if (toBalance.Balance == -transfer.Amount)
+                        {
+                            to.ActiveTokensCount++;
+                            token.HoldersCount++;
+                        }
                         if (toBalance.Balance == BigInteger.Zero)
                         {
                             to.ActiveTokensCount--;
                             token.HoldersCount--;
                         }
 
-                        if (contract.Tags.HasFlag(L1ContractTags.Nft))
+                        if (contract.Tags.HasFlag(L1ContractTags.Nft) && (toBalance.Balance == -transfer.Amount || toBalance.Balance == BigInteger.Zero))
                         {
                             token.OwnerId = null;
                             token.OwnerEntrypoint = null;
@@ -1028,11 +1053,24 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
                             from.ActiveTokensCount++;
                             token.HoldersCount++;
                         }
+                        if (fromBalance.Balance == BigInteger.Zero)
+                        {
+                            from.ActiveTokensCount--;
+                            token.HoldersCount--;
+                        }
 
                         if (contract.Tags.HasFlag(L1ContractTags.Nft))
                         {
-                            token.OwnerId = from.Id;
-                            token.OwnerEntrypoint = fromBalance.Entrypoint;
+                            if (fromBalance.Balance == transfer.Amount)
+                            {
+                                token.OwnerId = from.Id;
+                                token.OwnerEntrypoint = fromBalance.Entrypoint;
+                            }
+                            else if (fromBalance.Balance == BigInteger.Zero)
+                            {
+                                token.OwnerId = null;
+                                token.OwnerEntrypoint = null;
+                            }
                         }
 
                         token.TotalBurned -= transfer.Amount;

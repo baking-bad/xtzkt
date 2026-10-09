@@ -770,10 +770,20 @@ class TokensCommit(ProtocolHandler protocol) : Proto02.TokensCommit(protocol)
                 from.ActiveTokensCount--;
                 token.HoldersCount--;
             }
+            if (fromBalance.Balance == -amount)
+            {
+                from.ActiveTokensCount++;
+                token.HoldersCount++;
+            }
             if (toBalance.Balance == amount)
             {
                 to.ActiveTokensCount++;
                 token.HoldersCount++;
+            }
+            if (toBalance.Balance == BigInteger.Zero)
+            {
+                to.ActiveTokensCount--;
+                token.HoldersCount--;
             }
             if (contract.Tags.HasFlag(XMichelsonContractTags.Nft))
             {
