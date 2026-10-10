@@ -13,4 +13,10 @@ public static class LocalForgeExt
 
         return LocalForge.ForgeArray(LocalForge.ForgeMicheline(Netezos.Encoding.Micheline.FromJson(el)!)).Length;
     }
+
+    // TODO: re-check tz4 and tz5 sizes once the kernel supports them
+    public static int SignatureSize(string signer) =>
+        signer.StartsWith("tz5") ? 2420 + 2 : // ML-DSA-44 + ff 04
+        signer.StartsWith("tz4") ? 96 + 2 :   // BLS + ff 03
+        64;                                   // Ed25519, Secp256k1, P256
 }

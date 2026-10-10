@@ -92,6 +92,7 @@ public static class Base58
             case [6, 161, 161]:         // tz2
             case [6, 161, 164]:         // tz3
             case [6, 161, 166]:         // tz4
+            case [6, 161, 169]:         // tz5
             case [2, 90, 121]:          // KT1
             case [6, 124, 117]:         // sr1
                 shape = new(Shapes.P3x20, 20, 36);
@@ -130,7 +131,7 @@ readonly struct Shape4x32 : IBase58Shape
     public static int Base58Len => 54;
 }
 
-/// <summary>3 + 20 -> 36 characters: `tz1`, `tz2`, `tz3`, `tz4`, `KT1`, `sr1`.</summary>
+/// <summary>3 + 20 -> 36 characters: `tz1`, `tz2`, `tz3`, `tz4`, `tz5`, `KT1`, `sr1`.</summary>
 readonly struct Shape3x20 : IBase58Shape
 {
     public static int PrefixLen => 3;

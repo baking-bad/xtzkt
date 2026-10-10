@@ -8,6 +8,7 @@ using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.Common.Helpers;
 using Xtzkt.Indexers.TezosX.Extensions;
+using Xtzkt.Indexers.TezosX.Utils;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
@@ -62,7 +63,7 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             }).Length;
 
             if (isFirstOp)
-                size += 32 + (senderAddress.StartsWith("tz4") ? 96 : 64);
+                size += 32 + LocalForgeExt.SignatureSize(senderAddress);
 
             daFee = size * Context.Protocol.DaFeePerByte;
         }

@@ -4,6 +4,7 @@ using Xtzkt.Data.Models;
 using Xtzkt.Data.Models.Operations.Abstract;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Extensions;
+using Xtzkt.Indexers.TezosX.Utils;
 
 namespace Xtzkt.Indexers.TezosX.Protocols.Proto10;
 
@@ -41,7 +42,7 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             }).Length;
 
             if (isFirstOp)
-                size += 32 + (senderAddress.StartsWith("tz4") ? 96 : 64);
+                size += 32 + LocalForgeExt.SignatureSize(senderAddress);
 
             daFee = size * Context.Protocol.DaFeePerByte;
         }

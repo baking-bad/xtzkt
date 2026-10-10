@@ -62,7 +62,7 @@ partial class TransactionCommit
             }
 
             if (isFirstOp)
-                size += 32 + (senderAddress.StartsWith("tz4") ? 96 : 64);
+                size += 32 + LocalForgeExt.SignatureSize(senderAddress);
 
             daFee = size * Context.Protocol.DaFeePerByte;
         }

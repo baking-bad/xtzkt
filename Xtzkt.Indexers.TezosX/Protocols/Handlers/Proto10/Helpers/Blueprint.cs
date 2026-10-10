@@ -67,6 +67,7 @@ public partial class ProtoHelpers
                     (0, 1) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz2),
                     (0, 2) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz3),
                     (0, 3) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz4),
+                    (0, 4) => Netezos.Encoding.Base58.Convert(m1.Data[2..], Prefixes.tz5),
                     (1, _) when m1.Data[^1] == 0 => Netezos.Encoding.Base58.Convert(m1.Data[1..^1], Prefixes.KT1),
                     _ => throw new FormatException("Invalid Tezos address"),
                 },

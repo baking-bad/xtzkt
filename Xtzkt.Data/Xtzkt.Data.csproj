@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.4" />
-        <PackageReference Include="Netezos" Version="3.0.5" />
+        <PackageReference Include="Netezos" Version="3.0.6" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     </ItemGroup>
 

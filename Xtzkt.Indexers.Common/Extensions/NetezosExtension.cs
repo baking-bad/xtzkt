@@ -11,6 +11,7 @@ public static class NetezosExtension
     static readonly byte[] tz2 = [6, 161, 161];
     static readonly byte[] tz3 = [6, 161, 164];
     static readonly byte[] tz4 = [6, 161, 166];
+    static readonly byte[] tz5 = [6, 161, 169];
     static readonly byte[] KT1 = [2, 90, 121];
     static readonly byte[] sr1 = [6, 124, 117];
 
@@ -37,6 +38,7 @@ public static class NetezosExtension
                     1 => tz2,
                     2 => tz3,
                     3 => tz4,
+                    4 => tz5,
                     _ => throw new Exception("Invalid address prefix"),
                 };
                 bytes = value.GetBytes(2, 20);
@@ -97,6 +99,10 @@ public static class NetezosExtension
                 else if (value[1] == 3)
                 {
                     return Base58.TryEncode(value.GetBytes(2, 20), tz4, out address);
+                }
+                else if (value[1] == 4)
+                {
+                    return Base58.TryEncode(value.GetBytes(2, 20), tz5, out address);
                 }
             }
             else if (value[0] == 1 && value[21] == 0)

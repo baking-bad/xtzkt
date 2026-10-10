@@ -75,7 +75,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
             }).Length;
 
             if (isFirstOp)
-                size += 32 + (senderAddress.StartsWith("tz4") ? 96 : 64);
+                size += 32 + Xtzkt.Indexers.TezosX.Utils.LocalForgeExt.SignatureSize(senderAddress);
 
             daFee = size * Context.Protocol.DaFeePerByte;
         }
