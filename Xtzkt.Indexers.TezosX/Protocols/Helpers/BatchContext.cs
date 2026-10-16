@@ -12,6 +12,7 @@ namespace Xtzkt.Indexers.TezosX.Protocols
         public List<Log> Logs { get; } = [];
         public List<TokenTransfer> TokenTransfers { get; } = [];
         public List<XStatistics> Statistics { get; } = [];
+        public List<RegisterConstantOperation> RegisterConstantOps { get; } = [];
 
         public bool Contains(XBlock block)
         {
@@ -92,6 +93,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols
                 XStatistics.Write(conn, Statistics);
                 Statistics.Clear();
             }
+
+            RegisterConstantOps.Clear();
         }
     }
 }

@@ -62,17 +62,17 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
             }
             else if (diff.diff is CopyDiff copy)
             {
+                allocated.Add(diff.diff.Ptr);
                 var origin = GetOrigin(copy);
-                if (origin < 0)
-                    allocated.Add(diff.diff.Ptr);
-                else
+                if (origin >= 0)
                     copiedFrom.Add(origin);
             }
         }
 
         await Cache.BigMaps.Prefetch(Diffs
             .Where(x => x.diff.Ptr >= 0 && !allocated.Contains(x.diff.Ptr))
-            .Select(x => x.diff.Ptr));
+            .Select(x => x.diff.Ptr)
+            .Concat(copiedFrom));
 
         await Cache.BigMapKeys.Prefetch(Diffs
             .Where(x => x.diff.Ptr >= 0 && !allocated.Contains(x.diff.Ptr) && x.diff.Action == BigMapDiffAction.Update && Cache.BigMaps.HasCached(x.diff.Ptr))
@@ -80,26 +80,40 @@ class BigMapCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
 
         var images = new Dictionary<int, Dictionary<HashKey, (byte[] RawKey, byte[] RawValue)>>();
 
+        // big_maps allocated in this block are not in the DB yet
+        copiedFrom.ExceptWith(allocated);
         if (copiedFrom.Count != 0)
         {
-            await Cache.BigMaps.Prefetch(copiedFrom);
+            foreach (var ptr in copiedFrom)
+            {
+                if (!Cache.BigMaps.HasCached(ptr))
+                    throw new Exception($"Copied big_map {ptr} doesn't exist");
 
-            // origins allocated in this block are not in the DB yet, their images are built in the loop below
-            var copiedFromIds = copiedFrom
-                .Where(Cache.BigMaps.HasCached)
-                .ToDictionary(ptr => Cache.BigMaps.Get(ptr).Id);
-
-            foreach (var ptr in copiedFromIds.Values)
                 images.Add(ptr, []);
+            }
 
+            var copiedFromIds = copiedFrom.ToDictionary(ptr => Cache.BigMaps.Get(ptr).Id);
             var ids = copiedFromIds.Keys.ToHashSet();
-            var copiedKeys = ids.Count == 0 ? [] : await Db.BigMapKeys
+            var copiedKeys = await Db.BigMapKeys
                 .AsNoTracking()
                 .Where(x => ids.Contains(x.BigMapId) && x.Active)
                 .ToListAsync();
 
             foreach (var copiedKey in copiedKeys)
                 images[copiedFromIds[copiedKey.BigMapId]].Add(copiedKey.KeyHash, (copiedKey.RawKey, copiedKey.RawValue));
+
+            // keys changed since the last save are not in the DB yet
+            foreach (var entry in Db.ChangeTracker.Entries<BigMapKey>())
+            {
+                var key = entry.Entity;
+                if (!copiedFromIds.TryGetValue(key.BigMapId, out var ptr))
+                    continue;
+
+                if (key.Active)
+                    images[ptr][key.KeyHash] = (key.RawKey, key.RawValue);
+                else
+                    images[ptr].Remove(key.KeyHash);
+            }
         }
         #endregion
 

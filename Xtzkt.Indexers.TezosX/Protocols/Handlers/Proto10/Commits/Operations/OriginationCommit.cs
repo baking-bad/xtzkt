@@ -69,7 +69,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
                 Delegate = null,
                 Script = new()
                 {
-                    Code = (code as MichelineArray)!, // TODO: update Netezos and remove conversion
+                    Code = code,
                     Storage = storage,
                 },
             }).Length;
@@ -349,9 +349,15 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
 
     protected async Task<MichelineArray> ExpandCode(XMichelsonContract contract, IMicheline code)
     {
+        // Tezos X, unlike L1, accepts one extra level of nesting: { { parameter ..; storage ..; code .. } }
+        if (code is MichelineArray and [MichelineArray innerCode])
+            code = innerCode;
+
         if (code is not MichelineArray array)
         {
-            var constants = await Constants.Find(Db, contract.ChainId, [code]);
+            // Tezos X has issues with global constants validation,
+            // so an applied script may carry a `constant` that refers to nothing
+            var constants = await Constants.Find(Db, contract.ChainId, Batch.RegisterConstantOps, [code], strict: false);
             if (constants.Count > 0)
             {
                 contract.Tags |= XMichelsonContractTags.Constants;
@@ -375,7 +381,9 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
     protected async Task ProcessScript(XMichelsonOriginationOperation origination, XMichelsonContract contract, MichelineArray code, IMicheline storageValue)
     {
         #region expand top-level constants
-        var constants = await Constants.Find(Db, contract.ChainId, code);
+        // Tezos X has issues with global constants validation,
+        // so an applied script may carry a `constant` that refers to nothing
+        var constants = await Constants.Find(Db, contract.ChainId, Batch.RegisterConstantOps, code, strict: false);
         if (constants.Count > 0)
         {
             var depth = 0;
@@ -519,7 +527,7 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
 
             // TODO: we're actually missing constants in parameter and storage,
             // as they were expanded, so refs may be reverted inaccurately.
-            var constants = await Constants.Find(Db, contract.ChainId, code);
+            var constants = await Constants.Find(Db, contract.ChainId, Context.RegisterConstantOps, code, strict: false);
             foreach (var constant in constants)
             {
                 Db.TryAttach(constant);

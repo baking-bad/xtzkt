@@ -123,6 +123,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
             Cache.Schemas.Reset();
             Cache.Storages.Reset();
+            Cache.BigMaps.Reset();
+            Cache.BigMapKeys.Reset();
 
             foreach (var contract in contracts)
             {
@@ -362,6 +364,8 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto05
 
             Cache.Schemas.Reset();
             Cache.Storages.Reset();
+            Cache.BigMaps.Reset();
+            Cache.BigMapKeys.Reset();
 
             foreach (var change in codeChanges)
             {

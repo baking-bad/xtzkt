@@ -118,6 +118,7 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
 
         Db.RegisterConstantOps.Add(op);
         Context.RegisterConstantOps.Add(op);
+        Batch.RegisterConstantOps.Add(op);
 
         return op;
     }

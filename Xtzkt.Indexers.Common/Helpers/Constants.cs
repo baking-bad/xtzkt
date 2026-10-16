@@ -7,7 +7,7 @@ namespace Xtzkt.Indexers.Common.Helpers;
 
 public static class Constants
 {
-    public static async Task<List<RegisterConstantOperation>> Find(XtzktContext db, int chainId, IEnumerable<IMicheline> nodes)
+    public static async Task<List<RegisterConstantOperation>> Find(XtzktContext db, int chainId, IEnumerable<RegisterConstantOperation> context, IEnumerable<IMicheline> nodes, bool strict = true)
     {
         var res = new List<RegisterConstantOperation>();
         while (true)
@@ -19,13 +19,28 @@ public static class Constants
             if (pendingConstants.Count == 0)
                 break;
 
-            var constants = await db.RegisterConstantOps
-                .Where(x => x.ChainId == chainId && x.Address != null && pendingConstants.Contains(x.Address))
-                .ToListAsync();
+            var constants = new List<RegisterConstantOperation>(pendingConstants.Count);
 
-            foreach (var constant in constants)
-                res.Add(constant);
+            foreach (var constant in context)
+                if (constant.Address != null && pendingConstants.Remove(constant.Address))
+                    constants.Add(constant);
 
+            if (pendingConstants.Count != 0)
+            {
+                var storedConstants = await db.RegisterConstantOps
+                    .Where(x => x.ChainId == chainId && x.Address != null && pendingConstants.Contains(x.Address))
+                    .ToListAsync();
+
+                foreach (var constant in storedConstants)
+                    pendingConstants.Remove(constant.Address!);
+
+                if (strict && pendingConstants.Count != 0)
+                    throw new Exception($"Global constants not found: {string.Join(", ", pendingConstants)}");
+
+                constants.AddRange(storedConstants);
+            }
+
+            res.AddRange(constants);
             nodes = constants.Select(x => Micheline.FromBytes(x.Value!));
         }
         return res;
@@ -51,7 +66,9 @@ public static class Constants
         {
             if (prim.Prim == PrimType.constant)
             {
-                yield return (prim.Args[0] as MichelineString)!.Value;
+                // L1 rejects any other shape, but Tezos X allows malformed constants
+                if (prim.Args is [MichelineString address])
+                    yield return address.Value;
             }
             else
             {
