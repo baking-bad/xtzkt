@@ -723,11 +723,9 @@ internal static class ModelBindingContextExtension
             else
             {
                 hasValue = true;
-                result = Regexes.RestrictedUnicode().Replace(
-                    rawValue.Length > 1 && rawValue[0] == '"' && rawValue[^1] == '"'
-                        ? rawValue[1..^1]
-                        : rawValue,
-                    Regexes.NullEscapeString);
+                result = (rawValue.Length > 1 && rawValue[0] == '"' && rawValue[^1] == '"'
+                    ? rawValue[1..^1]
+                    : rawValue).SanitizeText();
             }
         }
         return true;
@@ -747,11 +745,9 @@ internal static class ModelBindingContextExtension
                 }
                 else
                 {
-                    list.Add(Regexes.RestrictedUnicode().Replace(
-                        rawValue.Length > 1 && rawValue[0] == '"' && rawValue[^1] == '"'
-                            ? rawValue[1..^1]
-                            : rawValue,
-                        Regexes.NullEscapeString));
+                    list.Add((rawValue.Length > 1 && rawValue[0] == '"' && rawValue[^1] == '"'
+                        ? rawValue[1..^1]
+                        : rawValue).SanitizeText());
                 }
             }
             hasValue = true;
@@ -766,7 +762,7 @@ internal static class ModelBindingContextExtension
         if (bindingContext.TryGetQueryParameter(name, out var rawValue))
         {
             hasValue = true;
-            result = Regexes.RestrictedUnicode().Replace(rawValue, Regexes.NullEscapeString);
+            result = rawValue.SanitizeText();
         }
         return true;
     }
@@ -777,7 +773,7 @@ internal static class ModelBindingContextExtension
         if (bindingContext.TryGetQueryParameterList(name, out var rawValues, unbounded))
         {
             hasValue = true;
-            result = [.. rawValues.Select(x => Regexes.RestrictedUnicode().Replace(x, Regexes.NullEscapeString))];
+            result = [.. rawValues.Select(x => x.SanitizeText())];
         }
         return true;
     }
@@ -787,7 +783,7 @@ internal static class ModelBindingContextExtension
         result = null;
         if (bindingContext.TryGetQueryParameter(name, out var rawValue))
         {
-            result = Regexes.RestrictedUnicode().Replace(rawValue, Regexes.NullEscapeString);
+            result = rawValue.SanitizeText();
             return true;
         }
         bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
@@ -806,6 +802,7 @@ internal static class ModelBindingContextExtension
             }
             else
             {
+                rawValue = rawValue.SanitizeText();
                 try
                 {
                     var json = NormalizeJson(rawValue);
@@ -825,6 +822,7 @@ internal static class ModelBindingContextExtension
         result = null;
         if (bindingContext.TryGetQueryParameter(name, out var rawValue))
         {
+            rawValue = rawValue.SanitizeText();
             try
             {
                 if (rawValue.AsSpan().TrimStart() is [ '[', .. ] or [ '{', .. ])

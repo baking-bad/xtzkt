@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Xtzkt.Utils;
 
 /// <summary>
@@ -90,45 +88,6 @@ public static class Jsonb
         // numeric_out writes plain digits: the sign, the integer part (a lone 0 if there's none), the scale after a point
         textLength = (negative ? 1 : 0) + (int)Math.Max(integerDigits, 1) + (scale > 0 ? (int)scale + 1 : 0);
         return true;
-    }
-
-    /// <summary>
-    /// Checks if a JSON string escapes a surrogate without its pair, which jsonb rejects.
-    /// </summary>
-    /// <param name="escaped">Raw UTF-8 text of a JSON string with escapes.</param>
-    /// <returns></returns>
-    public static bool HasLoneSurrogate(ReadOnlySpan<byte> escaped)
-    {
-        var high = false;
-        for (var i = 0; i < escaped.Length; i++)
-        {
-            if (escaped[i] != '\\' || escaped[++i] != 'u')
-            {
-                if (high)
-                    return true;
-                continue;
-            }
-
-            var unit = (char)ushort.Parse(escaped.Slice(i + 1, 4), NumberStyles.AllowHexSpecifier);
-            i += 4;
-
-            if (char.IsLowSurrogate(unit))
-            {
-                if (!high)
-                    return true;
-                high = false;
-            }
-            else if (high)
-            {
-                return true;
-            }
-            else
-            {
-                high = char.IsHighSurrogate(unit);
-            }
-        }
-
-        return high;
     }
 
     static int SkipDigits(ReadOnlySpan<byte> span, int pos)

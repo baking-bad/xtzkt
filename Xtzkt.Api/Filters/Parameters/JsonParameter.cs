@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Xtzkt.Api.Extensions;
 using Xtzkt.Api.Filters.Base;
 using Xtzkt.Api.Filters.Binders;
 using Xtzkt.Utils;
@@ -213,10 +216,10 @@ public class JsonPath
             Type = JsonPathType.Field;
             Value = value;
         }
-        else if (Regexes.Quoted().IsMatch(value))
+        else if (Regexes.Quoted().IsMatch(value) && TryParseKey(value, out var key))
         {
             Type = JsonPathType.Key;
-            Value = value[1..^1];
+            Value = key;
         }
         else if (Regexes.ArrayIndex().IsMatch(value))
         {
@@ -259,6 +262,22 @@ public class JsonPath
     public static string?[] Select(JsonPath[] path)
     {
         return [.. path.Select(x => x.Value)];
+    }
+
+    static bool TryParseKey(string json, [NotNullWhen(true)] out string? key)
+    {
+        key = null;
+        json = json.SanitizeText();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        key = json[1..^1];
+        return true;
     }
 }
 

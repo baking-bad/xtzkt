@@ -181,7 +181,7 @@ public class MetadataService(IConfiguration config, ILogger<MetadataService> log
     }
 
     /// <summary>
-    /// Returns null if the JSON can be stored as jsonb, parsed back within MaxDepth, and stays within MaxSize
+    /// Returns null if the JSON, once sanitized, can be stored as jsonb, parsed back within MaxDepth, and stays within MaxSize
     /// with its id placeholders filled in and its numbers printed in full, or the error status otherwise.
     /// </summary>
     TokenMetadataStatus? Validate(ReadOnlySpan<byte> bytes, string? idReplacer, out Exception? error)
@@ -209,11 +209,7 @@ public class MetadataService(IConfiguration config, ILogger<MetadataService> log
                     case JsonTokenType.StartObject or JsonTokenType.StartArray when reader.CurrentDepth >= _config.MaxDepth:
                         return TokenMetadataStatus.DepthLimitExceeded;
 
-                    // a well-formed escape can still make an invalid UTF-16 string (a lone surrogate), which jsonb rejects
-                    case JsonTokenType.String or JsonTokenType.PropertyName when reader.ValueIsEscaped && Jsonb.HasLoneSurrogate(reader.ValueSpan):
-                        return TokenMetadataStatus.InvalidJson;
-
-                    // so does a number out of the numeric range, which the JSON grammar doesn't limit
+                    // reject a number out of the numeric range, which the JSON grammar doesn't limit
                     case JsonTokenType.Number:
                         if (!Jsonb.IsValidNumber(reader.ValueSpan, out var length))
                             return TokenMetadataStatus.InvalidJson;
