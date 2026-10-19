@@ -116,7 +116,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Eq)
             {
-                sb.Append($"{name}.{Normalize(path)}.eq={value}&");
+                sb.Append($"{name}{Normalize(path)}.eq={Uri.EscapeDataString(value)}&");
             }
         }
 
@@ -124,7 +124,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Ne)
             {
-                sb.Append($"{name}.{Normalize(path)}.ne={value}&");
+                sb.Append($"{name}{Normalize(path)}.ne={Uri.EscapeDataString(value)}&");
             }
         }
 
@@ -132,7 +132,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Gt)
             {
-                sb.Append($"{name}.{Normalize(path)}.gt={value}&");
+                sb.Append($"{name}{Normalize(path)}.gt={Uri.EscapeDataString(value)}&");
             }
         }
 
@@ -140,7 +140,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Ge)
             {
-                sb.Append($"{name}.{Normalize(path)}.ge={value}&");
+                sb.Append($"{name}{Normalize(path)}.ge={Uri.EscapeDataString(value)}&");
             }
         }
 
@@ -148,7 +148,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Lt)
             {
-                sb.Append($"{name}.{Normalize(path)}.lt={value}&");
+                sb.Append($"{name}{Normalize(path)}.lt={Uri.EscapeDataString(value)}&");
 
             }
         }
@@ -157,7 +157,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Le)
             {
-                sb.Append($"{name}.{Normalize(path)}.le={value}&");
+                sb.Append($"{name}{Normalize(path)}.le={Uri.EscapeDataString(value)}&");
 
             }
         }
@@ -166,7 +166,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in As)
             {
-                sb.Append($"{name}.{Normalize(path)}.as={value}&");
+                sb.Append($"{name}{Normalize(path)}.as={Uri.EscapeDataString(value)}&");
             }
         }
 
@@ -174,7 +174,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, value) in Un)
             {
-                sb.Append($"{name}.{Normalize(path)}.un={value}&");
+                sb.Append($"{name}{Normalize(path)}.un={Uri.EscapeDataString(value)}&");
 
             }
         }
@@ -183,7 +183,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, values) in In)
             {
-                sb.Append($"{name}.{Normalize(path)}.in={string.Join(",", values.OrderBy(x => x))}&");
+                sb.Append($"{name}{Normalize(path)}.in={string.Join(",", values.OrderBy(x => x).Select(Uri.EscapeDataString))}&");
             }
         }
 
@@ -191,7 +191,7 @@ public class JsonParameter : INormalizable
         {
             foreach (var (path, values) in Ni)
             {
-                sb.Append($"{name}.{Normalize(path)}.ni={string.Join(",", values.OrderBy(x => x))}&");
+                sb.Append($"{name}{Normalize(path)}.ni={string.Join(",", values.OrderBy(x => x).Select(Uri.EscapeDataString))}&");
             }
         }
 
@@ -200,7 +200,12 @@ public class JsonParameter : INormalizable
 
     static string Normalize(JsonPath[] jsonPaths)
     {
-        return string.Join(".", jsonPaths.Select(x => x.Type > JsonPathType.Key ? $"[{x.Value ?? "*"}]" : x.Value));
+        return string.Concat(jsonPaths.Select(x => "." + (x.Type switch
+        {
+            JsonPathType.Index => $"[{x.Value}]",
+            JsonPathType.Any => "[*]",
+            _ => Uri.EscapeDataString(x.Value!).Replace(".", "%2E")
+        })));
     }
 }
 
