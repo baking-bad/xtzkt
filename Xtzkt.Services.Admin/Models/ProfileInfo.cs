@@ -21,7 +21,6 @@ public class ProfileInfo
     public string? Slack { get; set; }
     public string? Github { get; set; }
     public string? Gitlab { get; set; }
-    public string? Mailchain { get; set; }
     public string? Instagram { get; set; }
     public string? Facebook { get; set; }
     public string? X { get; set; }

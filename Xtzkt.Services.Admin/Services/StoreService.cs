@@ -63,7 +63,6 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
                     Slack = GetString(reader, "Slack"),
                     Github = GetString(reader, "Github"),
                     Gitlab = GetString(reader, "Gitlab"),
-                    Mailchain = GetString(reader, "Mailchain"),
                     Instagram = GetString(reader, "Instagram"),
                     Facebook = GetString(reader, "Facebook"),
                     X = GetString(reader, "X")
@@ -139,7 +138,6 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
         var slacks = new string?[profiles.Count];
         var githubs = new string?[profiles.Count];
         var gitlabs = new string?[profiles.Count];
-        var mailchains = new string?[profiles.Count];
         var instagrams = new string?[profiles.Count];
         var facebooks = new string?[profiles.Count];
         var xs = new string?[profiles.Count];
@@ -169,7 +167,6 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
                     slacks[i] = address.Slack;
                     githubs[i] = address.Github;
                     gitlabs[i] = address.Gitlab;
-                    mailchains[i] = address.Mailchain;
                     instagrams[i] = address.Instagram;
                     facebooks[i] = address.Facebook;
                     xs[i] = address.X;
@@ -188,9 +185,9 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
         }
 
         await using var cmd = new NpgsqlCommand("""
-            INSERT INTO "Profiles" ("Id", "Type", "Name", "UpdatedAt", "Description", "Logo", "LogoDark", "Website", "Support", "Email", "Telegram", "Discord", "Reddit", "Slack", "Github", "Gitlab", "Mailchain", "Instagram", "Facebook", "X", "Docs", "CommitDate", "CommitHash")
+            INSERT INTO "Profiles" ("Id", "Type", "Name", "UpdatedAt", "Description", "Logo", "LogoDark", "Website", "Support", "Email", "Telegram", "Discord", "Reddit", "Slack", "Github", "Gitlab", "Instagram", "Facebook", "X", "Docs", "CommitDate", "CommitHash")
             SELECT *
-            FROM unnest(@ids, @types, @names, @updatedAts, @descriptions, @logos, @logoDarks, @websites, @supports, @emails, @telegrams, @discords, @reddits, @slacks, @githubs, @gitlabs, @mailchains, @instagrams, @facebooks, @xs, @docs, @commitDates, @commitHashes)
+            FROM unnest(@ids, @types, @names, @updatedAts, @descriptions, @logos, @logoDarks, @websites, @supports, @emails, @telegrams, @discords, @reddits, @slacks, @githubs, @gitlabs, @instagrams, @facebooks, @xs, @docs, @commitDates, @commitHashes)
             ON CONFLICT ("Id") DO UPDATE SET
                 "Name" = EXCLUDED."Name",
                 "UpdatedAt" = EXCLUDED."UpdatedAt",
@@ -206,7 +203,6 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
                 "Slack" = EXCLUDED."Slack",
                 "Github" = EXCLUDED."Github",
                 "Gitlab" = EXCLUDED."Gitlab",
-                "Mailchain" = EXCLUDED."Mailchain",
                 "Instagram" = EXCLUDED."Instagram",
                 "Facebook" = EXCLUDED."Facebook",
                 "X" = EXCLUDED."X",
@@ -232,7 +228,6 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
         cmd.Parameters.AddWithValue("slacks", slacks);
         cmd.Parameters.AddWithValue("githubs", githubs);
         cmd.Parameters.AddWithValue("gitlabs", gitlabs);
-        cmd.Parameters.AddWithValue("mailchains", mailchains);
         cmd.Parameters.AddWithValue("instagrams", instagrams);
         cmd.Parameters.AddWithValue("facebooks", facebooks);
         cmd.Parameters.AddWithValue("xs", xs);
