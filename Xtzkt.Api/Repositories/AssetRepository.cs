@@ -54,6 +54,7 @@ public class AssetRepository(AssetCache _assetCache, TokenRepository _tokenRepo)
         return new Asset
         {
             Name = asset.Name,
+            Symbol = asset.Symbol,
             Description = asset.Description,
             Logo = asset.Logo,
             Tokens = asset.Tokens.Length == 1 ? [token]
@@ -88,6 +89,7 @@ public class AssetRepository(AssetCache _assetCache, TokenRepository _tokenRepo)
         return new Asset
         {
             Name = token.Name,
+            Symbol = token.Symbol,
             Description = description,
             Logo = logo,
             Tokens = [token],

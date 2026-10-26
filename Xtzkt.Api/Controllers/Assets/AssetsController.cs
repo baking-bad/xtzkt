@@ -20,7 +20,7 @@ public class AssetsController(AssetRepository _assets, ResponseCacheService _res
     /// Get asset by token id
     /// </summary>
     /// <remarks>
-    /// Returns the asset the specified token belongs to: its name, description, logo and all the tokens
+    /// Returns the asset the specified token belongs to: its name, symbol, description, logo and all the tokens
     /// it consists of. Any of the asset's own tokens can be used for the lookup, they all resolve to the
     /// same asset. A token that doesn't belong to any asset is returned as an asset of its own, described
     /// by its own metadata. Returns `null` if there's no such token.
@@ -44,7 +44,7 @@ public class AssetsController(AssetRepository _assets, ResponseCacheService _res
     /// Get asset by contract
     /// </summary>
     /// <remarks>
-    /// Returns the asset the specified token belongs to: its name, description, logo and all the tokens
+    /// Returns the asset the specified token belongs to: its name, symbol, description, logo and all the tokens
     /// it consists of. Any of the asset's own tokens can be used for the lookup, they all resolve to the
     /// same asset. A token that doesn't belong to any asset is returned as an asset of its own, described
     /// by its own metadata. Returns `null` if there's no such token.

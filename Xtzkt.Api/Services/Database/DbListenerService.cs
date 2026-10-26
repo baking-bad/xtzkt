@@ -11,6 +11,7 @@ namespace Xtzkt.Api.Services.Database;
 public class DbListenerService(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     DomainCache _domainCache,
     ProfileCache _profileCache,
     ProtocolCache _protocolCache,
@@ -24,6 +25,7 @@ public class DbListenerService(
     const string ChainSyncStateChanged = "chain_sync_state_changed";
     const string DomainChanged = "domain_changed";
     const string ProfileChanged = "profile_changed";
+    const string AssetChanged = "asset_changed";
     #endregion
 
     readonly Lock Crit = new();
@@ -35,6 +37,9 @@ public class DbListenerService(
     readonly HashSet<(ProfileType Type, string Id)> ProfileChanges = [];
     bool ProfileReset;
     Task ProfileNotifying = Task.CompletedTask;
+    readonly HashSet<int> AssetChanges = [];
+    bool AssetReset;
+    Task AssetNotifying = Task.CompletedTask;
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -60,6 +65,7 @@ public class DbListenerService(
                             LISTEN {ChainSyncStateChanged};
                             LISTEN {DomainChanged};
                             LISTEN {ProfileChanged};
+                            LISTEN {AssetChanged};
                             """);
                         _logger.LogInformation("Db listener connected");
 
@@ -170,6 +176,22 @@ public class DbListenerService(
 
                 if (ProfileNotifying.IsCompleted)
                     ProfileNotifying = Task.Run(NotifyProfilesAsync); // async run
+            }
+        }
+        else if (e.Channel == AssetChanged)
+        {
+            if (!int.TryParse(e.Payload, out var id))
+            {
+                _logger.LogCritical("Invalid {channel} trigger payload", e.Channel);
+                return;
+            }
+
+            lock (Crit)
+            {
+                AssetChanges.Add(id);
+
+                if (AssetNotifying.IsCompleted)
+                    AssetNotifying = Task.Run(NotifyAssetsAsync); // async run
             }
         }
     }
@@ -361,6 +383,62 @@ public class DbListenerService(
         }
     }
 
+    async Task NotifyAssetsAsync()
+    {
+        #region peek changes
+        bool reset;
+        int[] ids;
+        lock (Crit)
+        {
+            reset = AssetReset;
+            AssetReset = false;
+
+            ids = [.. AssetChanges];
+            AssetChanges.Clear();
+        }
+        #endregion
+
+        try
+        {
+            _logger.LogDebug("Processing asset notifications...");
+
+            if (reset)
+                await _assetCache.ReloadAsync();
+            else
+                await _assetCache.UpdateAsync(ids);
+
+            _responseCache.Clear();
+
+            _logger.LogDebug("Asset notifications processed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process asset notifications");
+
+            lock (Crit)
+            {
+                // retry
+                AssetReset |= reset;
+                AssetChanges.UnionWith(ids);
+            }
+
+            await Task.Delay(1000);
+        }
+
+        lock (Crit)
+        {
+            if (AssetReset || AssetChanges.Count != 0)
+            {
+                _logger.LogDebug("Handle pending asset notification");
+                AssetNotifying = Task.Run(NotifyAssetsAsync); // async run
+            }
+            else
+            {
+                AssetNotifying = Task.CompletedTask;
+            }
+        }
+    }
+
     void ResetCaches()
     {
         lock (Crit)
@@ -372,6 +450,10 @@ public class DbListenerService(
             ProfileReset = true;
             if (ProfileNotifying.IsCompleted)
                 ProfileNotifying = Task.Run(NotifyProfilesAsync); // async run
+
+            AssetReset = true;
+            if (AssetNotifying.IsCompleted)
+                AssetNotifying = Task.Run(NotifyAssetsAsync); // async run
         }
     }
 }

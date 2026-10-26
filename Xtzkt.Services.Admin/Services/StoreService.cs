@@ -253,6 +253,69 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
     }
     #endregion
 
+    #region assets
+    public async Task<List<Asset>> GetAssetsAsync(int offset, int limit, CancellationToken ct = default)
+    {
+        await using var cmd = _dataSource.CreateCommand("""
+            SELECT *
+            FROM "Assets"
+            ORDER BY "Id"
+            OFFSET @offset
+            LIMIT @limit
+            """);
+        cmd.Parameters.AddWithValue("offset", offset);
+        cmd.Parameters.AddWithValue("limit", limit);
+
+        var res = new List<Asset>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            res.Add(new Asset
+            {
+                Id = reader.GetInt32("Id"),
+                Name = GetString(reader, "Name"),
+                Symbol = GetString(reader, "Symbol"),
+                Description = GetString(reader, "Description"),
+                Logo = GetString(reader, "Logo"),
+                Tokens = reader.GetFieldValue<long[]>("Tokens")
+            });
+        }
+
+        return res;
+    }
+
+    public async Task<List<int>> UpdateAssetsAsync(List<Asset> creates, List<Asset> updates, List<int> removes, CancellationToken ct = default)
+    {
+        if (creates.Count == 0 && updates.Count == 0 && removes.Count == 0) return [];
+
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        await LockAssetsAsync(conn, ct);
+
+        long[] tokens = [.. creates.Concat(updates).SelectMany(x => x.Tokens)];
+        await CheckTokensExistAsync(conn, tokens, ct);
+        await CheckTokensFreeAsync(conn, tokens, [.. updates.Select(x => x.Id), .. removes], ct);
+
+        var removed = await RemoveAssetsAsync(conn, removes, ct);
+        await ReplaceAssetsAsync(conn, updates, ct);
+        var created = await CreateAssetsAsync(conn, creates, ct);
+
+        await tx.CommitAsync(ct);
+
+        _logger.LogInformation("Assets updated: {created} created, {updated} updated, {removed} removed", created.Count, updates.Count, removed);
+        return created;
+    }
+
+    static async Task LockAssetsAsync(NpgsqlConnection conn, CancellationToken ct)
+    {
+        await using var cmd = new NpgsqlCommand("""
+            LOCK TABLE "Assets" IN SHARE ROW EXCLUSIVE MODE
+            """, conn);
+
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
     static async Task CheckTokensExistAsync(NpgsqlConnection conn, long[] ids, CancellationToken ct)
     {
         if (ids.Length == 0) return;
@@ -274,6 +337,103 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
                 throw new TokenNotFoundException(token);
     }
 
+    static async Task CheckTokensFreeAsync(NpgsqlConnection conn, long[] tokens, int[] ids, CancellationToken ct)
+    {
+        if (tokens.Length == 0) return;
+
+        await using var cmd = new NpgsqlCommand("""
+            SELECT t.token, a."Id"
+            FROM "Assets" AS a
+            CROSS JOIN unnest(a."Tokens") AS t(token)
+            WHERE t.token = ANY(@tokens)
+            AND a."Id" <> ALL(@ids)
+            """, conn);
+        cmd.Parameters.AddWithValue("tokens", tokens);
+        cmd.Parameters.AddWithValue("ids", ids);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        var owners = new Dictionary<long, int>();
+        while (await reader.ReadAsync(ct))
+            owners.TryAdd(reader.GetInt64(0), reader.GetInt32(1));
+
+        foreach (var token in tokens)
+            if (owners.TryGetValue(token, out var owner))
+                throw new AssetTokenConflictException(token, owner);
+    }
+
+    static async Task<int> RemoveAssetsAsync(NpgsqlConnection conn, List<int> ids, CancellationToken ct)
+    {
+        if (ids.Count == 0) return 0;
+
+        await using var cmd = new NpgsqlCommand("""
+            DELETE FROM "Assets"
+            WHERE "Id" = ANY(@ids)
+            """, conn);
+        cmd.Parameters.AddWithValue("ids", ids);
+
+        return await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    static async Task ReplaceAssetsAsync(NpgsqlConnection conn, List<Asset> assets, CancellationToken ct)
+    {
+        if (assets.Count == 0) return;
+
+        await using var batch = new NpgsqlBatch(conn);
+        foreach (var asset in assets)
+        {
+            var cmd = AssetCommand("""
+                UPDATE "Assets"
+                SET "Name" = @name, "Symbol" = @symbol, "Description" = @description, "Logo" = @logo, "Tokens" = @tokens
+                WHERE "Id" = @id
+                """, asset);
+            cmd.Parameters.AddWithValue("id", asset.Id);
+            batch.BatchCommands.Add(cmd);
+        }
+
+        await batch.ExecuteNonQueryAsync(ct);
+
+        for (int i = 0; i < assets.Count; i++)
+            if (batch.BatchCommands[i].RecordsAffected == 0)
+                throw new AssetNotFoundException(assets[i].Id);
+    }
+
+    static async Task<List<int>> CreateAssetsAsync(NpgsqlConnection conn, List<Asset> assets, CancellationToken ct)
+    {
+        if (assets.Count == 0) return [];
+
+        await using var batch = new NpgsqlBatch(conn);
+        foreach (var asset in assets)
+        {
+            batch.BatchCommands.Add(AssetCommand("""
+                INSERT INTO "Assets" ("Name", "Symbol", "Description", "Logo", "Tokens")
+                VALUES (@name, @symbol, @description, @logo, @tokens)
+                RETURNING "Id"
+                """, asset));
+        }
+
+        await using var reader = await batch.ExecuteReaderAsync(ct);
+        var ids = new List<int>(assets.Count);
+        do
+        {
+            while (await reader.ReadAsync(ct))
+                ids.Add(reader.GetInt32(0));
+        }
+        while (await reader.NextResultAsync(ct));
+
+        return ids;
+    }
+
+    static NpgsqlBatchCommand AssetCommand(string sql, Asset asset)
+    {
+        var cmd = new NpgsqlBatchCommand(sql);
+        cmd.Parameters.AddWithValue("name", (object?)asset.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("symbol", (object?)asset.Symbol ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("description", (object?)asset.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("logo", (object?)asset.Logo ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("tokens", asset.Tokens);
+        return cmd;
+    }
+    #endregion
 
     #region tickets
     public async Task<List<TicketBinding>> GetTicketBindingsAsync(int offset, int limit, CancellationToken ct = default)

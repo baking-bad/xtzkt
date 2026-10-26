@@ -155,6 +155,9 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
+                    b.Property<string>("Symbol")
+                        .HasColumnType("text");
+
                     b.PrimitiveCollection<long[]>("Tokens")
                         .IsRequired()
                         .HasColumnType("bigint[]");
@@ -3802,6 +3805,19 @@ namespace Xtzkt.Data.Migrations
                     b.HasIndex("AddressId", "TicketId");
 
                     b.ToTable("TicketBalances");
+                });
+
+            modelBuilder.Entity("Xtzkt.Data.Models.TicketBinding", b =>
+                {
+                    b.Property<byte[]>("TicketHash")
+                        .HasColumnType("bytea");
+
+                    b.Property<long>("TokenId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TicketHash");
+
+                    b.ToTable("TicketBindings");
                 });
 
             modelBuilder.Entity("Xtzkt.Data.Models.TicketTransfer", b =>

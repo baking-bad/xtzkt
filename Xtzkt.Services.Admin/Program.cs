@@ -105,10 +105,12 @@ while (true)
 app.MapGet("/version", () => AssemblyInfo.Version);
 app.MapHealthChecks("/health");
 
+app.MapGet("/assets", AssetEndpoints.GetAsync);
 app.MapGet("/profiles", ProfileEndpoints.GetAsync);
 app.MapGet("/profiles/state", ProfileEndpoints.GetStateAsync);
 app.MapGet("/tickets", TicketBindingEndpoints.GetAsync);
 
+app.MapPost("/assets", AssetEndpoints.UpdateAsync);
 app.MapPost("/profiles", ProfileEndpoints.UpdateAsync);
 app.MapPost("/tickets", TicketBindingEndpoints.UpdateAsync);
 #endregion

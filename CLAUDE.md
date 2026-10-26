@@ -74,7 +74,7 @@ This is an aggregated Tezos blockchain indexer, combining data from multiple cha
 | `Xtzkt.Api` | ASP.NET Core | REST-like API |
 | `Xtzkt.Services.Metadata` | ASP.NET Core | Standalone service that is the **single** home for all metadata indexing (token and contract, across all chains/layers). Indexers themselves no longer index metadata. |
 | `Xtzkt.Services.Domains` | ASP.NET Core | Standalone service that is the **single** home for domain name indexing (Tezos Domains, across all chains/layers). Indexers themselves no longer index domains. |
-| `Xtzkt.Services.Admin` | ASP.NET Core | Internal API through which the operator manages off-chain data (profiles). It has **no** authentication of its own — access control is left to the operator, so compose publishes it on loopback only. |
+| `Xtzkt.Services.Admin` | ASP.NET Core | Internal API through which the operator manages off-chain data (profiles, assets, ticket bindings). It has **no** authentication of its own — access control is left to the operator, so compose publishes it on loopback only. |
 
 ### Data models
 

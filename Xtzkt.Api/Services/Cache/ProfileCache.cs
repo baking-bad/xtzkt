@@ -11,7 +11,7 @@ public class ProfileCache
     readonly IDbContextFactory<XtzktContext> DbFactory;
     readonly ILogger Logger;
     readonly Lock Crit = new();
-    readonly SemaphoreSlim Sync = new(1, 1);
+    readonly SemaphoreSlim Sema = new(1, 1);
 
     Dictionary<string, (FuzzyString Name, AccountProfile Profile)> AddressProfiles;
     Dictionary<string, string> ProtocolProfiles;
@@ -109,7 +109,7 @@ public class ProfileCache
     /// </summary>
     public async Task ReloadAsync()
     {
-        await Sync.WaitAsync();
+        await Sema.WaitAsync();
         try
         {
             using var db = DbFactory.CreateDbContext();
@@ -127,7 +127,7 @@ public class ProfileCache
         }
         finally
         {
-            Sync.Release();
+            Sema.Release();
         }
     }
 
@@ -136,7 +136,7 @@ public class ProfileCache
     /// </summary>
     public async Task UpdateAsync((ProfileType Type, string Id)[] keys)
     {
-        await Sync.WaitAsync();
+        await Sema.WaitAsync();
         try
         {
             var ids = keys.Select(x => x.Id).Distinct().ToArray();
@@ -161,7 +161,7 @@ public class ProfileCache
         }
         finally
         {
-            Sync.Release();
+            Sema.Release();
         }
     }
 

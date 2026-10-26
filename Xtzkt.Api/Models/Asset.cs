@@ -8,6 +8,11 @@ public class Asset
     public string? Name { get; set; }
 
     /// <summary>
+    /// Asset symbol. Falls back to the token's own symbol, if the token doesn't belong to any asset.
+    /// </summary>
+    public string? Symbol { get; set; }
+
+    /// <summary>
     /// Asset description. Falls back to the token's metadata, if the token doesn't belong to any asset.
     /// </summary>
     public string? Description { get; set; }

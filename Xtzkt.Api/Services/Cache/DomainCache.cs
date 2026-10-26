@@ -16,7 +16,7 @@ public class DomainCache
     readonly NpgsqlDataSource DataSource;
     readonly ILogger Logger;
     readonly Lock Crit = new();
-    readonly SemaphoreSlim Sync = new(1, 1);
+    readonly SemaphoreSlim Sema = new(1, 1);
 
     Dictionary<long, CachedDomain> CachedById;
     Dictionary<string, CachedDomain[]> CachedByAddress;
@@ -99,7 +99,7 @@ public class DomainCache
     /// </summary>
     public async Task ReloadAsync()
     {
-        await Sync.WaitAsync();
+        await Sema.WaitAsync();
         try
         {
             await using var db = await DataSource.OpenConnectionAsync();
@@ -116,7 +116,7 @@ public class DomainCache
         }
         finally
         {
-            Sync.Release();
+            Sema.Release();
         }
     }
 
@@ -125,7 +125,7 @@ public class DomainCache
     /// </summary>
     public async Task UpdateAsync(long[] ids)
     {
-        await Sync.WaitAsync();
+        await Sema.WaitAsync();
         try
         {
             await using var db = await DataSource.OpenConnectionAsync();
@@ -153,7 +153,7 @@ public class DomainCache
         }
         finally
         {
-            Sync.Release();
+            Sema.Release();
         }
     }
 
