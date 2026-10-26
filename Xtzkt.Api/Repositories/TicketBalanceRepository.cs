@@ -5,6 +5,7 @@ using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Models;
+using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Services.Cache;
 using Xtzkt.Api.Utils;
 
@@ -97,6 +98,15 @@ public class TicketBalanceRepository(
             columns.Add(@"t.""RawContent"" as ""Ticket_RawContent""");
             columns.Add(@"t.""JsonContent"" as ""Ticket_JsonContent""");
             columns.Add(@"t.""WeakHash"" as ""Ticket_WeakHash""");
+            columns.Add(@"tk.""Id"" as ""Ticket_Token_Id""");
+            columns.Add(@"tk.""ContractId"" as ""Ticket_Token_ContractId""");
+            columns.Add(@"tk.""TokenId"" as ""Ticket_Token_TokenId""");
+            columns.Add(@"tk.""Tags"" as ""Ticket_Token_Tags""");
+            columns.Add(@"tk.""TotalSupply"" as ""Ticket_Token_TotalSupply""");
+            columns.Add(@"tk.""Name"" as ""Ticket_Token_Name""");
+            columns.Add(@"tk.""Symbol"" as ""Ticket_Token_Symbol""");
+            columns.Add(@"tk.""Decimals"" as ""Ticket_Token_Decimals""");
+            columns.Add(@"tk.""Metadata"" as ""Ticket_Token_Metadata""");
         }
         else
         {
@@ -122,6 +132,15 @@ public class TicketBalanceRepository(
                             columns.Add(@"t.""RawContent"" as ""Ticket_RawContent""");
                             columns.Add(@"t.""JsonContent"" as ""Ticket_JsonContent""");
                             columns.Add(@"t.""WeakHash"" as ""Ticket_WeakHash""");
+                            columns.Add(@"tk.""Id"" as ""Ticket_Token_Id""");
+                            columns.Add(@"tk.""ContractId"" as ""Ticket_Token_ContractId""");
+                            columns.Add(@"tk.""TokenId"" as ""Ticket_Token_TokenId""");
+                            columns.Add(@"tk.""Tags"" as ""Ticket_Token_Tags""");
+                            columns.Add(@"tk.""TotalSupply"" as ""Ticket_Token_TotalSupply""");
+                            columns.Add(@"tk.""Name"" as ""Ticket_Token_Name""");
+                            columns.Add(@"tk.""Symbol"" as ""Ticket_Token_Symbol""");
+                            columns.Add(@"tk.""Decimals"" as ""Ticket_Token_Decimals""");
+                            columns.Add(@"tk.""Metadata"" as ""Ticket_Token_Metadata""");
                         }
                         else
                         {
@@ -144,6 +163,47 @@ public class TicketBalanceRepository(
                                         columns.Add($@"t.""JsonContent"" #> '{{{subField.PathString}}}' as {field.Column}");
                                     }
                                     break;
+                                case "token":
+                                    if (subField.Path == null)
+                                    {
+                                        columns.Add(@"tk.""Id"" as ""Ticket_Token_Id""");
+                                        columns.Add(@"tk.""ContractId"" as ""Ticket_Token_ContractId""");
+                                        columns.Add(@"tk.""TokenId"" as ""Ticket_Token_TokenId""");
+                                        columns.Add(@"tk.""Tags"" as ""Ticket_Token_Tags""");
+                                        columns.Add(@"tk.""TotalSupply"" as ""Ticket_Token_TotalSupply""");
+                                        columns.Add(@"tk.""Name"" as ""Ticket_Token_Name""");
+                                        columns.Add(@"tk.""Symbol"" as ""Ticket_Token_Symbol""");
+                                        columns.Add(@"tk.""Decimals"" as ""Ticket_Token_Decimals""");
+                                        columns.Add(@"tk.""Metadata"" as ""Ticket_Token_Metadata""");
+                                    }
+                                    else
+                                    {
+                                        var tokenField = subField.SubField()!;
+                                        switch (tokenField.Field)
+                                        {
+                                            case "id":          columns.Add(@"tk.""Id"" as ""Ticket_Token_Id"""); break;
+                                            case "contract":    columns.Add(@"tk.""ContractId"" as ""Ticket_Token_ContractId"""); break;
+                                            case "tokenId":     columns.Add(@"tk.""TokenId"" as ""Ticket_Token_TokenId"""); break;
+                                            case "standard":    columns.Add(@"tk.""Tags"" as ""Ticket_Token_Tags"""); break;
+                                            case "totalSupply": columns.Add(@"tk.""TotalSupply"" as ""Ticket_Token_TotalSupply"""); break;
+                                            case "name":        columns.Add(@"tk.""Name"" as ""Ticket_Token_Name"""); break;
+                                            case "symbol":      columns.Add(@"tk.""Symbol"" as ""Ticket_Token_Symbol"""); break;
+                                            case "decimals":    columns.Add(@"tk.""Decimals"" as ""Ticket_Token_Decimals"""); break;
+                                            case "metadata":
+                                                if (tokenField.Path == null)
+                                                {
+                                                    columns.Add(@"tk.""Metadata"" as ""Ticket_Token_Metadata""");
+                                                }
+                                                else
+                                                {
+                                                    field.Column = $"c{counter++}";
+                                                    columns.Add($@"tk.""Metadata"" #> '{{{tokenField.PathString}}}' as {field.Column}");
+                                                }
+                                                break;
+                                            default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Full} doesn't exist");
+                                        }
+                                    }
+                                    break;
                                 default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Full} doesn't exist");
                             }
                         }
@@ -157,6 +217,8 @@ public class TicketBalanceRepository(
             .Select(columns)
             .From(@"""TicketBalances""", "tb")
             .InnerJoin(@"""Tickets""", "t", @"""Id""", @"tb.""TicketId""")
+            .LeftJoin(@"""TicketBindings""", "bn", @"""TicketHash""", @"t.""WeakHash""")
+            .LeftJoin(@"""Tokens""", "tk", @"""Id""", @"bn.""TokenId""")
             .Where(@"tb.""Id""",             filter.Id)
             .Where(@"tb.""AddressId""",      filter.Address?.Id)
             .Where(@"tb.""TicketId""",       filter.Ticket?.Id)
@@ -234,6 +296,18 @@ public class TicketBalanceRepository(
                 RawContent = Micheline.FromBytes((byte[])row.Ticket_RawContent),
                 Content = row.Ticket_JsonContent,
                 WeakHash = row.Ticket_WeakHash,
+                Token = row.Ticket_Token_Id == null ? null : new TokenInfo
+                {
+                    Id = row.Ticket_Token_Id,
+                    Contract = _addressCache.GetInfo((int)row.Ticket_Token_ContractId),
+                    TokenId = row.Ticket_Token_TokenId,
+                    Standard = TokenStandards.ToString((int)row.Ticket_Token_Tags),
+                    TotalSupply = row.Ticket_Token_TotalSupply,
+                    Name = row.Ticket_Token_Name,
+                    Symbol = row.Ticket_Token_Symbol,
+                    Decimals = row.Ticket_Token_Decimals,
+                    Metadata = row.Ticket_Token_Metadata,
+                },
             },
             Balance = row.Balance,
             FirstLevel = row.FirstLevel,
@@ -335,6 +409,18 @@ public class TicketBalanceRepository(
                         RawContent = Micheline.FromBytes((byte[])row.Ticket_RawContent),
                         Content = row.Ticket_JsonContent,
                         WeakHash = row.Ticket_WeakHash,
+                        Token = row.Ticket_Token_Id == null ? null : new TokenInfo
+                        {
+                            Id = row.Ticket_Token_Id,
+                            Contract = _addressCache.GetInfo((int)row.Ticket_Token_ContractId),
+                            TokenId = row.Ticket_Token_TokenId,
+                            Standard = TokenStandards.ToString((int)row.Ticket_Token_Tags),
+                            TotalSupply = row.Ticket_Token_TotalSupply,
+                            Name = row.Ticket_Token_Name,
+                            Symbol = row.Ticket_Token_Symbol,
+                            Decimals = row.Ticket_Token_Decimals,
+                            Metadata = row.Ticket_Token_Metadata,
+                        },
                     };
                     break;
                 case "ticket.id":
@@ -388,8 +474,82 @@ public class TicketBalanceRepository(
                 case "ticket.weakHash":
                     foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[])row.Ticket_WeakHash);
                     break;
+                case "ticket.token":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Id == null ? null : new TokenInfo
+                    {
+                        Id = row.Ticket_Token_Id,
+                        Contract = _addressCache.GetInfo((int)row.Ticket_Token_ContractId),
+                        TokenId = row.Ticket_Token_TokenId,
+                        Standard = TokenStandards.ToString((int)row.Ticket_Token_Tags),
+                        TotalSupply = row.Ticket_Token_TotalSupply,
+                        Name = row.Ticket_Token_Name,
+                        Symbol = row.Ticket_Token_Symbol,
+                        Decimals = row.Ticket_Token_Decimals,
+                        Metadata = row.Ticket_Token_Metadata,
+                    };
+                    break;
+                case "ticket.token.id":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Id?.ToString();
+                    break;
+                case "ticket.token.contract":
+                    foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId);
+                    break;
+                case "ticket.token.contract.id":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_ContractId;
+                    break;
+                case "ticket.token.contract.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Hash;
+                    break;
+                case "ticket.token.contract.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Type;
+                    break;
+                case "ticket.token.contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Domain;
+                    break;
+                case "ticket.token.contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Profile;
+                    break;
+                case "ticket.token.contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner;
+                    break;
+                case "ticket.token.contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner?.Id;
+                    break;
+                case "ticket.token.contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner?.Hash;
+                    break;
+                case "ticket.token.contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner?.Type;
+                    break;
+                case "ticket.token.contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner?.Domain;
+                    break;
+                case "ticket.token.contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Ticket_Token_ContractId))?.Owner?.Profile;
+                    break;
+                case "ticket.token.tokenId":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_TokenId;
+                    break;
+                case "ticket.token.standard":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Tags == null ? null : TokenStandards.ToString((int)row.Ticket_Token_Tags);
+                    break;
+                case "ticket.token.totalSupply":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_TotalSupply;
+                    break;
+                case "ticket.token.name":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Name;
+                    break;
+                case "ticket.token.symbol":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Symbol;
+                    break;
+                case "ticket.token.decimals":
+                    foreach (var row in rows) result[j++][i] = row.Ticket_Token_Decimals;
+                    break;
+                case "ticket.token.metadata":
+                    foreach (var row in rows) result[j++][i] = (RawJson?)row.Ticket_Token_Metadata;
+                    break;
                 default:
-                    if (fields[i].Full.StartsWith("ticket.content."))
+                    if (fields[i].Full.StartsWith("ticket.content.") || fields[i].Full.StartsWith("ticket.token.metadata."))
                         foreach (var row in rows)
                             result[j++][i] = (RawJson?)((row as IDictionary<string, object>)![fields[i].Column!] as string);
                     break;

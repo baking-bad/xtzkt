@@ -60,6 +60,11 @@ public class Ticket
     [JsonConverter(typeof(HexConverter))]
     public required byte[] WeakHash { get; set; }
 
+    /// <summary>
+    /// Token the ticket represents. Ticket-token binding is done manually, off-chain.
+    /// </summary>
+    public TokenInfo? Token { get; set; }
+
     /// <summary>Ticket content type in Micheline format.</summary>
     public required IMicheline RawType { get; set; }
 

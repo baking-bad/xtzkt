@@ -107,8 +107,10 @@ app.MapHealthChecks("/health");
 
 app.MapGet("/profiles", ProfileEndpoints.GetAsync);
 app.MapGet("/profiles/state", ProfileEndpoints.GetStateAsync);
+app.MapGet("/tickets", TicketBindingEndpoints.GetAsync);
 
 app.MapPost("/profiles", ProfileEndpoints.UpdateAsync);
+app.MapPost("/tickets", TicketBindingEndpoints.UpdateAsync);
 #endregion
 
 app.Run();

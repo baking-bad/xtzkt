@@ -111,6 +111,8 @@ namespace Xtzkt.Data
         #endregion
 
         #region tickets
+        public DbSet<TicketBinding> TicketBindings { get; set; }
+
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketBalance> TicketBalances { get; set; }
         public DbSet<TicketTransfer> TicketTransfers { get; set; }
@@ -122,6 +124,7 @@ namespace Xtzkt.Data
 
         #region tokens
         public DbSet<Asset> Assets { get; set; }
+
         public DbSet<Token> Tokens { get; set; }
         public DbSet<TokenBalance> TokenBalances { get; set; }
         public DbSet<TokenTransfer> TokenTransfers { get; set; }
@@ -233,6 +236,8 @@ namespace Xtzkt.Data
             #endregion
 
             #region tickets
+            modelBuilder.BuildTicketBindingModel();
+
             modelBuilder.BuildTicketModel();
             modelBuilder.BuildTicketBalanceModel();
             modelBuilder.BuildTicketTransferModel();
@@ -244,6 +249,7 @@ namespace Xtzkt.Data
 
             #region tokens
             modelBuilder.BuildAssetModel();
+
             modelBuilder.BuildTokenModel();
             modelBuilder.BuildTokenBalanceModel();
             modelBuilder.BuildTokenTransferModel();

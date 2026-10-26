@@ -3,6 +3,7 @@ using Npgsql;
 using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Filters.Parameters;
+using Xtzkt.Api.Models;
 using Xtzkt.Api.Models.Abstract;
 using Xtzkt.Api.Models.Enums;
 using Xtzkt.Api.Models.Operations;
@@ -20,8 +21,8 @@ public class DepositRepository(
 {
     public static readonly SortSpec SortSpec = new("id")
     {
-        { "id",        (@"""Id""",        "bigint") },
-        { "timestamp", (@"""Timestamp""", "timestamptz") },
+        { "id",        (@"o.""Id""",        "bigint") },
+        { "timestamp", (@"o.""Timestamp""", "timestamptz") },
     };
 
     async Task<List<IdRange>?> ProcessFilters(DepositOperationFilter filter, Pagination? pagination = null)
@@ -47,31 +48,86 @@ public class DepositRepository(
             return [];
 
         var columns = new HashSet<string>();
-        if (selection != null)
+        var counter = 0;
+        if (selection == null)
+        {
+            columns.Add("o.*");
+            columns.Add(@"tk.""Id"" as ""Token_Id""");
+            columns.Add(@"tk.""ContractId"" as ""Token_ContractId""");
+            columns.Add(@"tk.""TokenId"" as ""Token_TokenId""");
+            columns.Add(@"tk.""Tags"" as ""Token_Tags""");
+            columns.Add(@"tk.""TotalSupply"" as ""Token_TotalSupply""");
+            columns.Add(@"tk.""Name"" as ""Token_Name""");
+            columns.Add(@"tk.""Symbol"" as ""Token_Symbol""");
+            columns.Add(@"tk.""Decimals"" as ""Token_Decimals""");
+            columns.Add(@"tk.""Metadata"" as ""Token_Metadata""");
+        }
+        else
         {
             foreach (var field in selection.Fields())
             {
                 switch (field.Field)
                 {
-                    case "runtime":        columns.Add(@"""Runtime"""); break;
-                    case "id":             columns.Add(@"""Id"""); break;
-                    case "chain":          columns.Add(@"""ChainId"""); break;
-                    case "level":          columns.Add(@"""Level"""); break;
-                    case "timestamp":      columns.Add(@"""Timestamp"""); break;
-                    case "hash":           columns.Add(@"""Hash"""); columns.Add(@"""Runtime"""); break;
-                    case "status":         columns.Add(@"""Status"""); break;
-                    case "inboxLevel":     columns.Add(@"""InboxLevel"""); break;
-                    case "inboxMessageId": columns.Add(@"""InboxMessageId"""); break;
-                    case "receiver":       columns.Add(@"""ReceiverId"""); break;
-                    case "type":           columns.Add(@"""Type"""); break;
-                    case "amount":         columns.Add(@"""Amount"""); columns.Add(@"""Amount18"""); columns.Add(@"""Runtime"""); break;
-                    case "ticketHash":     columns.Add(@"""TicketHash"""); break;
-                    case "proxy":          columns.Add(@"""ProxyId"""); break;
-                    case "depositId":      columns.Add(@"""DepositId"""); break;
-                    case "claimTransactionId": columns.Add(@"""ClaimTransactionId"""); break;
-                    case "gasUsed":        columns.Add(@"""GasUsed"""); break;
-                    case "logsCount":      columns.Add(@"""LogsCount"""); break;
-                    case "bridgeTicketTransfers": columns.Add(@"""BridgeTicketTransfers"""); break;
+                    case "runtime":        columns.Add(@"o.""Runtime"""); break;
+                    case "id":             columns.Add(@"o.""Id"""); break;
+                    case "chain":          columns.Add(@"o.""ChainId"""); break;
+                    case "level":          columns.Add(@"o.""Level"""); break;
+                    case "timestamp":      columns.Add(@"o.""Timestamp"""); break;
+                    case "hash":           columns.Add(@"o.""Hash"""); columns.Add(@"o.""Runtime"""); break;
+                    case "status":         columns.Add(@"o.""Status"""); break;
+                    case "inboxLevel":     columns.Add(@"o.""InboxLevel"""); break;
+                    case "inboxMessageId": columns.Add(@"o.""InboxMessageId"""); break;
+                    case "receiver":       columns.Add(@"o.""ReceiverId"""); break;
+                    case "type":           columns.Add(@"o.""Type"""); break;
+                    case "amount":         columns.Add(@"o.""Amount"""); columns.Add(@"o.""Amount18"""); columns.Add(@"o.""Runtime"""); break;
+                    case "ticketHash":     columns.Add(@"o.""TicketHash"""); break;
+                    case "token":
+                        if (field.Path == null)
+                        {
+                            columns.Add(@"tk.""Id"" as ""Token_Id""");
+                            columns.Add(@"tk.""ContractId"" as ""Token_ContractId""");
+                            columns.Add(@"tk.""TokenId"" as ""Token_TokenId""");
+                            columns.Add(@"tk.""Tags"" as ""Token_Tags""");
+                            columns.Add(@"tk.""TotalSupply"" as ""Token_TotalSupply""");
+                            columns.Add(@"tk.""Name"" as ""Token_Name""");
+                            columns.Add(@"tk.""Symbol"" as ""Token_Symbol""");
+                            columns.Add(@"tk.""Decimals"" as ""Token_Decimals""");
+                            columns.Add(@"tk.""Metadata"" as ""Token_Metadata""");
+                        }
+                        else
+                        {
+                            var subField = field.SubField()!;
+                            switch (subField.Field)
+                            {
+                                case "id":          columns.Add(@"tk.""Id"" as ""Token_Id"""); break;
+                                case "contract":    columns.Add(@"tk.""ContractId"" as ""Token_ContractId"""); break;
+                                case "tokenId":     columns.Add(@"tk.""TokenId"" as ""Token_TokenId"""); break;
+                                case "standard":    columns.Add(@"tk.""Tags"" as ""Token_Tags"""); break;
+                                case "totalSupply": columns.Add(@"tk.""TotalSupply"" as ""Token_TotalSupply"""); break;
+                                case "name":        columns.Add(@"tk.""Name"" as ""Token_Name"""); break;
+                                case "symbol":      columns.Add(@"tk.""Symbol"" as ""Token_Symbol"""); break;
+                                case "decimals":    columns.Add(@"tk.""Decimals"" as ""Token_Decimals"""); break;
+                                case "metadata":
+                                    if (subField.Path == null)
+                                    {
+                                        columns.Add(@"tk.""Metadata"" as ""Token_Metadata""");
+                                    }
+                                    else
+                                    {
+                                        field.Column = $"c{counter++}";
+                                        columns.Add($@"tk.""Metadata"" #> '{{{subField.PathString}}}' as {field.Column}");
+                                    }
+                                    break;
+                                default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Full} doesn't exist");
+                            }
+                        }
+                        break;
+                    case "proxy":          columns.Add(@"o.""ProxyId"""); break;
+                    case "depositId":      columns.Add(@"o.""DepositId"""); break;
+                    case "claimTransactionId": columns.Add(@"o.""ClaimTransactionId"""); break;
+                    case "gasUsed":        columns.Add(@"o.""GasUsed"""); break;
+                    case "logsCount":      columns.Add(@"o.""LogsCount"""); break;
+                    case "bridgeTicketTransfers": columns.Add(@"o.""BridgeTicketTransfers"""); break;
                     default: throw new BadRequestException(nameof(selection.Select), $"Field {field.Field} doesn't exist");
                 }
             }
@@ -79,22 +135,24 @@ public class DepositRepository(
 
         var (query, parameters) = new SqlBuilder()
             .Select(columns)
-            .From(@"""DepositOps""")
+            .From(@"""DepositOps""", "o")
+            .LeftJoin(@"""TicketBindings""", "bn", @"""TicketHash""", @"o.""TicketHash""")
+            .LeftJoin(@"""Tokens""", "tk", @"""Id""", @"bn.""TokenId""")
             .Where(filter.Or)
-            .Where(@"""Id""",                   ranges)
-            .Where(@"""Id""",                   filter.Id)
-            .Where(@"""Level""",                filter.Level)
-            .Where(@"""Timestamp""",            filter.Timestamp)
-            .Where(@"""Hash""",                 filter.Hash)
-            .Where(@"""Status""",               filter.Status)
-            .Where(@"""InboxLevel""",           filter.InboxLevel)
-            .Where(@"""InboxMessageId""",       filter.InboxMessageId)
-            .Where(@"""ReceiverId""",           filter.Receiver?.Id)
-            .Where(@"""ProxyId""",              filter.Proxy?.Id)
-            .Where(@"""Type""",                 filter.Type)
-            .Where(@"""TicketHash""",           filter.TicketHash)
-            .Where(@"""DepositId""",            filter.DepositId)
-            .Where(@"""ClaimTransactionId""",   filter.ClaimTransactionId)
+            .Where(@"o.""Id""",                   ranges)
+            .Where(@"o.""Id""",                   filter.Id)
+            .Where(@"o.""Level""",                filter.Level)
+            .Where(@"o.""Timestamp""",            filter.Timestamp)
+            .Where(@"o.""Hash""",                 filter.Hash)
+            .Where(@"o.""Status""",               filter.Status)
+            .Where(@"o.""InboxLevel""",           filter.InboxLevel)
+            .Where(@"o.""InboxMessageId""",       filter.InboxMessageId)
+            .Where(@"o.""ReceiverId""",           filter.Receiver?.Id)
+            .Where(@"o.""ProxyId""",              filter.Proxy?.Id)
+            .Where(@"o.""Type""",                 filter.Type)
+            .Where(@"o.""TicketHash""",           filter.TicketHash)
+            .Where(@"o.""DepositId""",            filter.DepositId)
+            .Where(@"o.""ClaimTransactionId""",   filter.ClaimTransactionId)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -172,6 +230,18 @@ public class DepositRepository(
                     Type = DepositTypes.ToString((int)row.Type),
                     Amount = row.Amount18,
                     TicketHash = row.TicketHash,
+                    Token = row.Token_Id == null ? null : new TokenInfo
+                    {
+                        Id = row.Token_Id,
+                        Contract = _addressCache.GetInfo((int)row.Token_ContractId),
+                        TokenId = row.Token_TokenId,
+                        Standard = TokenStandards.ToString((int)row.Token_Tags),
+                        TotalSupply = row.Token_TotalSupply,
+                        Name = row.Token_Name,
+                        Symbol = row.Token_Symbol,
+                        Decimals = row.Token_Decimals,
+                        Metadata = row.Token_Metadata,
+                    },
                     Proxy = _addressCache.GetInfo((int?)row.ProxyId),
                     DepositId = row.DepositId,
                     ClaimTransactionId = row.ClaimTransactionId,
@@ -283,6 +353,80 @@ public class DepositRepository(
                 case "ticketHash":
                     foreach (var row in rows) result[j++][i] = Decode.ToHex((byte[]?)row.TicketHash);
                     break;
+                case "token":
+                    foreach (var row in rows) result[j++][i] = row.Token_Id == null ? null : new TokenInfo
+                    {
+                        Id = row.Token_Id,
+                        Contract = _addressCache.GetInfo((int)row.Token_ContractId),
+                        TokenId = row.Token_TokenId,
+                        Standard = TokenStandards.ToString((int)row.Token_Tags),
+                        TotalSupply = row.Token_TotalSupply,
+                        Name = row.Token_Name,
+                        Symbol = row.Token_Symbol,
+                        Decimals = row.Token_Decimals,
+                        Metadata = row.Token_Metadata,
+                    };
+                    break;
+                case "token.id":
+                    foreach (var row in rows) result[j++][i] = row.Token_Id?.ToString();
+                    break;
+                case "token.contract":
+                    foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.Token_ContractId);
+                    break;
+                case "token.contract.id":
+                    foreach (var row in rows) result[j++][i] = row.Token_ContractId;
+                    break;
+                case "token.contract.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Hash;
+                    break;
+                case "token.contract.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Type;
+                    break;
+                case "token.contract.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Domain;
+                    break;
+                case "token.contract.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Profile;
+                    break;
+                case "token.contract.owner":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner;
+                    break;
+                case "token.contract.owner.id":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner?.Id;
+                    break;
+                case "token.contract.owner.hash":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner?.Hash;
+                    break;
+                case "token.contract.owner.type":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner?.Type;
+                    break;
+                case "token.contract.owner.domain":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner?.Domain;
+                    break;
+                case "token.contract.owner.profile":
+                    foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int?)row.Token_ContractId))?.Owner?.Profile;
+                    break;
+                case "token.tokenId":
+                    foreach (var row in rows) result[j++][i] = row.Token_TokenId;
+                    break;
+                case "token.standard":
+                    foreach (var row in rows) result[j++][i] = row.Token_Tags == null ? null : TokenStandards.ToString((int)row.Token_Tags);
+                    break;
+                case "token.totalSupply":
+                    foreach (var row in rows) result[j++][i] = row.Token_TotalSupply;
+                    break;
+                case "token.name":
+                    foreach (var row in rows) result[j++][i] = row.Token_Name;
+                    break;
+                case "token.symbol":
+                    foreach (var row in rows) result[j++][i] = row.Token_Symbol;
+                    break;
+                case "token.decimals":
+                    foreach (var row in rows) result[j++][i] = row.Token_Decimals;
+                    break;
+                case "token.metadata":
+                    foreach (var row in rows) result[j++][i] = (RawJson?)row.Token_Metadata;
+                    break;
                 case "proxy":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ProxyId);
                     break;
@@ -334,6 +478,11 @@ public class DepositRepository(
                 case "bridgeTicketTransfers":
                     foreach (var row in rows) result[j++][i] = row.BridgeTicketTransfers;
                     break;
+                default:
+                    if (fields[i].Full.StartsWith("token.metadata."))
+                        foreach (var row in rows)
+                            result[j++][i] = (RawJson?)((row as IDictionary<string, object>)![fields[i].Column!] as string);
+                    break;
             }
         }
 
@@ -360,10 +509,10 @@ public class DepositRepository(
                 continue;
 
             if ((roles & ActivityRole.Target) != 0)
-                or.Add(@"""ReceiverId""", address.Id, count);
+                or.Add(@"o.""ReceiverId""", address.Id, count);
 
             if ((roles & ActivityRole.Mention) != 0 && address is Data.Models.XEvmAddress)
-                or.Add(@"""ProxyId""", address.Id, count);
+                or.Add(@"o.""ProxyId""", address.Id, count);
         }
 
         if (or.IsEmpty)

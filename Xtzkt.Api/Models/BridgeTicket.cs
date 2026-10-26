@@ -24,6 +24,11 @@ public class BridgeTicket
     [JsonConverter(typeof(HexConverter))]
     public required byte[] WeakHash { get; set; }
 
+    /// <summary>
+    /// Token the ticket represents. Ticket-token binding is done manually, off-chain.
+    /// </summary>
+    public TokenInfo? Token { get; set; }
+
     /// <summary>Level of the block where the bridge ticket was first seen.</summary>
     public int FirstLevel { get; set; }
 

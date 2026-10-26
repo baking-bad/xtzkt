@@ -70,6 +70,12 @@ public class XEvmDepositOperation : DepositOperation, IBridgeTicketTransfersSour
     [JsonConverter(typeof(HexConverter))]
     public byte[]? TicketHash { get; set; }
 
+    /// <summary>
+    /// Token the deposited ticket represents (`fa` deposits only).
+    /// Tickets are bound to tokens by hand, so it's missing for unbound ones.
+    /// </summary>
+    public TokenInfo? Token { get; set; }
+
     /// <summary>ERC20 proxy contract the deposited token is exposed as (`fa` deposits only).</summary>
     public AddressInfo? Proxy { get; set; }
 

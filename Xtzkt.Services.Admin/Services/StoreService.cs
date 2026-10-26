@@ -7,6 +7,7 @@ namespace Xtzkt.Services.Admin.Services;
 
 class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
 {
+    #region profiles
     public async Task<(long Count, DateTime? LastUpdate)> GetStateAsync(CancellationToken ct = default)
     {
         await using var cmd = _dataSource.CreateCommand("""
@@ -250,6 +251,105 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
 
         return saved.Count;
     }
+    #endregion
+
+    static async Task CheckTokensExistAsync(NpgsqlConnection conn, long[] ids, CancellationToken ct)
+    {
+        if (ids.Length == 0) return;
+
+        await using var cmd = new NpgsqlCommand("""
+            SELECT "Id"
+            FROM "Tokens"
+            WHERE "Id" = ANY(@ids)
+            """, conn);
+        cmd.Parameters.AddWithValue("ids", ids);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        var existing = new HashSet<long>(ids.Length);
+        while (await reader.ReadAsync(ct))
+            existing.Add(reader.GetInt64(0));
+
+        foreach (var token in ids)
+            if (!existing.Contains(token))
+                throw new TokenNotFoundException(token);
+    }
+
+
+    #region tickets
+    public async Task<List<TicketBinding>> GetTicketBindingsAsync(int offset, int limit, CancellationToken ct = default)
+    {
+        await using var cmd = _dataSource.CreateCommand("""
+            SELECT *
+            FROM "TicketBindings"
+            ORDER BY "TicketHash"
+            OFFSET @offset
+            LIMIT @limit
+            """);
+        cmd.Parameters.AddWithValue("offset", offset);
+        cmd.Parameters.AddWithValue("limit", limit);
+
+        var res = new List<TicketBinding>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            res.Add(new TicketBinding
+            {
+                TicketHash = reader.GetFieldValue<byte[]>("TicketHash"),
+                TokenId = reader.GetInt64("TokenId")
+            });
+        }
+
+        return res;
+    }
+
+    public async Task<(int Upserted, int Removed)> UpdateTicketBindingsAsync(List<TicketBinding> upserts, List<byte[]> removes, CancellationToken ct = default)
+    {
+        if (upserts.Count == 0 && removes.Count == 0) return (0, 0);
+
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        await CheckTokensExistAsync(conn, [.. upserts.Select(x => x.TokenId)], ct);
+
+        var removed = await RemoveTicketBindingsAsync(conn, removes, ct);
+        var upserted = await UpsertTicketBindingsAsync(conn, upserts, ct);
+
+        await tx.CommitAsync(ct);
+
+        _logger.LogInformation("Ticket bindings updated: {upserted} upserted, {removed} removed", upserted, removed);
+        return (upserted, removed);
+    }
+
+    static async Task<int> RemoveTicketBindingsAsync(NpgsqlConnection conn, List<byte[]> hashes, CancellationToken ct)
+    {
+        if (hashes.Count == 0) return 0;
+
+        await using var cmd = new NpgsqlCommand("""
+            DELETE FROM "TicketBindings"
+            WHERE "TicketHash" = ANY(@hashes)
+            """, conn);
+        cmd.Parameters.AddWithValue("hashes", hashes.ToArray());
+
+        return await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    static async Task<int> UpsertTicketBindingsAsync(NpgsqlConnection conn, List<TicketBinding> ticketBindings, CancellationToken ct)
+    {
+        if (ticketBindings.Count == 0) return 0;
+
+        await using var cmd = new NpgsqlCommand("""
+            INSERT INTO "TicketBindings" ("TicketHash", "TokenId")
+            SELECT *
+            FROM unnest(@hashes, @tokens)
+            ON CONFLICT ("TicketHash") DO UPDATE SET
+                "TokenId" = EXCLUDED."TokenId"
+            """, conn);
+        cmd.Parameters.AddWithValue("hashes", ticketBindings.Select(x => x.TicketHash).ToArray());
+        cmd.Parameters.AddWithValue("tokens", ticketBindings.Select(x => x.TokenId).ToArray());
+
+        return await cmd.ExecuteNonQueryAsync(ct);
+    }
+    #endregion
 
     #region indexes
     public async Task EnsureIndexesAsync(CancellationToken ct = default)
