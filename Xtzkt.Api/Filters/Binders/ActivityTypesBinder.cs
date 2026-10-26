@@ -23,6 +23,12 @@ public class ActivityTypesBinder : IModelBinder
         var types = new HashSet<string>();
         foreach (var type in value!)
         {
+            if (ActivityTypes.TryGetGroup(type, out var group))
+            {
+                types.UnionWith(group);
+                continue;
+            }
+
             if (!ActivityTypes.IsValid(type))
             {
                 bindingContext.ModelState.TryAddModelError(bindingContext.ModelName, $"Invalid type '{type}'.");

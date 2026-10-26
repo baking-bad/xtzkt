@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Xtzkt.Api.Models.Enums;
 
 public class ActivityTypes
@@ -49,56 +51,102 @@ public class ActivityTypes
     public const string BridgeTicketTransfer = "bridge_ticket_transfer";
     public const string Baking = "baking";
 
-    public static bool IsValid(string value) => value switch
+    #region aliases
+    public const string Anonymous = "anonymous";
+    public const string Consensus = "consensus";
+    public const string Voting = "voting";
+    public const string Implicit = "implicit";
+    public const string Manager = "manager";
+    public const string All = "all";
+    #endregion
+
+    static readonly HashSet<string> AnonymousGroup =
+    [
+        Activation,
+        DalEntrapmentEvidence,
+        DoubleBaking,
+        DoubleConsensus,
+        DrainDelegate,
+        NonceRevelation,
+        VdfRevelation,
+    ];
+
+    static readonly HashSet<string> ConsensusGroup =
+    [
+        Attestation,
+        Preattestation,
+        Baking,
+    ];
+
+    static readonly HashSet<string> VotingGroup =
+    [
+        Ballot,
+        Proposal,
+    ];
+
+    static readonly HashSet<string> ImplicitGroup =
+    [
+        Migration,
+        AttestationReward,
+        Autostaking,
+        DalAttestationReward,
+        RevelationPenalty,
+        Subsidy,
+    ];
+
+    static readonly HashSet<string> ManagerGroup =
+    [
+        Deposit,
+        Origination,
+        Transaction,
+        DalPublishCommitment,
+        Delegation,
+        IncreasePaidStorage,
+        RegisterConstant,
+        Reveal,
+        SetDepositsLimit,
+        SetDelegateParameters,
+        SmartRollupAddMessages,
+        SmartRollupCement,
+        SmartRollupExecute,
+        SmartRollupOriginate,
+        SmartRollupPublish,
+        SmartRollupRecoverBond,
+        SmartRollupRefute,
+        Staking,
+        TransferTicket,
+        UpdateSecondaryKey,
+
+        TicketTransfer,
+        TokenTransfer,
+        BridgeTicketTransfer,
+    ];
+
+    static readonly HashSet<string> AllGroup =
+    [
+        .. AnonymousGroup,
+        .. ConsensusGroup,
+        .. VotingGroup,
+        .. ImplicitGroup,
+        .. ManagerGroup,
+    ];
+
+    public static bool IsValid(string value) => AllGroup.Contains(value);
+
+    public static bool TryGetGroup(string value, [NotNullWhen(true)] out IReadOnlySet<string>? group)
     {
-        Activation => true,
-        DalEntrapmentEvidence => true,
-        DoubleBaking => true,
-        DoubleConsensus => true,
-        DrainDelegate => true,
-        NonceRevelation => true,
-        VdfRevelation => true,
-
-        Attestation => true,
-        Preattestation => true,
-
-        Ballot => true,
-        Proposal => true,
-
-        Migration => true,
-        AttestationReward => true,
-        Autostaking => true,
-        DalAttestationReward => true,
-        RevelationPenalty => true,
-        Subsidy => true,
-
-        Deposit => true,
-        Origination => true,
-        Transaction => true,
-        DalPublishCommitment => true,
-        Delegation => true,
-        IncreasePaidStorage => true,
-        RegisterConstant => true,
-        Reveal => true,
-        SetDelegateParameters => true,
-        SetDepositsLimit => true,
-        SmartRollupAddMessages => true,
-        SmartRollupCement => true,
-        SmartRollupExecute => true,
-        SmartRollupOriginate => true,
-        SmartRollupPublish => true,
-        SmartRollupRecoverBond => true,
-        SmartRollupRefute => true,
-        Staking => true,
-        TransferTicket => true,
-        UpdateSecondaryKey => true,
-
-        TicketTransfer => true,
-        TokenTransfer => true,
-        BridgeTicketTransfer => true,
-        Baking => true,
-        _ => false
-    };
+        group = value switch
+        {
+            Anonymous => AnonymousGroup,
+            Consensus => ConsensusGroup,
+            Voting => VotingGroup,
+            Implicit => ImplicitGroup,
+            Manager => ManagerGroup,
+            All => AllGroup,
+            _ => null
+        };
+        return group != null;
+    }
 
     public static readonly HashSet<string> Default =
     [

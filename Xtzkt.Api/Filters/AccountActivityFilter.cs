@@ -19,7 +19,10 @@ public class AccountActivityFilter : INormalizable
     /// Comma-separated list of activity types to return. If not specified, most types are returned,
     /// except the noisy ones such as attestations, which you have to ask for explicitly.
     ///
-    /// Examples: `?types=transaction`, `?types=transaction,token_transfer,origination`.
+    /// Type groups are accepted as well (`consensus`, `voting`, `anonymous`, `manager`, `implicit`, or `all`),
+    /// each standing for all of its types, noisy ones included — see the section description for their contents.
+    ///
+    /// Examples: `?types=transaction`, `?types=transaction,token_transfer,origination`, `?types=manager,attestation`.
     /// </summary>
     public ActivityTypesParameter? Types { get; set; }
 
