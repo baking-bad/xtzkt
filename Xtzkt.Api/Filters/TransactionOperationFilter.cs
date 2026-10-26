@@ -54,6 +54,29 @@ public class TransactionOperationFilter : ManagerOperationFilter
     public AddressInfoNullParameter? Initiator { get; set; }
 
     /// <summary>
+    /// Filters by raw amount sent: `amount` for single-runtime transactions, and `amountSent`
+    /// for cross-runtime ones. The value is compared as is, in the sender's runtime units,
+    /// without converting between decimals, so it's mutez for `l1`, `x_michelson` and `x_michelson_evm`,
+    /// and 18 decimals for `x_evm` and `x_evm_michelson`. Use `amountTez` to filter all runtimes at once.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?amount.gt=0`.
+    /// </summary>
+    public BigIntegerParameter? Amount { get; set; }
+
+    /// <summary>
+    /// Filters by amount sent, in tez: `amount` for single-runtime transactions, and `amountSent`
+    /// for cross-runtime ones. Unlike `amount`, the value is a decimal number of tez with up to 18 decimals,
+    /// so it means the same in every runtime, and a single request covers them all.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Examples: `?amountTez.gt=123.4`, `?amountTez.le=0.000001`.
+    /// </summary>
+    public TezParameter? AmountTez { get; set; }
+
+    /// <summary>
     /// Filters by entrypoint called on the target contract.
     ///
     /// Click on the parameter to expand more details.
@@ -121,6 +144,8 @@ public class TransactionOperationFilter : ManagerOperationFilter
         Target == null &&
         TargetCodeHash == null &&
         Initiator == null &&
+        Amount == null &&
+        AmountTez == null &&
         Entrypoint == null &&
         Parameters == null &&
         Guessed == null &&
@@ -135,6 +160,8 @@ public class TransactionOperationFilter : ManagerOperationFilter
         ($"{name}.target", Target),
         ($"{name}.targetCodeHash", TargetCodeHash),
         ($"{name}.initiator", Initiator),
+        ($"{name}.amount", Amount),
+        ($"{name}.amountTez", AmountTez),
         ($"{name}.entrypoint", Entrypoint),
         ($"{name}.parameters", Parameters),
         ($"{name}.guessed", Guessed),

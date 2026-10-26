@@ -229,6 +229,17 @@ static class SwaggerExtension
                         schema.Properties[key] = schema.Properties[key].OneOf![1];
                 }
 
+                var tez = doc.Components!.Schemas![nameof(TezParameter)];
+                foreach (var key in tez.Properties!.Keys.ToList())
+                {
+                    var prop = tez.Properties[key];
+                    var value = new OpenApiSchema { Type = JsonSchemaType.String, Format = "decimal" };
+                    var description = prop.Description ?? prop.OneOf?.LastOrDefault()?.Description;
+                    tez.Properties[key] = prop.Items != null
+                        ? new OpenApiSchema { Type = JsonSchemaType.Array, Items = value, Description = description }
+                        : new OpenApiSchema { Type = value.Type, Format = value.Format, Description = description };
+                }
+
                 return Task.CompletedTask;
             });
         });

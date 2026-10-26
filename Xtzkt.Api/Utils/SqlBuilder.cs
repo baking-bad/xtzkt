@@ -175,6 +175,37 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
+    public SqlBuilder Where(string column, TezParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+            _filters.Add($"{column} = {Param(value.Eq)}");
+
+        if (value.Ne != null)
+            _filters.Add($"{column} != {Param(value.Ne)}");
+
+        if (value.Gt != null)
+            _filters.Add($"{column} > {Param(value.Gt)}");
+
+        if (value.Ge != null)
+            _filters.Add($"{column} >= {Param(value.Ge)}");
+
+        if (value.Lt != null)
+            _filters.Add($"{column} < {Param(value.Lt)}");
+
+        if (value.Le != null)
+            _filters.Add($"{column} <= {Param(value.Le)}");
+
+        if (value.In != null)
+            _filters.Add($"{column} = ANY ({Param(value.In)}::numeric[])");
+
+        if (value.Ni != null)
+            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}::numeric[]))");
+
+        return this;
+    }
+
     public SqlBuilder Where(string column, ChainIdParameter? value)
     {
         if (value == null) return this;

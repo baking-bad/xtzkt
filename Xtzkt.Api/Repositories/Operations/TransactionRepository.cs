@@ -24,6 +24,12 @@ public class TransactionRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
+    static readonly string AmountColumn =
+        $@"(CASE WHEN ""Direction"" IN ({(int)Data.Models.Direction.XEvm}, {(int)Data.Models.Direction.XEvmMichelson}) THEN ""Amount18"" ELSE ""Amount"" END)";
+
+    static readonly string AmountTezColumn =
+        $@"(CASE WHEN ""Direction"" IN ({(int)Data.Models.Direction.XEvm}, {(int)Data.Models.Direction.XEvmMichelson}) THEN ""Amount18"" ELSE ""Amount"" * 1000000000000::numeric END)";
+
     async Task<List<IdRange>?> ProcessFilters(TransactionOperationFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
@@ -168,6 +174,8 @@ public class TransactionRepository(
             .Where(@"""TargetId""",       filter.Target?.Id)
             .Where(@"""TargetCodeHash""", filter.TargetCodeHash)
             .Where(@"""InitiatorId""",    filter.Initiator?.Id)
+            .Where(AmountColumn,          filter.Amount)
+            .Where(AmountTezColumn,       filter.AmountTez)
             .Where(@"""Entrypoint""",     filter.Entrypoint)
             .Where(@"""Parameters""",     filter.Parameters)
             .Where(@"""Guessed""",        filter.Guessed)
@@ -214,6 +222,8 @@ public class TransactionRepository(
             .Where(@"""TargetId""",       filter.Target?.Id)
             .Where(@"""TargetCodeHash""", filter.TargetCodeHash)
             .Where(@"""InitiatorId""",    filter.Initiator?.Id)
+            .Where(AmountColumn,          filter.Amount)
+            .Where(AmountTezColumn,       filter.AmountTez)
             .Where(@"""Entrypoint""",     filter.Entrypoint)
             .Where(@"""Parameters""",     filter.Parameters)
             .Where(@"""Guessed""",        filter.Guessed)

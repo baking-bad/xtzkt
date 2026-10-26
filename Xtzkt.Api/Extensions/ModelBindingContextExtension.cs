@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Numerics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -673,6 +674,43 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
+    public static bool TryGetTez(this ModelBindingContext bindingContext, string name, ref bool hasValue, out BigInteger? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameter(name, out var rawValue))
+        {
+            if (!TryParseTez(rawValue, out var value))
+            {
+                bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                return false;
+            }
+            hasValue = true;
+            result = value;
+        }
+        return true;
+    }
+
+    public static bool TryGetTezList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<BigInteger>? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        {
+            var list = new List<BigInteger>(rawValues.Length);
+            foreach (var rawValue in rawValues)
+            {
+                if (!TryParseTez(rawValue, out var value))
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "List contains invalid value.");
+                    return false;
+                }
+                list.Add(value);
+            }
+            hasValue = true;
+            result = list;
+        }
+        return true;
+    }
+
     public static bool TryGetDateTime(this ModelBindingContext bindingContext, string name, ref bool hasValue, out DateTime? result)
     {
         result = null;
@@ -1011,6 +1049,21 @@ internal static class ModelBindingContextExtension
         }
 
         return true;
+    }
+
+    static bool TryParseTez(string rawValue, out BigInteger result)
+    {
+        var dot = rawValue.IndexOf('.');
+        var decimals = dot == -1 ? 0 : rawValue.Length - dot - 1;
+
+        if (dot == 0 || dot == rawValue.Length - 1 || decimals > TezParameter.Decimals)
+        {
+            result = default;
+            return false;
+        }
+
+        var digits = (dot == -1 ? rawValue : rawValue.Remove(dot, 1)) + new string('0', TezParameter.Decimals - decimals);
+        return BigInteger.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out result);
     }
 
     static bool CheckBatchSize(this ModelBindingContext bindingContext, string name, int count)
