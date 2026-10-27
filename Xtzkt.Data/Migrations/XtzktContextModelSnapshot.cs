@@ -5363,9 +5363,6 @@ namespace Xtzkt.Data.Migrations
                     b.Property<string>("LogoDark")
                         .HasColumnType("text");
 
-                    b.Property<string>("Mailchain")
-                        .HasColumnType("text");
-
                     b.Property<string>("Reddit")
                         .HasColumnType("text");
 
