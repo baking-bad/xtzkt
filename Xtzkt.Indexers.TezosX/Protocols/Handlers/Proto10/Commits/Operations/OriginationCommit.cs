@@ -289,7 +289,6 @@ class OriginationCommit(ProtocolHandler protocol) : Proto02.OriginationCommit(pr
         RevertPayFee(sender, operation.DaFee!.Value);
         RevertBurnFee(sender, operation.GasFee!.Value - operation.GasFeeRefunded!.Value);
         sender.Counter = operation.Counter - 1;
-        sender.Revealed = true;
         sender.OriginationsCount--;
         sender.LastLevel = operation.Level;
         sender.LastTimestamp = operation.Timestamp;

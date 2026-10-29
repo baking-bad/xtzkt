@@ -193,7 +193,6 @@ class TransferTicketCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         RevertPayFee(sender, operation.DaFee);
         RevertBurnFee(sender, operation.GasFee - operation.GasFeeRefunded);
         sender.Counter = operation.Counter - 1;
-        sender.Revealed = true;
         sender.TransferTicketCount--;
         sender.LastLevel = operation.Level;
         sender.LastTimestamp = operation.Timestamp;

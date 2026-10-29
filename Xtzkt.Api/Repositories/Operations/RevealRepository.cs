@@ -57,6 +57,7 @@ public class RevealRepository(
                     case "timestamp":       columns.Add(@"""Timestamp"""); break;
                     case "hash":            columns.Add(@"""Hash"""); break;
                     case "sender":          columns.Add(@"""SenderId"""); break;
+                    case "publicKey":       columns.Add(@"""SenderId"""); break;
                     case "counter":         columns.Add(@"""Counter"""); break;
                     case "gasLimit":        columns.Add(@"""GasLimit"""); break;
                     case "gasUsed":         columns.Add(@"""GasUsed"""); break;
@@ -136,6 +137,7 @@ public class RevealRepository(
                     Timestamp = row.Timestamp,
                     Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
+                    PublicKey = GetPublicKey(_addressCache.Get((int)row.SenderId)),
                     Counter = row.Counter,
                     StorageFee = row.StorageFee,
                     AllocationFee = row.AllocationFee,
@@ -155,6 +157,7 @@ public class RevealRepository(
                     Timestamp = row.Timestamp,
                     Hash = Hashes.FormatMichelsonOperationHash(row.Hash),
                     Sender = _addressCache.GetInfo((int)row.SenderId),
+                    PublicKey = GetPublicKey(_addressCache.Get((int)row.SenderId)),
                     Counter = row.Counter,
                     StorageFee = row.StorageFee,
                     AllocationFee = row.AllocationFee,
@@ -249,6 +252,9 @@ public class RevealRepository(
                 case "sender.owner.profile":
                     foreach (var row in rows) result[j++][i] = (await _addressCache.GetInfoAsync((int)row.SenderId)).Owner?.Profile;
                     break;
+                case "publicKey":
+                    foreach (var row in rows) result[j++][i] = GetPublicKey(await _addressCache.GetAsync((int)row.SenderId));
+                    break;
                 case "counter":
                     foreach (var row in rows) result[j++][i] = row.Counter;
                     break;
@@ -293,6 +299,13 @@ public class RevealRepository(
 
         return result;
     }
+
+    static string? GetPublicKey(Data.Models.Address? sender) => sender switch
+    {
+        Data.Models.L1User user => user.PublicKey,
+        Data.Models.XMichelsonUser user => user.PublicKey,
+        _ => null
+    };
 
     public async Task<IEnumerable<IActivity>> Activity(
         List<Data.Models.Address> addresses,

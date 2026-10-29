@@ -144,7 +144,6 @@ class RegisterConstantsCommit(ProtocolHandler protocol) : ProtocolCommit(protoco
         RevertPayFee(sender, op.DaFee);
         RevertBurnFee(sender, op.GasFee - op.GasFeeRefunded);
         sender.Counter = op.Counter - 1;
-        sender.Revealed = true;
         sender.RegisterConstantsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;

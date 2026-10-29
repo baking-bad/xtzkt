@@ -151,7 +151,6 @@ class IncreasePaidStorageCommit(ProtocolHandler protocol) : ProtocolCommit(proto
         RevertPayFee(sender, operation.DaFee);
         RevertBurnFee(sender, operation.GasFee - operation.GasFeeRefunded);
         sender.Counter = operation.Counter - 1;
-        sender.Revealed = true;
         sender.IncreasePaidStorageCount--;
         sender.LastLevel = operation.Level;
         sender.LastTimestamp = operation.Timestamp;

@@ -123,11 +123,9 @@ class RevealsCommit(ProtocolHandler protocol) : ProtocolCommit(protocol)
         #region revert result
         if (operation.Status == OperationStatus.Applied)
         {
-            if (sender.RevealsCount == 1)
-            {
-                sender.PublicKey = null;
-                sender.Revealed = false;
-            }
+            // the kernel rejects a second reveal and never clears the key
+            sender.PublicKey = null;
+            sender.Revealed = false;
         }
         #endregion
 

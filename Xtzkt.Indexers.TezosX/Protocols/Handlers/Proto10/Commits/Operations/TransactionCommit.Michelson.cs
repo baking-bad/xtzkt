@@ -318,7 +318,6 @@ partial class TransactionCommit
         RevertPayFee(sender, op.DaFee!.Value);
         RevertBurnFee(sender, op.GasFee!.Value - op.GasFeeRefunded!.Value);
         sender.Counter = op.Counter - 1;
-        sender.Revealed = true;
         sender.TransactionsCount--;
         sender.LastLevel = op.Level;
         sender.LastTimestamp = op.Timestamp;

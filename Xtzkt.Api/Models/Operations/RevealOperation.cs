@@ -28,6 +28,9 @@ public abstract class RevealOperation : IOpgActivity
     /// <summary>Address that revealed its public key.</summary>
     public required AddressInfo Sender { get; set; }
 
+    /// <summary>Public key the operation reveals; missing if the sender has never revealed it successfully.</summary>
+    public string? PublicKey { get; set; }
+
     /// <summary>Sender's operation counter, ensuring operations apply in order and only once.</summary>
     public int Counter { get; set; }
 
