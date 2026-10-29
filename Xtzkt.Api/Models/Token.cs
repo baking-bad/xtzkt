@@ -74,4 +74,11 @@ public class Token
 
     /// <summary>Time when the metadata was last synced (resolved, or the last resolve attempt), if any.</summary>
     public DateTime? MetadataSyncedAt { get; set; }
+
+    /// <summary>
+    /// Asset the token belongs to, or `null` if it doesn't belong to any. Assets are curated manually, off-chain,
+    /// so unlike the token's own name, symbol and metadata, this can't be faked on-chain. A token without an asset
+    /// is unknown rather than bad: NFTs, for one, are almost never curated.
+    /// </summary>
+    public AssetInfo? Asset { get; set; }
 }

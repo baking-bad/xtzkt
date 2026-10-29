@@ -14,6 +14,7 @@ namespace Xtzkt.Api.Repositories;
 public class TokenTransferRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
@@ -57,6 +58,13 @@ public class TokenTransferRepository(
 
             filter.Token.Id ??= new();
             filter.Token.Id.Eq = (long)row.Id;
+        }
+
+        if (filter.Token?.Asset != null)
+        {
+            if (!_assetCache.TryGetTokenIds(filter.Token.Asset, out var tokenIds) || !Int64Parameter.TryMerge(filter.Token.Id, tokenIds, out var tokenId))
+                return null;
+            filter.Token.Id = tokenId;
         }
 
         return await _blockCache.ProcessOpFilters(chains, filter.Id, filter.Level, filter.Timestamp, pagination);
@@ -139,6 +147,7 @@ public class TokenTransferRepository(
                                 case "name":        columns.Add(@"t.""Name"" as ""Token_Name"""); break;
                                 case "symbol":      columns.Add(@"t.""Symbol"" as ""Token_Symbol"""); break;
                                 case "decimals":    columns.Add(@"t.""Decimals"" as ""Token_Decimals"""); break;
+                                case "asset":       columns.Add(@"tt.""TokenId"" as ""Token_Id"""); break;
                                 case "metadata":
                                     if (subField.Path == null)
                                     {
@@ -262,6 +271,7 @@ public class TokenTransferRepository(
                 Symbol = row.Token_Symbol,
                 Decimals = row.Token_Decimals,
                 Metadata = row.Token_Metadata,
+                Asset = _assetCache.GetInfo((long)row.Token_Id),
             },
             From = _addressCache.GetInfo((int?)row.FromId),
             FromEntrypoint = row.FromEntrypoint,
@@ -410,6 +420,7 @@ public class TokenTransferRepository(
                         Symbol = row.Token_Symbol,
                         Decimals = row.Token_Decimals,
                         Metadata = row.Token_Metadata,
+                        Asset = _assetCache.GetInfo((long)row.Token_Id),
                     };
                     break;
                 case "token.id":
@@ -471,6 +482,21 @@ public class TokenTransferRepository(
                     break;
                 case "token.metadata":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Token_Metadata;
+                    break;
+                case "token.asset":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id);
+                    break;
+                case "token.asset.id":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Id;
+                    break;
+                case "token.asset.name":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Name;
+                    break;
+                case "token.asset.symbol":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Symbol;
+                    break;
+                case "token.asset.logo":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Logo;
                     break;
                 default:
                     if (fields[i].Full.StartsWith("token.metadata."))

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Data;
 using Xtzkt.Data.Models;
 
@@ -33,6 +34,65 @@ public class AssetCache
         {
             return CachedByTokenId.GetValueOrDefault(tokenId);
         }
+    }
+
+    public Models.AssetInfo? GetInfo(long? tokenId)
+    {
+        if (tokenId is not long _tokenId || Get(_tokenId) is not Asset asset)
+            return null;
+
+        return new()
+        {
+            Id = asset.Id,
+            Name = asset.Name,
+            Symbol = asset.Symbol,
+            Logo = asset.Logo,
+        };
+    }
+
+    /// <summary>
+    /// Ids of all the tokens that belong to an asset.
+    /// </summary>
+    public long[] GetTokenIds()
+    {
+        lock (Crit)
+        {
+            return [.. CachedByTokenId.Keys];
+        }
+    }
+
+    /// <summary>
+    /// Translates a filter by asset into the equivalent filter by token id.
+    /// Returns `false` if no token can match it.
+    /// </summary>
+    public bool TryGetTokenIds(AssetInfoParameter asset, out Int64Parameter? tokenIds)
+    {
+        if (asset.Id is not Int32NullParameter id)
+        {
+            tokenIds = null;
+            return true;
+        }
+
+        var matchesNull = id.Matches(null);
+        var tokens = new List<long>();
+
+        lock (Crit)
+        {
+            foreach (var (tokenId, tokenAsset) in CachedByTokenId)
+            {
+                if (id.Matches(tokenAsset.Id) != matchesNull)
+                    tokens.Add(tokenId);
+            }
+        }
+
+        if (matchesNull)
+        {
+            tokenIds = tokens.Count == 0 ? null : new() { Ni = tokens };
+            return true;
+        }
+
+        tokenIds = new() { In = tokens };
+        return tokens.Count != 0;
     }
 
     /// <summary>

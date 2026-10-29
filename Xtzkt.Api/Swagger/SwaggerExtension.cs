@@ -212,6 +212,7 @@ static class SwaggerExtension
                     nameof(AddressInfoParameter),
                     nameof(AddressInfoNullParameter),
                     nameof(AddressInfoEqParameter),
+                    nameof(AssetInfoParameter),
                     nameof(ChainInfoParameter),
                     nameof(ChainInfoEqParameter),
                     nameof(TokenInfoParameter),

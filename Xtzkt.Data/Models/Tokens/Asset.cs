@@ -23,6 +23,13 @@ namespace Xtzkt.Data.Models
             modelBuilder.Entity<Asset>()
                 .HasKey(x => x.Id);
             #endregion
+
+            #region props
+            // ids are assigned manually
+            modelBuilder.Entity<Asset>()
+                .Property(x => x.Id)
+                .ValueGeneratedNever();
+            #endregion
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Xtzkt.Api.Repositories;
 public class TokenBalanceRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
@@ -87,6 +88,13 @@ public class TokenBalanceRepository(
 
             filter.Token.Id ??= new();
             filter.Token.Id.Eq = (long)row.Id;
+        }
+
+        if (filter.Token?.Asset != null)
+        {
+            if (!_assetCache.TryGetTokenIds(filter.Token.Asset, out var tokenIds) || !Int64Parameter.TryMerge(filter.Token.Id, tokenIds, out var tokenId))
+                return false;
+            filter.Token.Id = tokenId;
         }
 
         return true;
@@ -165,6 +173,7 @@ public class TokenBalanceRepository(
                                 case "name":        columns.Add(@"t.""Name"" as ""Token_Name"""); break;
                                 case "symbol":      columns.Add(@"t.""Symbol"" as ""Token_Symbol"""); break;
                                 case "decimals":    columns.Add(@"t.""Decimals"" as ""Token_Decimals"""); break;
+                                case "asset":       columns.Add(@"tb.""TokenId"" as ""Token_Id"""); break;
                                 case "metadata":
                                     if (subField.Path == null)
                                     {
@@ -268,6 +277,7 @@ public class TokenBalanceRepository(
                 Symbol = row.Token_Symbol,
                 Decimals = row.Token_Decimals,
                 Metadata = row.Token_Metadata,
+                Asset = _assetCache.GetInfo((long)row.Token_Id),
             },
             Balance = row.Balance,
             Entrypoint = row.Entrypoint,
@@ -376,6 +386,7 @@ public class TokenBalanceRepository(
                         Symbol = row.Token_Symbol,
                         Decimals = row.Token_Decimals,
                         Metadata = row.Token_Metadata,
+                        Asset = _assetCache.GetInfo((long)row.Token_Id),
                     };
                     break;
                 case "token.id":
@@ -437,6 +448,21 @@ public class TokenBalanceRepository(
                     break;
                 case "token.metadata":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Token_Metadata;
+                    break;
+                case "token.asset":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id);
+                    break;
+                case "token.asset.id":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Id;
+                    break;
+                case "token.asset.name":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Name;
+                    break;
+                case "token.asset.symbol":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Symbol;
+                    break;
+                case "token.asset.logo":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Token_Id)?.Logo;
                     break;
                 default:
                     if (fields[i].Full.StartsWith("token.metadata."))

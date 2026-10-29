@@ -141,10 +141,7 @@ namespace Xtzkt.Data.Migrations
             modelBuilder.Entity("Xtzkt.Data.Models.Asset", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text");

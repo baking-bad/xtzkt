@@ -21,7 +21,10 @@ public class TokenBalance
     /// <summary>Balance amount.</summary>
     public BigInteger Balance { get; set; }
 
-    /// <summary>Entrypoint used to receive the ticket (tickets only).</summary>
+    /// <summary>
+    /// Entrypoint of the address holding the balance, e.g. `deposit` for `KT1...%deposit`. A token contract may keep
+    /// balances of one address under different entrypoints, so the address can have several balances of the same token.
+    /// </summary>
     [JsonConverter(typeof(Utf8Converter))]
     public byte[]? Entrypoint { get; set; }
 

@@ -16,6 +16,7 @@ namespace Xtzkt.Api.Repositories.Operations;
 public class DepositRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
@@ -107,6 +108,7 @@ public class DepositRepository(
                                 case "name":        columns.Add(@"tk.""Name"" as ""Token_Name"""); break;
                                 case "symbol":      columns.Add(@"tk.""Symbol"" as ""Token_Symbol"""); break;
                                 case "decimals":    columns.Add(@"tk.""Decimals"" as ""Token_Decimals"""); break;
+                                case "asset":       columns.Add(@"tk.""Id"" as ""Token_Id"""); break;
                                 case "metadata":
                                     if (subField.Path == null)
                                     {
@@ -241,6 +243,7 @@ public class DepositRepository(
                         Symbol = row.Token_Symbol,
                         Decimals = row.Token_Decimals,
                         Metadata = row.Token_Metadata,
+                        Asset = _assetCache.GetInfo((long)row.Token_Id),
                     },
                     Proxy = _addressCache.GetInfo((int?)row.ProxyId),
                     DepositId = row.DepositId,
@@ -365,6 +368,7 @@ public class DepositRepository(
                         Symbol = row.Token_Symbol,
                         Decimals = row.Token_Decimals,
                         Metadata = row.Token_Metadata,
+                        Asset = _assetCache.GetInfo((long)row.Token_Id),
                     };
                     break;
                 case "token.id":
@@ -426,6 +430,21 @@ public class DepositRepository(
                     break;
                 case "token.metadata":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Token_Metadata;
+                    break;
+                case "token.asset":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Token_Id);
+                    break;
+                case "token.asset.id":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Token_Id)?.Id;
+                    break;
+                case "token.asset.name":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Token_Id)?.Name;
+                    break;
+                case "token.asset.symbol":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Token_Id)?.Symbol;
+                    break;
+                case "token.asset.logo":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Token_Id)?.Logo;
                     break;
                 case "proxy":
                     foreach (var row in rows) result[j++][i] = await _addressCache.GetInfoAsync((int?)row.ProxyId);

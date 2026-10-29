@@ -96,6 +96,15 @@ public class TokenFilter : INormalizable
     /// </summary>
     public JsonParameter? Metadata { get; set; }
 
+    /// <summary>
+    /// Filters by asset the token belongs to.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Examples: `?asset=1`, `?asset.ne=null`.
+    /// </summary>
+    public AssetInfoParameter? Asset { get; set; }
+
     public bool IsEmpty() =>
         Id == null &&
         Chain == null &&
@@ -106,7 +115,8 @@ public class TokenFilter : INormalizable
         LastLevel == null &&
         FirstTimestamp == null &&
         LastTimestamp == null &&
-        Metadata == null;
+        Metadata == null &&
+        Asset == null;
 
     public string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
@@ -118,5 +128,6 @@ public class TokenFilter : INormalizable
         ($"{name}.lastLevel", LastLevel),
         ($"{name}.firstTimestamp", FirstTimestamp),
         ($"{name}.lastTimestamp", LastTimestamp),
-        ($"{name}.metadata", Metadata));
+        ($"{name}.metadata", Metadata),
+        ($"{name}.asset", Asset));
 }

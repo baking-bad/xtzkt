@@ -53,6 +53,7 @@ public class AssetRepository(AssetCache _assetCache, TokenRepository _tokenRepo)
     {
         return new Asset
         {
+            Id = asset.Id,
             Name = asset.Name,
             Symbol = asset.Symbol,
             Description = asset.Description,

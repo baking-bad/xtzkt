@@ -8,6 +8,10 @@ Tezos L1 and on Tezos X.
   grouped by hand, and a token stays an asset of its own until someone groups it.
 - Tokens of one asset are independent contracts, each with its own supply, holders and decimals: the same
   asset often has 6 decimals on Tezos L1 and 18 in EVM. Nothing is summed up across them.
+- Every token carries the `asset` it belongs to, or `null` if it doesn't belong to any. Since assets are
+  curated by hand, this can't be faked on-chain the way a token's own name, symbol or logo can: a token
+  that calls itself USDC is USDC only if its `asset` says so. `null` means unknown rather than bad: most
+  tokens, NFTs especially, are never curated.
 
 ### Bridge tickets are a third thing
 
@@ -39,5 +43,6 @@ Michelson ticket, so it lives in `/v1/bridge_tickets`:
 - `/v1/assets/{contract}/{tokenId}` accepts any token of the asset and returns all of them at once.
 - If the pair `contract + tokenId` matches tokens on several chains (which practically never happens),
   you'll get a 400 asking you to add the `chain` parameter, or use `/v1/assets/{tokenId}` with internal `Token.Id` instead.
-- You can use returned token ids in `/v1/tokens/balances?token.id.in=...` and `/v1/tokens/transfers?token.id.in=...`
-  to get a single feed across the whole asset and build aggregated statistics.
+- `/v1/tokens/balances?token.asset=...` and `/v1/tokens/transfers?token.asset=...` give a single feed across
+  the whole asset, to build aggregated statistics. Note that `asset.id` is not a token id, so it doesn't go
+  into `/v1/assets/{tokenId}`: any token id of the asset does.

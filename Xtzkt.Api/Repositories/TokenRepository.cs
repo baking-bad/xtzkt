@@ -13,6 +13,7 @@ namespace Xtzkt.Api.Repositories;
 public class TokenRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     NpgsqlDataSource _dataSource)
 {
     public static readonly SortSpec SortSpec = new("id")
@@ -60,6 +61,13 @@ public class TokenRepository(
         if (!await _addressCache.Resolve(filter.Contract, chains))
             return false;
 
+        if (filter.Asset != null)
+        {
+            if (!_assetCache.TryGetTokenIds(filter.Asset, out var tokenIds) || !Int64Parameter.TryMerge(filter.Id, tokenIds, out var id))
+                return false;
+            filter.Id = id;
+        }
+
         return true;
     }
 
@@ -100,6 +108,7 @@ public class TokenRepository(
                     case "metadataStatus":    columns.Add(@"""MetadataStatus"""); break;
                     case "metadataLink":      columns.Add(@"""MetadataLink"""); break;
                     case "metadataSyncedAt":  columns.Add(@"""MetadataSyncedAt"""); break;
+                    case "asset":             columns.Add(@"""Id"""); break;
                     case "metadata":
                         if (field.Path == null)
                         {
@@ -192,6 +201,7 @@ public class TokenRepository(
             MetadataStatus = TokenMetadataStatuses.ToString((int)row.MetadataStatus),
             MetadataLink = row.MetadataLink,
             MetadataSyncedAt = row.MetadataSyncedAt,
+            Asset = _assetCache.GetInfo((long)row.Id),
         });
     }
 
@@ -351,6 +361,21 @@ public class TokenRepository(
                     break;
                 case "metadata":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Metadata;
+                    break;
+                case "asset":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Id);
+                    break;
+                case "asset.id":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Id)?.Id;
+                    break;
+                case "asset.name":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Id)?.Name;
+                    break;
+                case "asset.symbol":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Id)?.Symbol;
+                    break;
+                case "asset.logo":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long)row.Id)?.Logo;
                     break;
                 default:
                     if (fields[i].Field == "metadata")

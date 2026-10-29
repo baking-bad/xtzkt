@@ -355,9 +355,40 @@ public class Int32NullParameter : INormalizable
         return res.Reduce();
     }
 
+    public bool Matches(int? value)
+    {
+        if (Eq is int eq && (eq == Null ? value != null : value != eq))
+            return false;
+
+        if (Ne is int ne && (ne == Null ? value == null : value == ne))
+            return false;
+
+        if (NullIfNull(Gt) is int gt && !(value > gt))
+            return false;
+
+        if (NullIfNull(Ge) is int ge && !(value >= ge))
+            return false;
+
+        if (NullIfNull(Lt) is int lt && !(value < lt))
+            return false;
+
+        if (NullIfNull(Le) is int le && !(value <= le))
+            return false;
+
+        if (In != null && !IsIn(value, In))
+            return false;
+
+        if (Ni != null && IsIn(value, Ni))
+            return false;
+
+        return true;
+    }
+
     static int? NullIfNull(int? value) => value == Null ? null : value;
 
     static int? Max(int? a, int? b) => a == null ? b : b == null ? a : Math.Max(a.Value, b.Value);
 
     static int? Min(int? a, int? b) => a == null ? b : b == null ? a : Math.Min(a.Value, b.Value);
+
+    static bool IsIn(int? value, List<int> list) => value is int v ? v != Null && list.Contains(v) : list.Contains(Null);
 }

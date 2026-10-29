@@ -15,6 +15,7 @@ public class TokenInfoBinder(IModelMetadataProvider _metadata, IModelBinderFacto
         var tokenId = await bindingContext.BindChild<BigIntegerParameter>(_metadata, _factory, $"{param}.{nameof(TokenInfoParameter.TokenId)}");
         var standard = await bindingContext.BindChild<TokenStandardParameter>(_metadata, _factory, $"{param}.{nameof(TokenInfoParameter.Standard)}");
         var metadata = await bindingContext.BindChild<JsonParameter>(_metadata, _factory, $"{param}.{nameof(TokenInfoParameter.Metadata)}");
+        var asset = await bindingContext.BindChild<AssetInfoParameter>(_metadata, _factory, $"{param}.{nameof(TokenInfoParameter.Asset)}");
 
         id ??= await bindingContext.BindChild<Int64Parameter>(_metadata, _factory, param);
 
@@ -22,8 +23,8 @@ public class TokenInfoBinder(IModelMetadataProvider _metadata, IModelBinderFacto
             return;
 
         bindingContext.Result = ModelBindingResult.Success(
-            id == null && contract == null && tokenId == null && standard == null && metadata == null
+            id == null && contract == null && tokenId == null && standard == null && metadata == null && asset == null
                 ? null
-                : new TokenInfoParameter { Id = id, Contract = contract, TokenId = tokenId, Standard = standard, Metadata = metadata });
+                : new TokenInfoParameter { Id = id, Contract = contract, TokenId = tokenId, Standard = standard, Metadata = metadata, Asset = asset });
     }
 }

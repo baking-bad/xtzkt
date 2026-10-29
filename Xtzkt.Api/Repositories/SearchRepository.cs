@@ -17,6 +17,7 @@ namespace Xtzkt.Api.Repositories;
 public class SearchRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     ProfileCache _profileCache,
     DomainCache _domainCache,
     DbInitService _dbInit,
@@ -395,6 +396,7 @@ public class SearchRepository(
             Name = row.Name,
             Symbol = row.Symbol,
             Decimals = row.Decimals,
+            Asset = _assetCache.GetInfo((long)row.Id),
         }));
     }
 
@@ -402,6 +404,7 @@ public class SearchRepository(
     {
         var lowered = query.ToLowerInvariant();
         var escaped = lowered.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+        var curated = _assetCache.GetTokenIds();
 
         IEnumerable<dynamic> rows;
         if (lowered.Length < FuzzyMatcher.MinFuzzyLength)
@@ -416,9 +419,9 @@ public class SearchRepository(
                 FROM "Tokens"
                 WHERE "ChainId" = ANY (@chains)
                 AND lower("Symbol") LIKE @prefix
-                ORDER BY score DESC, "Id" DESC
+                ORDER BY score DESC, ("Id" = ANY (@curated)) DESC, "HoldersCount" DESC, "Id" DESC
                 LIMIT @limit
-                """, new { prefix = $"{escaped}%", chains, lowered, limit });
+                """, new { prefix = $"{escaped}%", chains, curated, lowered, limit });
         }
         else if (_dbInit.PgTrgm)
         {
@@ -436,9 +439,9 @@ public class SearchRepository(
                 AND ("Symbol" ILIKE @contains OR "Name" ILIKE @contains OR
                     @lowered % "Symbol" OR @lowered % "Name" OR
                     @lowered <% "Symbol" OR @lowered <% "Name")
-                ORDER BY score DESC, "Id" DESC
+                ORDER BY score DESC, ("Id" = ANY (@curated)) DESC, "HoldersCount" DESC, "Id" DESC
                 LIMIT @limit
-                """, new { contains = $"%{escaped}%", prefix = $"{escaped}%", chains, lowered, limit });
+                """, new { contains = $"%{escaped}%", prefix = $"{escaped}%", chains, curated, lowered, limit });
         }
         else
         {
@@ -454,9 +457,9 @@ public class SearchRepository(
                 FROM "Tokens"
                 WHERE "ChainId" = ANY (@chains)
                 AND ("Symbol" ILIKE @contains OR "Name" ILIKE @contains)
-                ORDER BY score DESC, "Id" DESC
+                ORDER BY score DESC, ("Id" = ANY (@curated)) DESC, "HoldersCount" DESC, "Id" DESC
                 LIMIT @limit
-                """, new { contains = $"%{escaped}%", prefix = $"{escaped}%", chains, lowered, limit });
+                """, new { contains = $"%{escaped}%", prefix = $"{escaped}%", chains, curated, lowered, limit });
         }
 
         var contractIds = new List<int>(rows.Count());
@@ -475,6 +478,7 @@ public class SearchRepository(
             Name = row.Name,
             Symbol = row.Symbol,
             Decimals = row.Decimals,
+            Asset = _assetCache.GetInfo((long)row.Id),
         }));
     }
     #endregion

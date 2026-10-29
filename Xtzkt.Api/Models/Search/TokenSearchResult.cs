@@ -29,4 +29,11 @@ public class TokenSearchResult : SearchResult
 
     /// <summary>Token decimals (from metadata).</summary>
     public int? Decimals { get; init; }
+
+    /// <summary>
+    /// Asset the token belongs to, or `null` if it doesn't belong to any. Assets are curated manually, off-chain,
+    /// so unlike the token's own name and symbol, this can't be faked on-chain. A token without an asset
+    /// is unknown rather than bad: NFTs, for one, are almost never curated.
+    /// </summary>
+    public AssetInfo? Asset { get; init; }
 }

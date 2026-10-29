@@ -4,7 +4,7 @@ namespace Xtzkt.Services.Admin.Models;
 
 public class AssetInfo
 {
-    public int? Id { get; set; }
+    public required int Id { get; set; }
     public string? Name { get; set; }
     public string? Symbol { get; set; }
     public string? Description { get; set; }

@@ -52,7 +52,7 @@ public class TokenBalanceFilter : INormalizable
     public BigIntegerParameter? Balance { get; set; }
 
     /// <summary>
-    /// Filters by entrypoint used to receive the ticket.
+    /// Filters by entrypoint of the address holding the balance.
     ///
     /// Click on the parameter to expand more details.
     ///

@@ -3,6 +3,11 @@ namespace Xtzkt.Api.Models;
 public class Asset
 {
     /// <summary>
+    /// Internal unique asset id, or `null` if the token doesn't belong to any asset.
+    /// </summary>
+    public int? Id { get; set; }
+
+    /// <summary>
     /// Asset name. Falls back to the token's own name, if the token doesn't belong to any asset.
     /// </summary>
     public string? Name { get; set; }

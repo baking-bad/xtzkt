@@ -15,6 +15,7 @@ namespace Xtzkt.Api.Repositories;
 public class TicketTransferRepository(
     ChainCache _chainCache,
     AddressCache _addressCache,
+    AssetCache _assetCache,
     BlockCache _blockCache,
     NpgsqlDataSource _dataSource)
 {
@@ -161,6 +162,7 @@ public class TicketTransferRepository(
                                             case "name":        columns.Add(@"tk.""Name"" as ""Ticket_Token_Name"""); break;
                                             case "symbol":      columns.Add(@"tk.""Symbol"" as ""Ticket_Token_Symbol"""); break;
                                             case "decimals":    columns.Add(@"tk.""Decimals"" as ""Ticket_Token_Decimals"""); break;
+                                            case "asset":       columns.Add(@"tk.""Id"" as ""Ticket_Token_Id"""); break;
                                             case "metadata":
                                                 if (tokenField.Path == null)
                                                 {
@@ -297,6 +299,7 @@ public class TicketTransferRepository(
                     Symbol = row.Ticket_Token_Symbol,
                     Decimals = row.Ticket_Token_Decimals,
                     Metadata = row.Ticket_Token_Metadata,
+                    Asset = _assetCache.GetInfo((long)row.Ticket_Token_Id),
                 },
             },
             From = _addressCache.GetInfo((int?)row.FromId),
@@ -446,6 +449,7 @@ public class TicketTransferRepository(
                             Symbol = row.Ticket_Token_Symbol,
                             Decimals = row.Ticket_Token_Decimals,
                             Metadata = row.Ticket_Token_Metadata,
+                            Asset = _assetCache.GetInfo((long)row.Ticket_Token_Id),
                         },
                     };
                     break;
@@ -512,6 +516,7 @@ public class TicketTransferRepository(
                         Symbol = row.Ticket_Token_Symbol,
                         Decimals = row.Ticket_Token_Decimals,
                         Metadata = row.Ticket_Token_Metadata,
+                        Asset = _assetCache.GetInfo((long)row.Ticket_Token_Id),
                     };
                     break;
                 case "ticket.token.id":
@@ -573,6 +578,21 @@ public class TicketTransferRepository(
                     break;
                 case "ticket.token.metadata":
                     foreach (var row in rows) result[j++][i] = (RawJson?)row.Ticket_Token_Metadata;
+                    break;
+                case "ticket.token.asset":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Ticket_Token_Id);
+                    break;
+                case "ticket.token.asset.id":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Ticket_Token_Id)?.Id;
+                    break;
+                case "ticket.token.asset.name":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Ticket_Token_Id)?.Name;
+                    break;
+                case "ticket.token.asset.symbol":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Ticket_Token_Id)?.Symbol;
+                    break;
+                case "ticket.token.asset.logo":
+                    foreach (var row in rows) result[j++][i] = _assetCache.GetInfo((long?)row.Ticket_Token_Id)?.Logo;
                     break;
                 default:
                     if (fields[i].Full.StartsWith("ticket.content.") || fields[i].Full.StartsWith("ticket.token.metadata."))

@@ -284,27 +284,26 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
         return res;
     }
 
-    public async Task<List<int>> UpdateAssetsAsync(List<Asset> creates, List<Asset> updates, List<int> removes, CancellationToken ct = default)
+    public async Task<(int Upserted, int Removed)> UpdateAssetsAsync(List<Asset> upserts, List<int> removes, CancellationToken ct = default)
     {
-        if (creates.Count == 0 && updates.Count == 0 && removes.Count == 0) return [];
+        if (upserts.Count == 0 && removes.Count == 0) return (0, 0);
 
         await using var conn = await _dataSource.OpenConnectionAsync(ct);
         await using var tx = await conn.BeginTransactionAsync(ct);
 
         await LockAssetsAsync(conn, ct);
 
-        long[] tokens = [.. creates.Concat(updates).SelectMany(x => x.Tokens)];
+        long[] tokens = [.. upserts.SelectMany(x => x.Tokens)];
         await CheckTokensExistAsync(conn, tokens, ct);
-        await CheckTokensFreeAsync(conn, tokens, [.. updates.Select(x => x.Id), .. removes], ct);
+        await CheckTokensFreeAsync(conn, tokens, [.. upserts.Select(x => x.Id), .. removes], ct);
 
         var removed = await RemoveAssetsAsync(conn, removes, ct);
-        await ReplaceAssetsAsync(conn, updates, ct);
-        var created = await CreateAssetsAsync(conn, creates, ct);
+        var upserted = await UpsertAssetsAsync(conn, upserts, ct);
 
         await tx.CommitAsync(ct);
 
-        _logger.LogInformation("Assets updated: {created} created, {updated} updated, {removed} removed", created.Count, updates.Count, removed);
-        return created;
+        _logger.LogInformation("Assets updated: {upserted} upserted, {removed} removed", upserted, removed);
+        return (upserted, removed);
     }
 
     static async Task LockAssetsAsync(NpgsqlConnection conn, CancellationToken ct)
@@ -374,64 +373,33 @@ class StoreService(NpgsqlDataSource _dataSource, ILogger<StoreService> _logger)
         return await cmd.ExecuteNonQueryAsync(ct);
     }
 
-    static async Task ReplaceAssetsAsync(NpgsqlConnection conn, List<Asset> assets, CancellationToken ct)
+    static async Task<int> UpsertAssetsAsync(NpgsqlConnection conn, List<Asset> assets, CancellationToken ct)
     {
-        if (assets.Count == 0) return;
+        if (assets.Count == 0) return 0;
 
         await using var batch = new NpgsqlBatch(conn);
         foreach (var asset in assets)
         {
-            var cmd = AssetCommand("""
-                UPDATE "Assets"
-                SET "Name" = @name, "Symbol" = @symbol, "Description" = @description, "Logo" = @logo, "Tokens" = @tokens
-                WHERE "Id" = @id
-                """, asset);
+            var cmd = new NpgsqlBatchCommand("""
+                INSERT INTO "Assets" ("Id", "Name", "Symbol", "Description", "Logo", "Tokens")
+                VALUES (@id, @name, @symbol, @description, @logo, @tokens)
+                ON CONFLICT ("Id") DO UPDATE SET
+                    "Name" = EXCLUDED."Name",
+                    "Symbol" = EXCLUDED."Symbol",
+                    "Description" = EXCLUDED."Description",
+                    "Logo" = EXCLUDED."Logo",
+                    "Tokens" = EXCLUDED."Tokens"
+                """);
             cmd.Parameters.AddWithValue("id", asset.Id);
+            cmd.Parameters.AddWithValue("name", (object?)asset.Name ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("symbol", (object?)asset.Symbol ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("description", (object?)asset.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("logo", (object?)asset.Logo ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("tokens", asset.Tokens);
             batch.BatchCommands.Add(cmd);
         }
 
-        await batch.ExecuteNonQueryAsync(ct);
-
-        for (int i = 0; i < assets.Count; i++)
-            if (batch.BatchCommands[i].RecordsAffected == 0)
-                throw new AssetNotFoundException(assets[i].Id);
-    }
-
-    static async Task<List<int>> CreateAssetsAsync(NpgsqlConnection conn, List<Asset> assets, CancellationToken ct)
-    {
-        if (assets.Count == 0) return [];
-
-        await using var batch = new NpgsqlBatch(conn);
-        foreach (var asset in assets)
-        {
-            batch.BatchCommands.Add(AssetCommand("""
-                INSERT INTO "Assets" ("Name", "Symbol", "Description", "Logo", "Tokens")
-                VALUES (@name, @symbol, @description, @logo, @tokens)
-                RETURNING "Id"
-                """, asset));
-        }
-
-        await using var reader = await batch.ExecuteReaderAsync(ct);
-        var ids = new List<int>(assets.Count);
-        do
-        {
-            while (await reader.ReadAsync(ct))
-                ids.Add(reader.GetInt32(0));
-        }
-        while (await reader.NextResultAsync(ct));
-
-        return ids;
-    }
-
-    static NpgsqlBatchCommand AssetCommand(string sql, Asset asset)
-    {
-        var cmd = new NpgsqlBatchCommand(sql);
-        cmd.Parameters.AddWithValue("name", (object?)asset.Name ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("symbol", (object?)asset.Symbol ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("description", (object?)asset.Description ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("logo", (object?)asset.Logo ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("tokens", asset.Tokens);
-        return cmd;
+        return await batch.ExecuteNonQueryAsync(ct);
     }
     #endregion
 

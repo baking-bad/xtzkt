@@ -37,16 +37,21 @@ static class AssetEndpoints
 
     public static async Task<IResult> UpdateAsync(List<AssetInfo?> assets, StoreService store, CancellationToken ct)
     {
-        var indexes = new Dictionary<int, int>(assets.Count);
+        var ids = new HashSet<int>(assets.Count);
         var tokenIndexes = new Dictionary<long, int>();
-        var creates = new List<Asset>();
-        var updates = new List<Asset>();
+        var upserts = new List<Asset>(assets.Count);
         var removes = new List<int>();
 
         for (int i = 0; i < assets.Count; i++)
         {
             if (assets[i] is not AssetInfo asset)
                 return Results.BadRequest($"[{i}]: asset is null");
+
+            if (asset.Id <= 0)
+                return Results.BadRequest($"[{i}]: id must be positive");
+
+            if (!ids.Add(asset.Id))
+                return Results.BadRequest($"[{i}]: duplicate id {asset.Id}");
 
             if (asset.Name != null && string.IsNullOrWhiteSpace(asset.Name))
                 return Results.BadRequest($"[{i}]: name must be either null or non-empty");
@@ -63,15 +68,9 @@ static class AssetEndpoints
             if (asset.Description?.Length > MaxDescriptionLength)
                 return Results.BadRequest($"[{i}]: description must not be longer than {MaxDescriptionLength} characters");
 
-            if (asset.Id is int id && !indexes.TryAdd(id, i))
-                return Results.BadRequest($"[{i}]: duplicate id {id}");
-
             if (asset.Tokens == null)
             {
-                if (asset.Id == null)
-                    return Results.BadRequest($"[{i}]: tokens are required to create an asset");
-
-                removes.Add(asset.Id.Value);
+                removes.Add(asset.Id);
                 continue;
             }
 
@@ -91,25 +90,13 @@ static class AssetEndpoints
                 tokenIndexes.Add(token, i);
             }
 
-            if (asset.Id == null)
-                creates.Add(ToModel(asset, 0, asset.Tokens));
-            else
-                updates.Add(ToModel(asset, asset.Id.Value, asset.Tokens));
+            upserts.Add(ToModel(asset, asset.Tokens));
         }
 
         try
         {
-            var created = await store.UpdateAssetsAsync(creates, updates, removes, ct);
-
-            var ids = new int[assets.Count];
-            for (int i = 0, k = 0; i < assets.Count; i++)
-                ids[i] = assets[i]!.Id ?? created[k++];
-
-            return Results.Ok(ids);
-        }
-        catch (AssetNotFoundException ex)
-        {
-            return Results.BadRequest($"[{indexes[ex.Id]}]: asset {ex.Id} doesn't exist");
+            await store.UpdateAssetsAsync(upserts, removes, ct);
+            return Results.NoContent();
         }
         catch (TokenNotFoundException ex)
         {
@@ -121,9 +108,9 @@ static class AssetEndpoints
         }
     }
 
-    static Asset ToModel(AssetInfo asset, int id, long[] tokens) => new()
+    static Asset ToModel(AssetInfo asset, long[] tokens) => new()
     {
-        Id = id,
+        Id = asset.Id,
         Name = asset.Name,
         Symbol = asset.Symbol,
         Description = asset.Description,

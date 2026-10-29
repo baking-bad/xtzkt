@@ -38,17 +38,25 @@ public class TokenInfoParameter : INormalizable
     /// </summary>
     public JsonParameter? Metadata { get; set; }
 
+    /// <summary>
+    /// Filters by asset the token belongs to.
+    /// Click on the parameter to expand more details.
+    /// </summary>
+    public AssetInfoParameter? Asset { get; set; }
+
     public virtual bool IsEmpty() =>
         Id == null &&
         Contract == null &&
         TokenId == null &&
         Standard == null &&
-        Metadata == null;
+        Metadata == null &&
+        Asset == null;
 
     public virtual string Normalize(string name) => ResponseCacheService.BuildKey("",
         ($"{name}.id", Id),
         ($"{name}.contract", Contract),
         ($"{name}.tokenId", TokenId),
         ($"{name}.standard", Standard),
-        ($"{name}.metadata", Metadata));
+        ($"{name}.metadata", Metadata),
+        ($"{name}.asset", Asset));
 }
