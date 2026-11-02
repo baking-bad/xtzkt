@@ -30,6 +30,26 @@ public class TokenTransferRepository(
         if (chains.Count == 0)
             return null;
 
+        if (filter.Anyof != null)
+        {
+            var columns = filter.Anyof.Fields.Select(field => field switch
+            {
+                "from" => @"tt.""FromId""",
+                "to" => @"tt.""ToId""",
+                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
+            }).Distinct().ToList();
+
+            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+                return null;
+
+            var or = new OrParameterBuilder(pagination?.Limit);
+            if (filter.Anyof.HasNull)
+                or.Add(columns, Int32NullParameter.Null, 0);
+            foreach (var address in addresses)
+                or.Add(columns, address.Id, address.TokenTransfersCount);
+            filter.Or = or.Build();
+        }
+
         if (!await _addressCache.Resolve(filter.From, chains))
             return null;
 
@@ -173,12 +193,6 @@ public class TokenTransferRepository(
             .From(@"""TokenTransfers""", "tt")
             .InnerJoin(@"""Tokens""", "t", @"""Id""", @"tt.""TokenId""")
             .Where(filter.Or)
-            .Where(filter.Anyof, x => x switch
-            {
-                "from" => @"tt.""FromId""",
-                "to" => @"tt.""ToId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
-            })
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)
@@ -222,12 +236,7 @@ public class TokenTransferRepository(
             sql.InnerJoin(@"""Tokens""", "t", @"""Id""", @"tt.""TokenId""");
 
         var (query, parameters) = sql
-            .Where(filter.Anyof, x => x switch
-            {
-                "from" => @"tt.""FromId""",
-                "to" => @"tt.""ToId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
-            })
+            .Where(filter.Or)
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)

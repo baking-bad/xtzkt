@@ -30,6 +30,28 @@ public class OriginationRepository(
         if (chains.Count == 0)
             return null;
 
+        if (filter.Anyof != null)
+        {
+            var columns = filter.Anyof.Fields.Select(field => field switch
+            {
+                "sender" => @"""SenderId""",
+                "contract" => @"""ContractId""",
+                "baker" => @"""BakerId""",
+                "initiator" => @"""InitiatorId""",
+                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `contract`, `baker` and `initiator` fields only."),
+            }).Distinct().ToList();
+
+            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+                return null;
+
+            var or = new OrParameterBuilder(pagination?.Limit);
+            if (filter.Anyof.HasNull)
+                or.Add(columns, Int32NullParameter.Null, 0);
+            foreach (var address in addresses)
+                or.Add(columns, address.Id, address.OriginationsCount);
+            filter.Or = or.Build();
+        }
+
         if (!await _addressCache.Resolve(filter.Sender, chains))
             return null;
 
@@ -107,14 +129,6 @@ public class OriginationRepository(
             .Select(columns)
             .From(@"""OriginationOps""")
             .Where(filter.Or)
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "contract" => @"""ContractId""",
-                "baker" => @"""BakerId""",
-                "initiator" => @"""InitiatorId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `contract`, `baker` and `initiator` fields only."),
-            })
             .Where(@"""Id""",               ranges)
             .Where(@"""Id""",               filter.Id)
             .Where(@"""Level""",            filter.Level)
@@ -149,14 +163,7 @@ public class OriginationRepository(
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""OriginationOps""")
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "contract" => @"""ContractId""",
-                "baker" => @"""BakerId""",
-                "initiator" => @"""InitiatorId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `contract`, `baker` and `initiator` fields only."),
-            })
+            .Where(filter.Or)
             .Where(@"""Id""",               ranges)
             .Where(@"""Id""",               filter.Id)
             .Where(@"""Level""",            filter.Level)

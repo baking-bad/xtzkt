@@ -24,11 +24,37 @@ public class BridgeTicketTransferRepository(
         { "timestamp", (@"tt.""Timestamp""", "timestamptz") },
     };
 
+    static int BridgeTicketTransfersCount(Data.Models.Address address) => address switch
+    {
+        Data.Models.XEvmAddress a => a.BridgeTicketTransfersCount,
+        _ => 0,
+    };
+
     async Task<List<IdRange>?> ProcessFilters(BridgeTicketTransferFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
         if (chains.Count == 0)
             return null;
+
+        if (filter.Anyof != null)
+        {
+            var columns = filter.Anyof.Fields.Select(field => field switch
+            {
+                "from" => @"tt.""FromId""",
+                "to" => @"tt.""ToId""",
+                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
+            }).Distinct().ToList();
+
+            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+                return null;
+
+            var or = new OrParameterBuilder(pagination?.Limit);
+            if (filter.Anyof.HasNull)
+                or.Add(columns, Int32NullParameter.Null, 0);
+            foreach (var address in addresses)
+                or.Add(columns, address.Id, BridgeTicketTransfersCount(address));
+            filter.Or = or.Build();
+        }
 
         if (!await _addressCache.Resolve(filter.From, chains))
             return null;
@@ -166,12 +192,6 @@ public class BridgeTicketTransferRepository(
             .LeftJoin(@"""TicketBindings""", "bn", @"""TicketHash""", @"t.""WeakHash""")
             .LeftJoin(@"""Tokens""", "tk", @"""Id""", @"bn.""TokenId""")
             .Where(filter.Or)
-            .Where(filter.Anyof, x => x switch
-            {
-                "from" => @"tt.""FromId""",
-                "to" => @"tt.""ToId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
-            })
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)
@@ -209,12 +229,7 @@ public class BridgeTicketTransferRepository(
             sql.InnerJoin(@"""BridgeTickets""", "t", @"""Id""", @"tt.""TicketId""");
 
         var (query, parameters) = sql
-            .Where(filter.Anyof, x => x switch
-            {
-                "from" => @"tt.""FromId""",
-                "to" => @"tt.""ToId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
-            })
+            .Where(filter.Or)
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)
@@ -520,11 +535,7 @@ public class BridgeTicketTransferRepository(
 
         foreach (var address in addresses)
         {
-            var count = address switch
-            {
-                Data.Models.XEvmAddress a => a.BridgeTicketTransfersCount,
-                _ => 0,
-            };
+            var count = BridgeTicketTransfersCount(address);
             if (count == 0)
                 continue;
 

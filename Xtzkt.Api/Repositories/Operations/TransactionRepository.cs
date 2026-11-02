@@ -36,6 +36,27 @@ public class TransactionRepository(
         if (chains.Count == 0)
             return null;
 
+        if (filter.Anyof != null)
+        {
+            var columns = filter.Anyof.Fields.Select(field => field switch
+            {
+                "sender" => @"""SenderId""",
+                "target" => @"""TargetId""",
+                "initiator" => @"""InitiatorId""",
+                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `initiator` fields only."),
+            }).Distinct().ToList();
+
+            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+                return null;
+
+            var or = new OrParameterBuilder(pagination?.Limit);
+            if (filter.Anyof.HasNull)
+                or.Add(columns, Int32NullParameter.Null, 0);
+            foreach (var address in addresses)
+                or.Add(columns, address.Id, address.TransactionsCount);
+            filter.Or = or.Build();
+        }
+
         if (!await _addressCache.Resolve(filter.Sender, chains))
             return null;
 
@@ -155,13 +176,6 @@ public class TransactionRepository(
             .Select(columns)
             .From(@"""TransactionOps""")
             .Where(filter.Or)
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "target" => @"""TargetId""",
-                "initiator" => @"""InitiatorId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `initiator` fields only."),
-            })
             .Where(@"""Id""",             ranges)
             .Where(@"""Id""",             filter.Id)
             .Where(@"""Level""",          filter.Level)
@@ -203,13 +217,7 @@ public class TransactionRepository(
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""TransactionOps""")
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "target" => @"""TargetId""",
-                "initiator" => @"""InitiatorId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `initiator` fields only."),
-            })
+            .Where(filter.Or)
             .Where(@"""Id""",             ranges)
             .Where(@"""Id""",             filter.Id)
             .Where(@"""Level""",          filter.Level)

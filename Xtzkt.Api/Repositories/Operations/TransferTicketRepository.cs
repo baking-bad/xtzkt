@@ -24,11 +24,39 @@ public class TransferTicketRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
+    static int TransferTicketCount(Data.Models.Address address) => address switch
+    {
+        Data.Models.L1Address a => a.TransferTicketCount,
+        Data.Models.XMichelsonAddress a => a.TransferTicketCount,
+        _ => 0,
+    };
+
     async Task<List<IdRange>?> ProcessFilters(TransferTicketOperationFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
         if (chains.Count == 0)
             return null;
+
+        if (filter.Anyof != null)
+        {
+            var columns = filter.Anyof.Fields.Select(field => field switch
+            {
+                "sender" => @"""SenderId""",
+                "target" => @"""TargetId""",
+                "ticketer" => @"""TicketerId""",
+                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `ticketer` fields only."),
+            }).Distinct().ToList();
+
+            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+                return null;
+
+            var or = new OrParameterBuilder(pagination?.Limit);
+            if (filter.Anyof.HasNull)
+                or.Add(columns, Int32NullParameter.Null, 0);
+            foreach (var address in addresses)
+                or.Add(columns, address.Id, TransferTicketCount(address));
+            filter.Or = or.Build();
+        }
 
         if (!await _addressCache.Resolve(filter.Sender, chains))
             return null;
@@ -105,13 +133,6 @@ public class TransferTicketRepository(
             .Select(columns)
             .From(@"""TransferTicketOps""")
             .Where(filter.Or)
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "target" => @"""TargetId""",
-                "ticketer" => @"""TicketerId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `ticketer` fields only."),
-            })
             .Where(@"""Id""",         ranges)
             .Where(@"""Id""",         filter.Id)
             .Where(@"""Level""",      filter.Level)
@@ -145,13 +166,7 @@ public class TransferTicketRepository(
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""TransferTicketOps""")
-            .Where(filter.Anyof, x => x switch
-            {
-                "sender" => @"""SenderId""",
-                "target" => @"""TargetId""",
-                "ticketer" => @"""TicketerId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `sender`, `target` and `ticketer` fields only."),
-            })
+            .Where(filter.Or)
             .Where(@"""Id""",         ranges)
             .Where(@"""Id""",         filter.Id)
             .Where(@"""Level""",      filter.Level)
@@ -465,12 +480,7 @@ public class TransferTicketRepository(
 
         foreach (var address in addresses)
         {
-            var count = address switch
-            {
-                Data.Models.L1Address a => a.TransferTicketCount,
-                Data.Models.XMichelsonAddress a => a.TransferTicketCount,
-                _ => 0,
-            };
+            var count = TransferTicketCount(address);
             if (count == 0)
                 continue;
 

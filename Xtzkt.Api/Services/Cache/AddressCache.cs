@@ -474,6 +474,19 @@ public class AddressCache
         return addresses;
     }
 
+    public async Task<List<Address>?> ResolveAddresses(AnyOfParameter p, List<Chain> chains)
+    {
+        var addresses = await ResolveAddresses(new Int32EqInParameter { Eq = p.Eq, In = p.In }, chains);
+        if (p.HasNull)
+            return addresses;
+
+        if (addresses.Count == 0)
+            return null;
+
+        chains.RemoveAll(chain => !addresses.Any(x => x.ChainId == chain.Id));
+        return addresses;
+    }
+
     public async Task<List<Address>> ResolveAddresses(AddressHashEqParameter p, List<Chain> chains)
     {
         var res = new List<Address>();

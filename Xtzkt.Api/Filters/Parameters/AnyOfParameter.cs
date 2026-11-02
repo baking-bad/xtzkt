@@ -31,6 +31,8 @@ public class AnyOfParameter : INormalizable
     [JsonIgnore]
     public IEnumerable<string> Fields { get; set; } = [];
 
+    internal bool HasNull => Eq == Int32NullParameter.Null || In?.Contains(Int32NullParameter.Null) == true;
+
     public string Normalize(string name)
     {
         var sb = new StringBuilder();

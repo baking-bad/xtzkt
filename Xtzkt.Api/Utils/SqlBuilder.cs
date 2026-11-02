@@ -5,19 +5,23 @@ using Xtzkt.Api.Exceptions;
 using Xtzkt.Api.Filters;
 using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Utils;
+using Xtzkt.Data;
 using Xtzkt.Utils;
 
 namespace Xtzkt.Api;
 
 public class SqlBuilder(SqlBuilder? _root = null)
 {
+    const int AllChains = -1;
+
     object? _from;
     string? _fromAlias;
     readonly List<string> _cols = [];
     readonly List<string> _joins = [];
     readonly List<string> _filters = [];
-    readonly List<string> _orFilters = [];
-    readonly List<string> _idRangeFilters = [];
+    readonly List<List<(string sql, int chains)>> _orGroups = [];
+    readonly List<(string sql, int chains)> _idRangeFilters = [];
+    int _idRangeChains = AllChains;
     readonly List<(string field, string column, bool asc)> _sorting = [];
     int _offset = 0;
     int _limit = 0;
@@ -79,9 +83,19 @@ public class SqlBuilder(SqlBuilder? _root = null)
     {
         if (idRanges?.Count is not > 0) return this;
 
-        var target = idRanges.Count == 1 ? _filters : _idRangeFilters;
-        foreach (var range in idRanges)
-            target.Add($"({column} >= {Param(range.Min)} AND {column} <= {Param(range.Max)})");
+        var ranges = idRanges
+            .Select(range => (sql: $"({column} >= {Param(range.Min)} AND {column} <= {Param(range.Max)})", chains: ChainsOf(range)))
+            .ToList();
+
+        if (ranges.Count == 1)
+        {
+            _filters.Add(ranges[0].sql);
+            _idRangeChains &= ranges[0].chains;
+        }
+        else
+        {
+            _idRangeFilters.AddRange(ranges);
+        }
 
         return this;
     }
@@ -90,47 +104,38 @@ public class SqlBuilder(SqlBuilder? _root = null)
     {
         if (or == null) return this;
 
-        foreach (var (column, values) in or.ColsAndVals)
+        var group = new List<(string sql, int chains)>(or.ColsAndVals.Length);
+        foreach (var (columns, values) in or.ColsAndVals)
         {
-            if (values == null || values.Count == 0)
+            var ids = values.Where(x => x != Int32NullParameter.Null).ToList();
+            var hasNull = ids.Count != values.Count;
+            var idsParam = ids.Count switch
+            {
+                0 => null,
+                1 => Param(ids[0]),
+                _ => Param(ids),
+            };
+
+            var conditions = new List<string>(columns.Length * 2);
+            foreach (var column in columns)
+            {
+                if (hasNull)
+                    conditions.Add($"{column} IS NULL");
+
+                if (idsParam != null)
+                    conditions.Add(ids.Count == 1 ? $"{column} = {idsParam}" : $"{column} = ANY ({idsParam})");
+            }
+
+            if (conditions.Count == 0)
                 continue;
 
-            _orFilters.Add(values.Count == 1
-                ? $"{column} = {Param(values[0])}"
-                : $"{column} = ANY ({Param(values)})");
+            group.Add((
+                conditions.Count == 1 ? conditions[0] : $"({string.Join(" OR ", conditions)})",
+                hasNull ? AllChains : ChainsOf(ids)));
         }
 
-        return this;
-    }
-
-    public SqlBuilder Where(AnyOfParameter? anyof, Func<string, string> map)
-    {
-        if (anyof == null) return this;
-
-        if (anyof.Eq is int eq)
-        {
-            if (eq == Int32NullParameter.Null)
-                _filters.Add($"({string.Join(" OR ", anyof.Fields.Select(x => $"{map(x)} IS NULL"))})");
-            else
-            {
-                var p = Param(eq);
-                _filters.Add($"({string.Join(" OR ", anyof.Fields.Select(x => $"{map(x)} = {p}"))})");
-            }
-        }
-
-        if (anyof.In != null)
-        {
-            if (anyof.In.Contains(Int32NullParameter.Null))
-            {
-                var p = Param(anyof.In.Where(x => x != Int32NullParameter.Null).ToArray());
-                _filters.Add($"({string.Join(" OR ", anyof.Fields.Select(x => $"({map(x)} IS NULL OR {map(x)} = ANY ({p}))"))})");
-            }
-            else
-            {
-                var p = Param(anyof.In);
-                _filters.Add($"({string.Join(" OR ", anyof.Fields.Select(x => $"{map(x)} = ANY ({p})"))})");
-            }
-        }
+        if (group.Count != 0)
+            _orGroups.Add(group);
 
         return this;
     }
@@ -1278,14 +1283,17 @@ public class SqlBuilder(SqlBuilder? _root = null)
 
     List<string> Branches()
     {
-        if (_idRangeFilters.Count == 0)
-            return _orFilters;
+        var groups = _idRangeFilters.Count == 0 ? _orGroups : [.. _orGroups, _idRangeFilters];
+        if (groups.Count == 0)
+            return [];
 
-        if (_orFilters.Count == 0)
-            return _idRangeFilters;
+        var combined = groups.Skip(1).Aggregate(
+            groups[0].Select(x => (x.sql, chains: x.chains & _idRangeChains)).Where(x => x.chains != 0).ToList(),
+            (branches, group) => [.. branches.SelectMany(branch => group
+                .Where(x => (x.chains & branch.chains) != 0)
+                .Select(x => ($"{branch.sql} AND {x.sql}", branch.chains & x.chains)))]);
 
-        // TODO: merge branches by chain id
-        return [.. _orFilters.SelectMany(or => _idRangeFilters.Select(range => $"{or} AND {range}"))];
+        return combined.Count != 0 ? [.. combined.Select(x => x.sql)] : ["FALSE"];
     }
 
     string Build(int padding)
@@ -1434,4 +1442,16 @@ public class SqlBuilder(SqlBuilder? _root = null)
     }
 
     static string Pad(int size) => new(' ', size);
+
+    static int ChainsOf(int id) => id >= 0 ? 1 << (id >> IdLayout.Shift32) : 0;
+
+    static int ChainsOf(List<int> ids) => ids.Aggregate(0, (chains, id) => chains | ChainsOf(id));
+
+    static int ChainsOf(IdRange range)
+    {
+        var chains = 0;
+        for (var chain = range.Min >> IdLayout.Shift64; chain <= range.Max >> IdLayout.Shift64; chain++)
+            chains |= 1 << (int)chain;
+        return chains;
+    }
 }
