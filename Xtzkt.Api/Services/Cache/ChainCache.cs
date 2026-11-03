@@ -203,6 +203,35 @@ namespace Xtzkt.Api.Services.Cache
             };
         }
 
+        public Int32RangeParameter? GetLevelRange(List<Chain> chains)
+        {
+            if (chains.Count == Count())
+                return null;
+
+            if (chains.Count == 0)
+                return new()
+                {
+                    Gt = int.MaxValue,
+                    Lt = int.MinValue,
+                };
+
+            if (chains.Count == 1)
+                return new()
+                {
+                    Ge = chains[0].GenesisLevel,
+                    Le = chains[0].Level + 600,
+                };
+
+            if (chains[^1].Id - chains[0].Id + 1 != chains.Count)
+                throw new BadRequestException("chain", "Filtering by non-adjacent chains is not supported, query them separately");
+
+            return new()
+            {
+                Ge = chains.Min(x => x.GenesisLevel),
+                Le = chains.Max(x => x.Level) + 600,
+            };
+        }
+
         public DateTimeRangeParameter? GetTimestampRange(List<Chain> chains)
         {
             if (chains.Count == Count())

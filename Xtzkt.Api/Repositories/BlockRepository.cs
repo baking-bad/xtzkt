@@ -22,6 +22,7 @@ public class BlockRepository(
     public static readonly SortSpec SortSpec = new("id")
     {
         { "id",        (@"""Id""",        "bigint") },
+        { "level",     (@"""Level""",     "integer") },
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
@@ -38,6 +39,14 @@ public class BlockRepository(
             if (!Int64Parameter.TryMerge(filter.Id, idRange, out var id))
                 return false;
             filter.Id = id;
+
+            if (filter.Level != null || pagination?.SortingBy("level") == true)
+            {
+                var levelRange = _chainCache.GetLevelRange(chains);
+                if (!Int32Parameter.TryMerge(filter.Level, levelRange, out var level))
+                    return false;
+                filter.Level = level;
+            }
 
             if (filter.Timestamp != null || pagination?.SortingBy("timestamp") == true)
             {
