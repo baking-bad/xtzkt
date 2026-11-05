@@ -219,7 +219,6 @@ public class ProfileCache
                     Slack = address.Slack,
                     Github = address.Github,
                     Gitlab = address.Gitlab,
-                    Mailchain = address.Mailchain,
                     Instagram = address.Instagram,
                     Facebook = address.Facebook,
                     X = address.X,

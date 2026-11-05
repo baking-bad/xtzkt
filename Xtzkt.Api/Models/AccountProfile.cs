@@ -41,9 +41,6 @@ public class AccountProfile
     /// <summary>GitLab account.</summary>
     public string? Gitlab { get; init; }
 
-    /// <summary>Mailchain address.</summary>
-    public string? Mailchain { get; init; }
-
     /// <summary>Instagram account.</summary>
     public string? Instagram { get; init; }
 
