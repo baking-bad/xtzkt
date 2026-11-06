@@ -82,6 +82,7 @@ public class BlockRepository(
                     case "level":                columns.Add(@"""Level"""); break;
                     case "hash":                 columns.Add(@"""Hash"""); columns.Add(@"""Layer"""); break;
                     case "timestamp":            columns.Add(@"""Timestamp"""); break;
+                    case "activityTypes":        columns.Add(@"""Operations"""); columns.Add(@"""Events"""); break;
                     // L1Block
                     case "cycle":                columns.Add(@"""Cycle"""); break;
                     case "protocol":             columns.Add(@"""ProtocolId"""); break;
@@ -171,6 +172,7 @@ public class BlockRepository(
                     Timestamp = row.Timestamp,
                     Cycle = row.Cycle,
                     Protocol = _protocolCache.GetInfo((int)row.ProtocolId),
+                    ActivityTypes = ActivityTypes.ToList((long)row.Operations, (int)row.Events),
                     Software = _softwareCache.GetInfo((int?)row.SoftwareId),
                     PayloadRound = row.PayloadRound,
                     BlockRound = row.BlockRound,
@@ -202,6 +204,7 @@ public class BlockRepository(
                     Hash = Hashes.FormatEvmBlockHash(row.Hash),
                     Timestamp = row.Timestamp,
                     Protocol = _protocolCache.GetInfo((int)row.ProtocolId),
+                    ActivityTypes = ActivityTypes.ToList((long)row.Operations, (int)row.Events),
                     DaFees = (BigInteger)row.BakerFees18,
                     BurnedFees = (BigInteger)row.BurnedFees18,
                     EvmGasUsed = row.EvmGasUsed,
@@ -266,6 +269,9 @@ public class BlockRepository(
                     break;
                 case "protocol.version":
                     foreach (var row in rows) result[j++][i] = _protocolCache.GetInfo((int)row.ProtocolId).Version;
+                    break;
+                case "activityTypes":
+                    foreach (var row in rows) result[j++][i] = ActivityTypes.ToList((long)row.Operations, (int)row.Events);
                     break;
                 // L1Block
                 case "cycle":

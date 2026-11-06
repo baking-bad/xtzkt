@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Xtzkt.Data.Models;
 
 namespace Xtzkt.Api.Models.Enums;
 
@@ -197,4 +198,68 @@ public class ActivityTypes
         BridgeTicketTransfer,
         Baking,
     ];
+
+    static readonly (AllOperations Flag, string Type)[] OperationFlags =
+    [
+        (AllOperations.Activation,             Activation),
+        (AllOperations.DalEntrapmentEvidence,  DalEntrapmentEvidence),
+        (AllOperations.DoubleBaking,           DoubleBaking),
+        (AllOperations.DoubleConsensus,        DoubleConsensus),
+        (AllOperations.DrainDelegate,          DrainDelegate),
+        (AllOperations.NonceRevelation,        NonceRevelation),
+        (AllOperations.VdfRevelation,          VdfRevelation),
+
+        (AllOperations.Attestation,            Attestation),
+        (AllOperations.Preattestation,         Preattestation),
+
+        (AllOperations.Ballot,                 Ballot),
+        (AllOperations.Proposal,               Proposal),
+
+        (AllOperations.Migration,              Migration),
+        (AllOperations.AttestationRewards,     AttestationReward),
+        (AllOperations.Autostaking,            Autostaking),
+        (AllOperations.DalAttestationReward,   DalAttestationReward),
+        (AllOperations.RevelationPenalty,      RevelationPenalty),
+        (AllOperations.Subsidy,                Subsidy),
+
+        (AllOperations.Deposit,                Deposit),
+        (AllOperations.Origination,            Origination),
+        (AllOperations.Transaction,            Transaction),
+        (AllOperations.DalPublishCommitment,   DalPublishCommitment),
+        (AllOperations.Delegation,             Delegation),
+        (AllOperations.IncreasePaidStorage,    IncreasePaidStorage),
+        (AllOperations.RegisterConstant,       RegisterConstant),
+        (AllOperations.Reveal,                 Reveal),
+        (AllOperations.SetDepositsLimits,      SetDepositsLimit),
+        (AllOperations.SetDelegateParameters,  SetDelegateParameters),
+        (AllOperations.SmartRollupAddMessages, SmartRollupAddMessages),
+        (AllOperations.SmartRollupCement,      SmartRollupCement),
+        (AllOperations.SmartRollupExecute,     SmartRollupExecute),
+        (AllOperations.SmartRollupOriginate,   SmartRollupOriginate),
+        (AllOperations.SmartRollupPublish,     SmartRollupPublish),
+        (AllOperations.SmartRollupRecoverBond, SmartRollupRecoverBond),
+        (AllOperations.SmartRollupRefute,      SmartRollupRefute),
+        (AllOperations.Staking,                Staking),
+        (AllOperations.TransferTicket,         TransferTicket),
+        (AllOperations.UpdateSecondaryKey,     UpdateSecondaryKey),
+    ];
+
+    static readonly (AllBlockEvents Flag, string Type)[] EventFlags =
+    [
+        (AllBlockEvents.Tickets,       TicketTransfer),
+        (AllBlockEvents.Tokens,        TokenTransfer),
+        (AllBlockEvents.BridgeTickets, BridgeTicketTransfer),
+    ];
+
+    public static List<string> ToList(long operations, int events)
+    {
+        var types = new List<string>();
+        foreach (var (flag, type) in OperationFlags)
+            if ((operations & (long)flag) != 0)
+                types.Add(type);
+        foreach (var (flag, type) in EventFlags)
+            if ((events & (int)flag) != 0)
+                types.Add(type);
+        return types;
+    }
 }

@@ -39,6 +39,12 @@ public abstract class Block
     /// Protocol the block was created under.
     /// </summary>
     public required ProtocolInfo Protocol { get; set; }
+
+    /// <summary>
+    /// Types of activity included in the block (`transaction`, `token_transfer`, `migration`, ...),
+    /// named as in the `types` filter of `/v1/activity/block`.
+    /// </summary>
+    public List<string> ActivityTypes { get; set; } = [];
 }
 
 public class L1Block : Block
