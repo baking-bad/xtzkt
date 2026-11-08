@@ -135,7 +135,6 @@ static class ProfileEndpoints
             Slack = profile.Slack,
             Github = profile.Github,
             Gitlab = profile.Gitlab,
-            Mailchain = profile.Mailchain,
             Instagram = profile.Instagram,
             Facebook = profile.Facebook,
             X = profile.X
@@ -181,7 +180,6 @@ static class ProfileEndpoints
                 Slack = address.Slack,
                 Github = address.Github,
                 Gitlab = address.Gitlab,
-                Mailchain = address.Mailchain,
                 Instagram = address.Instagram,
                 Facebook = address.Facebook,
                 X = address.X
