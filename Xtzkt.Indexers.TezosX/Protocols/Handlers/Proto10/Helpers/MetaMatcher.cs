@@ -43,8 +43,7 @@ public partial class ProtoHelpers
 
         if (context.EvmRoot is not EvmRootFrame root)
         {
-            // kernel drops evm side of a backtracked operation so there is nothing to match with
-            // TODO: revisit once the kernel reworks the evm side of backtracked operations
+            // 7.x kernels drop the evm side of a backtracked operation, so there is nothing to match with
             if (isApplied && context.Contents.Any(HasCracCalls))
                 throw new Exception($"Synthetic transaction of operation {context.Batch.Hash} missed");
 
@@ -117,9 +116,8 @@ public partial class ProtoHelpers
 
     void MatchCracFrames(List<MichelsonInternalContent> contents, EvmInternalFrame? topLevelTarget)
     {
-        // crac frames entered from the target of an internal call are spliced right after that call,
+        // in 7.x kernels crac frames entered from the target of an internal call are spliced right after that call,
         // crac frames entered from the target of a top-level call are appended after all internal operations
-        // TODO: re-check it after release of Ganesha 7.3 with fixes
         List<EvmFrame>? gatewayCalls = null;
         List<MichelsonCracFrameContent> cracFrames = [];
 

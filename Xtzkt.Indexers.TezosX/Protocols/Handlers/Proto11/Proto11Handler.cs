@@ -28,7 +28,6 @@ public class Proto11Handler(
     IHelpers? _helpers;
 
     #region commits
-    private protected override TransactionCommit TransactionCommit => new(this);
     private protected override LogCommit LogCommit => new(this);
     #endregion
 }

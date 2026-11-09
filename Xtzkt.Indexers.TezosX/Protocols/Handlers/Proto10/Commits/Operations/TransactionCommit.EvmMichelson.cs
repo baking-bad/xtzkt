@@ -181,10 +181,23 @@ partial class TransactionCommit
         var block = Context.Block;
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
+        var senderAddress = trace.RequiredString("from");
         var sourceAddress = content.RequiredString("source");
-        var (sender, alias) = await GetEvmMichelsonParties(trace.RequiredString("from"), sourceAddress);
-        if (alias.Hash != sourceAddress)
-            throw new ValidationException("Unexpected crac alias");
+
+        XEvmAddress sender;
+        XMichelsonAddress alias;
+        if (EvmRuntime.GetAliases(sourceAddress).Contains(senderAddress))
+        {
+            alias = await Helpers.GetOrCreateXMichelsonAddress(sourceAddress);
+            sender = await Helpers.GetOrCreateXEvmAlias(senderAddress, alias);
+        }
+        else
+        {
+            sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
+            alias = await Helpers.GetOrCreateXMichelsonAlias(MichelsonRuntime.GetAlias(senderAddress), sender);
+            if (alias.Hash != sourceAddress)
+                throw new ValidationException("Unexpected crac alias");
+        }
 
         var senderEip7702Delegate = await GetEip7702Delegate(sender);
 
@@ -319,19 +332,6 @@ partial class TransactionCommit
         Context.TransactionOps.Add(op);
 
         return (op, target, bigmapDiffs, ticketUpdates);
-    }
-
-    protected virtual async Task<(XEvmAddress Sender, XMichelsonAddress Alias)> GetEvmMichelsonParties(string senderAddress, string sourceAddress)
-    {
-        var sender = await Helpers.GetOrCreateXEvmAddress(senderAddress);
-
-        // alias of alias is expected to resolve into original owner
-        if (sender is XEvmAlias senderAlias)
-            return (sender, await Cache.Addresses.GetAsync(senderAlias.OwnerId) as XMichelsonAddress
-                ?? throw new Exception("Failed to resolve alias owner"));
-
-        var aliasAddress = MichelsonRuntime.GetAlias(senderAddress);
-        return (sender, await Helpers.GetOrCreateXMichelsonAlias(aliasAddress, sender));
     }
 
     public virtual async Task Revert(XEvmMichelsonTransactionOperation op)
