@@ -59,7 +59,12 @@ class EvmRuntime : Proto01.EvmRuntime
     #region helpers
     public override string GetAlias(string address)
     {
-        return Runtimes.GetEvmAlias(address);
+        return Runtimes.GetLegacyEvmAlias(address);
+    }
+
+    public override string[] GetAliases(string address)
+    {
+        return [Runtimes.GetLegacyEvmAlias(address)];
     }
 
     public override int ConvertGas(long michelsonMilligas)

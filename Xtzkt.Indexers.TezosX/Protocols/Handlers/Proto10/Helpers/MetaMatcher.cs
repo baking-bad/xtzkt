@@ -12,9 +12,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
 public partial class ProtoHelpers
 {
-    static readonly BigInteger WeiPerMutez = BigInteger.Pow(10, 12);
+    protected static readonly BigInteger WeiPerMutez = BigInteger.Pow(10, 12);
 
-    void MatchEvmOp(EvmOpContext context)
+    protected virtual void MatchEvmOp(EvmOpContext context)
     {
         // for deposits there is nothing to match
         if (context.Operation.From == EvmRuntime.DepositOrigin)
@@ -28,7 +28,7 @@ public partial class ProtoHelpers
         AlignCracFrames(GetOuterGatewayFrames(context.RootFrame), context.MichelsonContents ?? []);
     }
 
-    void MatchMichelsonOp(MichelsonOpContext context)
+    protected virtual void MatchMichelsonOp(MichelsonOpContext context)
     {
         // for deposits there is nothing to match
         if (context.Contents.Any(x => x.Op.From == MichelsonRuntime.DepositOrigin))
@@ -72,7 +72,7 @@ public partial class ProtoHelpers
             MatchCracFrames(content.Internals, content.EvmTarget);
     }
 
-    List<EvmFrame> GetOuterGatewayFrames(EvmFrame frame)
+    protected List<EvmFrame> GetOuterGatewayFrames(EvmFrame frame)
     {
         if (IsCracCall(frame))
             return [frame];
@@ -93,7 +93,7 @@ public partial class ProtoHelpers
         }
     }
 
-    void AlignCracFrames(List<EvmFrame> gatewayCalls, List<MichelsonCracFrameContent> cracFrames)
+    protected virtual void AlignCracFrames(List<EvmFrame> gatewayCalls, List<MichelsonCracFrameContent> cracFrames)
     {
         if (gatewayCalls.Count == 0 && cracFrames.Count == 0)
             return;
@@ -153,7 +153,7 @@ public partial class ProtoHelpers
         }
     }
 
-    bool MatchEvmTargets(EvmFrame gatewayCall, MichelsonCracFrameContent cracFrame, bool apply)
+    protected bool MatchEvmTargets(EvmFrame gatewayCall, MichelsonCracFrameContent cracFrame, bool apply)
     {
         var targets = new EvmTargets(this, gatewayCall);
 
@@ -182,17 +182,17 @@ public partial class ProtoHelpers
         return targets.IsConsumed;
     }
 
-    bool IsCracCall(EvmFrame frame)
+    protected bool IsCracCall(EvmFrame frame)
     {
         return frame is not EvmInternalFrame { Op.StaticRootStatus: not null } && EvmRuntime.IsCracCall(frame.To, frame.Trace);
     }
 
-    bool IsCracCall(MichelsonOperation op)
+    protected bool IsCracCall(MichelsonOperation op)
     {
         return MichelsonRuntime.IsCracCall(op.To, op.Content);
     }
 
-    bool IsCracCall(MichelsonInternalOperation op)
+    protected bool IsCracCall(MichelsonInternalOperation op)
     {
         return MichelsonRuntime.IsCracCall(op.To, op.Content);
     }
@@ -203,11 +203,13 @@ public partial class ProtoHelpers
             content.Internals.Any(x => x is MichelsonInternalOpContent { Op: var op } && IsCracCall(op));
     }
 
-    bool IsCracTarget(EvmFrame gatewayCall, MichelsonCracFrameContent cracFrame)
+    protected virtual bool IsCracTarget(EvmFrame gatewayCall, MichelsonCracFrameContent cracFrame)
     {
         var targetCall = cracFrame.TargetCall;
         var sender = gatewayCall.From;
-        if (targetCall.From != MichelsonRuntime.GetAlias(sender) && EvmRuntime.GetAlias(targetCall.From) != sender)
+
+        // the kernel substitutes the owner for its alias, whichever of its derivations the alias comes from
+        if (targetCall.From != MichelsonRuntime.GetAlias(sender) && !EvmRuntime.GetAliases(targetCall.From).Contains(sender))
             return false;
 
         if (GetMichelsonCall(gatewayCall) is not MichelsonCall call ||
@@ -228,17 +230,17 @@ public partial class ProtoHelpers
         return fits && MatchEvmTargets(gatewayCall, cracFrame, apply: false);
     }
 
-    static bool CanEnterNothing(EvmFrame gatewayCall)
+    protected static bool CanEnterNothing(EvmFrame gatewayCall)
     {
         return gatewayCall.Status == OperationStatus.Failed && gatewayCall.Calls.Count == 0;
     }
 
-    static string GetEntrypoint(MichelsonInternalOperation op)
+    protected static string GetEntrypoint(MichelsonInternalOperation op)
     {
         return op.Content.Optional("parameters")?.RequiredString("entrypoint") ?? "default";
     }
 
-    MichelsonCall? GetMichelsonCall(EvmFrame gateway)
+    protected MichelsonCall? GetMichelsonCall(EvmFrame gateway)
     {
         if (!gateway.IsMichelsonCallParsed)
         {
@@ -248,7 +250,7 @@ public partial class ProtoHelpers
         return gateway.MichelsonCall;
     }
 
-    MichelsonCall? ParseMichelsonCall(JsonElement trace)
+    protected MichelsonCall? ParseMichelsonCall(JsonElement trace)
     {
         if (trace.OptionalHexBytes("input") is not byte[] input || input.Length < 4)
             return null;
@@ -292,7 +294,7 @@ public partial class ProtoHelpers
         }
     }
 
-    static (string Address, string Entrypoint)? ParseTezosUrl(string url)
+    protected static (string Address, string Entrypoint)? ParseTezosUrl(string url)
     {
         if (!TrySplitUrl(url, out var host, out var path) || host != "tezos" || path is not ['/', _, ..])
             return null;
@@ -305,7 +307,7 @@ public partial class ProtoHelpers
         return (rest[..slash], slash == rest.Length - 1 ? "default" : rest[(slash + 1)..]);
     }
 
-    static bool TrySplitUrl(string url, out string host, out string path)
+    protected static bool TrySplitUrl(string url, out string host, out string path)
     {
         host = path = "";
 
@@ -331,7 +333,7 @@ public partial class ProtoHelpers
         return true;
     }
 
-    static string? ParseEthereumUrl(string url)
+    protected static string? ParseEthereumUrl(string url)
     {
         if (!TrySplitUrl(url, out var host, out var path) || host != "ethereum" || path is not ['/', _, ..])
             return null;
@@ -343,7 +345,7 @@ public partial class ProtoHelpers
         return address.Length == 40 && address.All(char.IsAsciiHexDigit) ? $"0x{address.ToLowerInvariant()}" : null;
     }
 
-    bool IsCracTarget(string sender, JsonElement content, EvmInternalOperation target)
+    protected bool IsCracTarget(string sender, JsonElement content, EvmInternalOperation target)
     {
         // incoming static calls are pruned from the traces
         if (target.Trace.IsStaticCall())
@@ -386,17 +388,17 @@ public partial class ProtoHelpers
             && target.Trace.RequiredHexBigInteger("value") == content.RequiredInt64("amount") * WeiPerMutez;
     }
 
-    static OperationStatus GetStatus(MichelsonOperation op)
+    protected static OperationStatus GetStatus(MichelsonOperation op)
     {
         return op.Content.Required("metadata").Required("operation_result").RequiredOpStatus("status");
     }
 
-    static OperationStatus GetStatus(MichelsonInternalOperation op)
+    protected static OperationStatus GetStatus(MichelsonInternalOperation op)
     {
         return op.Content.Required("result").RequiredOpStatus("status");
     }
 
-    sealed class EvmTargets(ProtoHelpers helpers, EvmFrame root)
+    protected sealed class EvmTargets(ProtoHelpers helpers, EvmFrame root)
     {
         public bool IsConsumed => _next == root.Calls.Count;
 

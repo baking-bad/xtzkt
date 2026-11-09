@@ -185,6 +185,9 @@ namespace Xtzkt.Indexers.TezosX.Protocols
                 if (skippingStatic && call.IsStaticCall())
                     continue;
 
+                if (Helpers.IsDroppedFrame(call))
+                    continue;
+
                 res += call.RequiredHexInt32("gasUsed") - frameGasOffset;
             }
             return res;

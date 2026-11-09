@@ -9,18 +9,18 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto10.Helpers;
 
 public partial class ProtoHelpers
 {
-    MetaBatch? ReadOperation(MetaBlockContext context, string hash, bool delayed)
+    protected virtual MetaBatch? ReadOperation(MetaBlockContext context, string hash, bool delayed)
     {
         MetaBatch batch;
-        if (context.EvmOps.Remove(hash, out var evmChain))
+        if (context.EvmOps.Remove(hash, out var evmOp))
         {
             batch = new MetaBatch { Delayed = delayed, Hash = Hashes.ParseOperationHash(hash) };
-            ReadEvmOperation(context, evmChain, batch);
+            ReadEvmOperation(context, evmOp, batch);
         }
-        else if (context.MichelsonOps.Remove(hash, out var michelsonChain))
+        else if (context.MichelsonOps.Remove(hash, out var michelsonOp))
         {
             batch = new MetaBatch { Delayed = delayed, Hash = Hashes.ParseOperationHash(hash) };
-            ReadMichelsonOperation(context, michelsonChain, batch);
+            ReadMichelsonOperation(context, michelsonOp, batch);
         }
         else
         {
@@ -104,7 +104,6 @@ public partial class ProtoHelpers
         {
             // crac frames are read along with the gateway calls that entered them, while the ones of a backtracked
             // operation are skipped, as the kernel drops its evm side and there is nothing to match them with
-            // TODO: revisit once the kernel reworks the evm side of backtracked operations
             if (content is not MichelsonInternalOpContent { Op: var op } opContent)
                 continue;
 
@@ -164,14 +163,14 @@ public partial class ProtoHelpers
         }
     }
 
-    sealed class MetaBlockContext
+    protected sealed class MetaBlockContext
     {
         public required List<DelayedOperation> DelayedOps { get; init; }
         public required Dictionary<string, EvmOpContext> EvmOps { get; init; }
         public required Dictionary<string, MichelsonOpContext> MichelsonOps { get; init; }
     }
 
-    sealed class EvmOpContext
+    protected sealed class EvmOpContext
     {
         public required EvmOperation Operation { get; init; }
         public required EvmRootFrame RootFrame { get; init; }
@@ -179,7 +178,7 @@ public partial class ProtoHelpers
         public List<MichelsonCracFrameContent>? MichelsonContents { get; set; }
     }
 
-    sealed class MichelsonOpContext
+    protected sealed class MichelsonOpContext
     {
         public required MichelsonBatch Batch { get; init; }
         public required List<MichelsonContent> Contents { get; init; }
@@ -187,7 +186,7 @@ public partial class ProtoHelpers
         public EvmRootFrame? EvmRoot { get; set; }
     }
 
-    abstract class EvmFrame
+    protected abstract class EvmFrame
     {
         public abstract string Hash { get; }
         public abstract string From { get; }
@@ -203,7 +202,7 @@ public partial class ProtoHelpers
         public bool IsMichelsonCallParsed { get; set; }
     }
 
-    sealed class EvmRootFrame : EvmFrame
+    protected sealed class EvmRootFrame : EvmFrame
     {
         public required EvmOperation Op { get; init; }
 
@@ -214,7 +213,7 @@ public partial class ProtoHelpers
         public override OperationStatus Status => Op.Trace.TraceStatus();
     }
 
-    sealed class EvmInternalFrame : EvmFrame
+    protected sealed class EvmInternalFrame : EvmFrame
     {
         public required EvmInternalOperation Op { get; init; }
 
@@ -225,7 +224,7 @@ public partial class ProtoHelpers
         public override OperationStatus Status => Op.Status;
     }
 
-    sealed class MichelsonContent
+    protected sealed class MichelsonContent
     {
         public required MichelsonOperation Op { get; init; }
         public required List<MichelsonInternalContent> Internals { get; init; }
@@ -234,9 +233,9 @@ public partial class ProtoHelpers
         public EvmInternalFrame? EvmTarget { get; set; }
     }
 
-    abstract class MichelsonInternalContent;
+    protected abstract class MichelsonInternalContent;
 
-    sealed class MichelsonInternalOpContent : MichelsonInternalContent
+    protected sealed class MichelsonInternalOpContent : MichelsonInternalContent
     {
         public required MichelsonInternalOperation Op { get; init; }
 
@@ -244,7 +243,7 @@ public partial class ProtoHelpers
         public EvmInternalFrame? EvmTarget { get; set; }
     }
 
-    sealed class MichelsonCracFrameContent : MichelsonInternalContent
+    protected sealed class MichelsonCracFrameContent : MichelsonInternalContent
     {
         public required MichelsonInternalOperation Begin { get; init; }
         public required MichelsonInternalOperation TargetCall { get; init; }
@@ -256,5 +255,5 @@ public partial class ProtoHelpers
     }
 
     // the call to the michelson runtime made by a call to the michelson gateway
-    sealed record MichelsonCall(string Address, string Entrypoint, BigInteger Amount);
+    protected sealed record MichelsonCall(string Address, string Entrypoint, BigInteger Amount);
 }

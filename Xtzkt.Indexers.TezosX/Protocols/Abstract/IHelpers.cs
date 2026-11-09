@@ -10,6 +10,7 @@ public interface IHelpers
 {
     Task<JsonElement> GetRawBlueprint(int level);
     Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> getBlueprintTask);
+    bool IsDroppedFrame(JsonElement trace);
 
     #region fees
     BigInteger GetDaFee(JsonElement tx, bool isDelayedOp);

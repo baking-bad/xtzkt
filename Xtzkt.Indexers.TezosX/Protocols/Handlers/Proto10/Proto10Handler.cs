@@ -34,12 +34,31 @@ public class Proto10Handler(
     protected override IMigrator Migrator => new ProtoMigrator(this);
     IHelpers? _helpers;
 
+    #region commits
+    private protected virtual DepositCommit DepositCommit => new(this);
+    private protected virtual IncreasePaidStorageCommit IncreasePaidStorageCommit => new(this);
+    private protected virtual OriginationCommit OriginationCommit => new(this);
+    private protected virtual RegisterConstantsCommit RegisterConstantsCommit => new(this);
+    private protected virtual RevealsCommit RevealsCommit => new(this);
+    private protected virtual TransactionCommit TransactionCommit => new(this);
+    private protected virtual TransferTicketCommit TransferTicketCommit => new(this);
+    private protected virtual BigMapCommit BigMapCommit => new(this);
+    private protected virtual BlockCommit BlockCommit => new(this);
+    private protected virtual BridgeTicketsCommit BridgeTicketsCommit => new(this);
+    private protected virtual DepositClaimCommit DepositClaimCommit => new(this);
+    private protected virtual LogCommit LogCommit => new(this);
+    private protected virtual StateCommit StateCommit => new(this);
+    private protected virtual StatisticsCommit StatisticsCommit => new(this);
+    private protected virtual TicketsCommit TicketsCommit => new(this);
+    private protected virtual TokensCommit TokensCommit => new(this);
+    #endregion
+
     protected override async Task Commit(MetaBlock block)
     {
-        await new BlockCommit(this).Apply(block.EvmBlock);
+        await BlockCommit.Apply(block.EvmBlock);
 
-        var bigMapCommit = new BigMapCommit(this);
-        var ticketsCommit = new TicketsCommit(this);
+        var bigMapCommit = BigMapCommit;
+        var ticketsCommit = TicketsCommit;
 
         foreach (var batch in block.Batches)
         {
@@ -61,25 +80,25 @@ public class Proto10Handler(
                         {
                             case "increase_paid_storage":
                                 {
-                                    var op = await new IncreasePaidStorageCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
+                                    var op = await IncreasePaidStorageCommit.Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
                                     managerOp = op;
                                     break;
                                 }
                             case "reveal":
                                 {
-                                    var op = await new RevealsCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
+                                    var op = await RevealsCommit.Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
                                     managerOp = op;
                                     break;
                                 }
                             case "register_global_constant":
                                 {
-                                    var op = await new RegisterConstantsCommit(this).Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
+                                    var op = await RegisterConstantsCommit.Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
                                     managerOp = op;
                                     break;
                                 }
                             case "origination":
                                 {
-                                    var commit = new OriginationCommit(this);
+                                    var commit = OriginationCommit;
                                     await commit.Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
 
                                     if (commit.BigMapDiffs != null)
@@ -91,7 +110,7 @@ public class Proto10Handler(
                             case "transaction":
                                 {
                                     var (op, target, bigmapDiffs, ticketUpdates)
-                                        = await new TransactionCommit(this).ApplyMichelson(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
+                                        = await TransactionCommit.ApplyMichelson(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
 
                                     if (bigmapDiffs != null)
                                         bigMapCommit.Append(op, (target as XMichelsonContract)!, bigmapDiffs);
@@ -105,7 +124,7 @@ public class Proto10Handler(
                                 }
                             case "transfer_ticket":
                                 {
-                                    var commit = new TransferTicketCommit(this);
+                                    var commit = TransferTicketCommit;
                                     await commit.Apply(batch.Hash, mop.Content, batch.Delayed, isFirstOp);
 
                                     if (commit.TicketUpdates != null)
@@ -125,8 +144,8 @@ public class Proto10Handler(
                             case "CREATE":
                             case "CREATE2":
                                 {
-                                    var op = await new OriginationCommit(this).ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
-                                    await new LogCommit(this).ApplyEvmLogs(op, eop.Logs);
+                                    var op = await OriginationCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                                    await LogCommit.ApplyEvmLogs(op, eop.Logs);
                                     parentOp = op;
                                     break;
                                 }
@@ -137,8 +156,8 @@ public class Proto10Handler(
                             case "SELFDESTRUCT":
                             case "SUICIDE":
                                 {
-                                    var op = await new TransactionCommit(this).ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
-                                    await new LogCommit(this).ApplyEvmLogs(op, eop.Logs);
+                                    var op = await TransactionCommit.ApplyEvm(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed);
+                                    await LogCommit.ApplyEvmLogs(op, eop.Logs);
                                     parentOp = op;
                                     break;
                                 }
@@ -149,7 +168,7 @@ public class Proto10Handler(
                     case CracOperation cop when cop.GatewayCall is EvmOperation eop && cop.TargetCall is MichelsonInternalOperation miop:
                         {
                             var (op, target, bigmapDiffs, ticketUpdates)
-                                = await new TransactionCommit(this).ApplyEvmMichelson(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed, miop.Content);
+                                = await TransactionCommit.ApplyEvmMichelson(batch.Hash, eop.Tx, eop.Receipt, eop.Trace, batch.Delayed, miop.Content);
 
                             if (bigmapDiffs != null)
                                 bigMapCommit.Append(op, (target as XMichelsonContract)!, bigmapDiffs);
@@ -163,8 +182,8 @@ public class Proto10Handler(
                         }
                     case CracOperation cop when cop.GatewayCall is MichelsonOperation mop && cop.TargetCall is EvmInternalOperation eiop:
                         {
-                            var op = await new TransactionCommit(this).ApplyMichelsonEvm(batch.Hash, mop.Content, batch.Delayed, isFirstOp, eiop.Trace);
-                            await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
+                            var op = await TransactionCommit.ApplyMichelsonEvm(batch.Hash, mop.Content, batch.Delayed, isFirstOp, eiop.Trace);
+                            await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                             parentOp = op;
                             managerOp = op;
                             cracOps.Add(operation, parentOp);
@@ -172,14 +191,14 @@ public class Proto10Handler(
                         }
                     case MichelsonDeposit dop:
                         {
-                            await new DepositCommit(this).ApplyMichelson(batch.Hash, dop.Deposit, dop.FeederCall.Content);
+                            await DepositCommit.ApplyMichelson(batch.Hash, dop.Deposit, dop.FeederCall.Content);
                             // shoudln't have internal ops
                             break;
                         }
                     case EvmDeposit dop:
                         {
-                            var op = await new DepositCommit(this).ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
-                            var logCommit = new LogCommit(this);
+                            var op = await DepositCommit.ApplyEvm(batch.Hash, dop.Deposit, dop.FeederCall.Receipt);
+                            var logCommit = LogCommit;
                             await logCommit.ApplyEvmLogs(op, dop.FeederCall.Logs);
                             foreach (var bridgeCall in dop.BridgeCalls)
                                 if (bridgeCall.Status == OperationStatus.Applied)
@@ -201,7 +220,7 @@ public class Proto10Handler(
                             {
                                 case "origination":
                                     {
-                                        var commit = new OriginationCommit(this);
+                                        var commit = OriginationCommit;
                                         await commit.ApplyInternal(parentOp!, cracParent, miop.Content);
 
                                         if (commit.BigMapDiffs != null)
@@ -212,7 +231,7 @@ public class Proto10Handler(
                                 case "transaction":
                                     {
                                         var (op, target, bigmapDiffs, ticketUpdates)
-                                            = await new TransactionCommit(this).ApplyInternalMichelson(parentOp!, cracParent, miop.Content);
+                                            = await TransactionCommit.ApplyInternalMichelson(parentOp!, cracParent, miop.Content);
 
                                         if (bigmapDiffs != null)
                                             bigMapCommit.Append(op, (target as XMichelsonContract)!, bigmapDiffs);
@@ -224,7 +243,7 @@ public class Proto10Handler(
                                     }
                                 case "event":
                                     {
-                                        await new LogCommit(this).ApplyMichelsonLog(cracParent, miop.Content);
+                                        await LogCommit.ApplyMichelsonLog(cracParent, miop.Content);
                                         break;
                                     }
                                 default:
@@ -240,8 +259,8 @@ public class Proto10Handler(
                                 case "CREATE":
                                 case "CREATE2":
                                     {
-                                        var op = await new OriginationCommit(this).ApplyInternalEvm(parentOp!, cracParent, eiop.Trace, eiop.Status, eiop.ParentStatus);
-                                        await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
+                                        var op = await OriginationCommit.ApplyInternalEvm(parentOp!, cracParent, eiop.Trace, eiop.Status, eiop.ParentStatus);
+                                        await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                                         break;
                                     }
                                 case "CALL":
@@ -251,8 +270,8 @@ public class Proto10Handler(
                                 case "SELFDESTRUCT":
                                 case "SUICIDE":
                                     {
-                                        var op = await new TransactionCommit(this).ApplyInternalEvm(parentOp!, cracParent, eiop.Trace, eiop.Status);
-                                        await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
+                                        var op = await TransactionCommit.ApplyInternalEvm(parentOp!, cracParent, eiop.Trace, eiop.Status);
+                                        await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                                         break;
                                     }
                                 default:
@@ -261,15 +280,15 @@ public class Proto10Handler(
                             break;
                         case InternalCracOperation ciop when ciop.GatewayCall is MichelsonInternalOperation miop && ciop.TargetCall is EvmInternalOperation eiop:
                             {
-                                var op = await new TransactionCommit(this).ApplyInternalMichelsonEvm(parentOp!, cracParent, miop.Content, eiop.Trace);
-                                await new LogCommit(this).ApplyEvmLogs(op, eiop.Logs);
+                                var op = await TransactionCommit.ApplyInternalMichelsonEvm(parentOp!, cracParent, miop.Content, eiop.Trace);
+                                await LogCommit.ApplyEvmLogs(op, eiop.Logs);
                                 cracOps.Add(iop, op);
                                 break;
                             }
                         case InternalCracOperation ciop when ciop.GatewayCall is EvmInternalOperation eiop && ciop.TargetCall is MichelsonInternalOperation miop:
                             {
                                 var (op, target, bigmapDiffs, ticketUpdates)
-                                = await new TransactionCommit(this).ApplyInternalEvmMichelson(parentOp!, cracParent, eiop.Trace, eiop.Status, miop.Content);
+                                = await TransactionCommit.ApplyInternalEvmMichelson(parentOp!, cracParent, eiop.Trace, eiop.Status, miop.Content);
 
                                 if (bigmapDiffs != null)
                                     bigMapCommit.Append(op, (target as XMichelsonContract)!, bigmapDiffs);
@@ -365,13 +384,13 @@ public class Proto10Handler(
 
         await bigMapCommit.Apply();
         await ticketsCommit.Apply();
-        await new TokensCommit(this).Apply(bigMapCommit.Updates);
-        await new TokensCommit(this).ApplyEvmTransfers();
-        await new BridgeTicketsCommit(this).Apply();
-        await new DepositClaimCommit(this).Apply();
+        await TokensCommit.Apply(bigMapCommit.Updates);
+        await TokensCommit.ApplyEvmTransfers();
+        await BridgeTicketsCommit.Apply();
+        await DepositClaimCommit.Apply();
 
-        await new StatisticsCommit(this).Apply();
-        await new StateCommit(this).Apply(block);
+        await StatisticsCommit.Apply();
+        await StateCommit.Apply(block);
     }
 
     protected override async Task Revert()
@@ -379,80 +398,80 @@ public class Proto10Handler(
         var currBlock = await Cache.Blocks.CurrentAsync();
         Db.TryAttach(currBlock);
 
-        await new StatisticsCommit(this).Revert();
+        await StatisticsCommit.Revert();
 
-        await new DepositClaimCommit(this).Revert();
-        await new BridgeTicketsCommit(this).Revert(currBlock);
-        await new TokensCommit(this).Revert(currBlock);
-        await new TicketsCommit(this).Revert(currBlock);
-        await new BigMapCommit(this).Revert(currBlock);
-        await new LogCommit(this).RevertLogs(currBlock);
+        await DepositClaimCommit.Revert();
+        await BridgeTicketsCommit.Revert(currBlock);
+        await TokensCommit.Revert(currBlock);
+        await TicketsCommit.Revert(currBlock);
+        await BigMapCommit.Revert(currBlock);
+        await LogCommit.RevertLogs(currBlock);
 
         foreach (var operation in Context.EnumerateOps().OrderByDescending(x => x.Id).ToList())
         {
             switch (operation)
             {
                 case XMichelsonDepositOperation op:
-                    await new DepositCommit(this).Revert(op);
+                    await DepositCommit.Revert(op);
                     break;
                 case XEvmDepositOperation op:
-                    await new DepositCommit(this).Revert(op);
+                    await DepositCommit.Revert(op);
                     break;
                 case XIncreasePaidStorageOperation op:
-                    await new IncreasePaidStorageCommit(this).Revert(op);
+                    await IncreasePaidStorageCommit.Revert(op);
                     break;
                 case XMichelsonOriginationOperation op:
                     if (op.InitiatorId == null)
-                        await new OriginationCommit(this).Revert(op);
+                        await OriginationCommit.Revert(op);
                     else
-                        await new OriginationCommit(this).RevertInternal(op);
+                        await OriginationCommit.RevertInternal(op);
                     break;
                 case XEvmOriginationOperation op:
                     if (op.InitiatorId == null)
-                        await new OriginationCommit(this).Revert(op);
+                        await OriginationCommit.Revert(op);
                     else
-                        await new OriginationCommit(this).RevertInternal(op);
+                        await OriginationCommit.RevertInternal(op);
                     break;
                 case XRegisterConstantOperation op:
-                    await new RegisterConstantsCommit(this).Revert(op);
+                    await RegisterConstantsCommit.Revert(op);
                     break;
                 case XRevealOperation op:
-                    await new RevealsCommit(this).Revert(op);
+                    await RevealsCommit.Revert(op);
                     break;
                 case XMichelsonTransactionOperation op:
                     if (op.InitiatorId == null)
-                        await new TransactionCommit(this).Revert(op);
+                        await TransactionCommit.Revert(op);
                     else
-                        await new TransactionCommit(this).RevertInternal(op);
+                        await TransactionCommit.RevertInternal(op);
                     break;
                 case XEvmTransactionOperation op:
                     if (op.InitiatorId == null)
-                        await new TransactionCommit(this).Revert(op);
+                        await TransactionCommit.Revert(op);
                     else
-                        await new TransactionCommit(this).RevertInternal(op);
+                        await TransactionCommit.RevertInternal(op);
                     break;
                 case XMichelsonEvmTransactionOperation op:
                     if (op.InitiatorId == null)
-                        await new TransactionCommit(this).Revert(op);
+                        await TransactionCommit.Revert(op);
                     else
-                        await new TransactionCommit(this).RevertInternal(op);
+                        await TransactionCommit.RevertInternal(op);
                     break;
                 case XEvmMichelsonTransactionOperation op:
                     if (op.InitiatorId == null)
-                        await new TransactionCommit(this).Revert(op);
+                        await TransactionCommit.Revert(op);
                     else
-                        await new TransactionCommit(this).RevertInternal(op);
+                        await TransactionCommit.RevertInternal(op);
                     break;
                 case XTransferTicketOperation op:
-                    await new TransferTicketCommit(this).Revert(op);
+                    await TransferTicketCommit.Revert(op);
                     break;
                 default:
                     throw new NotImplementedException($"'{operation.GetType()}' is not implemented");
             }
         }
 
-        await new BlockCommit(this).Revert();
-        await new StateCommit(this).Revert();
+        await BlockCommit.Revert();
+        await StateCommit.Revert();
     }
 
     protected override async Task CheckMichelsonActivationLevel(XChain state)

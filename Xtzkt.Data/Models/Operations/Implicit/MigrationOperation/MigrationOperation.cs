@@ -29,6 +29,7 @@ namespace Xtzkt.Data.Models
         RemoveBigMapKey,
         BurnBalance,
         AmendAddress,
+        BindAlias,
     }
 
     public static class MigrationOperationModel

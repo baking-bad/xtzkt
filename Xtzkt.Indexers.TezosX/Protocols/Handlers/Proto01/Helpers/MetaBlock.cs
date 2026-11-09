@@ -6,6 +6,8 @@ namespace Xtzkt.Indexers.TezosX.Protocols.Proto01.Helpers;
 
 public partial class ProtoHelpers
 {
+    public virtual bool IsDroppedFrame(JsonElement trace) => false;
+
     public virtual async Task<MetaBlock> GetMetaBlock(int level, Task<JsonElement> rawBlueprintTask)
     {
         var t1 = GetBlueprint(level, rawBlueprintTask);

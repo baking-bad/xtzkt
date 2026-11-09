@@ -170,6 +170,7 @@ Accepted asymmetries — these are **intentional**, do not "fix" them:
 - `LastLevel = block.Level` in `Revert` (Tickets/Tokens commits) instead of restoring the previous value — known systemic cosmetic issue.
 - `contract.Tags` / `bigmap.Tags` ledger discovery is not reverted (`TokensCommit`) — architectural limitation.
 - `SoftwareCommit.Revert` doesn't restore `baker.SoftwareId` / remove zero-count `Software` rows (explicit TODO, cosmetic).
+- `UpgradeToXEvmAlias` / `UpgradeToXMichelsonAlias` (TezosX) are not undone in `Revert`: the address stays an alias until it becomes empty and is removed, or its owner is removed, and its own aliases, unbound by the upgrade, stay unbound.
 
 #### Gas accounting
 
