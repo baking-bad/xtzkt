@@ -41,14 +41,27 @@ public class AccountRepository(
             if (_addresses[i] is Data.Models.XAddress xAddress && xAddress.AliasesCount != 0)
             {
                 // UPDATE: add other runtimes, when implemented
-                var aliasHash = xAddress is Data.Models.XEvmAddress
-                    ? Runtimes.GetMichelsonAlias(xAddress.Hash)
-                    : Runtimes.GetEvmAlias(xAddress.Hash);
+                if (Runtimes.GetRecoverableEvmAlias(xAddress.Hash) is string recoverableHash)
+                {
+                    // not yet materialized in the indexer alias will be missed
+                    if (await _addressCache.GetAsync(xAddress.ChainId, recoverableHash) is Data.Models.XEvmAlias alias && _ids.Add(alias.Id))
+                        _addresses.Add(alias);
 
-                // an alias always lives on the same chain as its owner
-                var alias = await _addressCache.GetAsync(xAddress.ChainId, aliasHash);
-                if (alias != null && _ids.Add(alias.Id))
-                    _addresses.Add(alias);
+                    // not yet materialized in the indexer alias will be missed
+                    if (await _addressCache.GetAsync(xAddress.ChainId, Runtimes.GetLegacyEvmAlias(xAddress.Hash)) is Data.Models.XEvmAlias legacyAlias && _ids.Add(legacyAlias.Id))
+                        _addresses.Add(legacyAlias);
+                }
+                else
+                {
+                    var aliasHash = xAddress is Data.Models.XEvmAddress
+                        ? Runtimes.GetMichelsonAlias(xAddress.Hash)
+                        : Runtimes.GetLegacyEvmAlias(xAddress.Hash);
+
+                    // an alias always lives on the same chain as its owner
+                    var alias = await _addressCache.GetAsync(xAddress.ChainId, aliasHash);
+                    if (alias != null && _ids.Add(alias.Id))
+                        _addresses.Add(alias);
+                }
             }
             #endregion
         }

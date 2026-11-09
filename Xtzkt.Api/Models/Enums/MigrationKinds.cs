@@ -13,6 +13,7 @@ internal static class MigrationKinds
     public const string RemoveBigMapKey = "remove_bigmap_key";
     public const string BurnBalance     = "burn_balance";
     public const string AmendAddress    = "amend_address";
+    public const string BindAlias       = "bind_alias";
 
     public static readonly Dictionary<string, int> Mapping = new()
     {
@@ -25,6 +26,7 @@ internal static class MigrationKinds
         { RemoveBigMapKey, (int)MigrationKind.RemoveBigMapKey },
         { BurnBalance,     (int)MigrationKind.BurnBalance },
         { AmendAddress,    (int)MigrationKind.AmendAddress },
+        { BindAlias,       (int)MigrationKind.BindAlias },
     };
 
     public static string ToString(int value) => value switch
@@ -38,6 +40,7 @@ internal static class MigrationKinds
         (int)MigrationKind.RemoveBigMapKey => RemoveBigMapKey,
         (int)MigrationKind.BurnBalance     => BurnBalance,
         (int)MigrationKind.AmendAddress    => AmendAddress,
+        (int)MigrationKind.BindAlias       => BindAlias,
         _ => throw new Exception("invalid value")
     };
 }

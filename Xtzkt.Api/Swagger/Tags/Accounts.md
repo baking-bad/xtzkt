@@ -6,7 +6,7 @@ to the same party (note that in classic TzKT these two were the same thing).
 
 - The same hash may exist on several chains, so an address is identified by `hash + chain`, not by `hash` alone.
 - Tezos X has multiple runtimes (Michelson and EVM), and an address in one runtime can have **aliases**
-  in the others: a Michelson address can have an EVM alias `0x...`, an EVM address can have a Michelson
+  in the others: a Michelson address can have one or more EVM aliases `0x...`, an EVM address can have a Michelson
   alias `KT1...`.
 - Both apply at once, so an account can span several chains and have aliases on several runtimes.
 - Every address keeps its own balance and counters — an account is a set of addresses, not a sum of them.

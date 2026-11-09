@@ -19,10 +19,15 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
                 ?? throw new Exception("Event parent transaction not found");
 
             var result = content.Required("result");
+            var consumedGas = (int)(((result.OptionalInt64("consumed_milligas") ?? 0) + 999) / 1000);
+
+            #region count gas
+            parentTx.GasUsed += consumedGas;
+            block.GasUsed += consumedGas;
+            #endregion
+
             if (parentTx.Status != OperationStatus.Applied || result.RequiredString("status") != "applied")
                 return;
-
-            var consumedGas = (int)(((result.OptionalInt64("consumed_milligas") ?? 0) + 999) / 1000);
 
             var log = new MichelsonLog
             {
@@ -54,11 +59,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto14
             #endregion
 
             #region apply
-            parentTx.GasUsed += consumedGas;
             parentTx.LogsCount = (parentTx.LogsCount ?? 0) + 1;
             contract.LogsCount++;
             Cache.Chain.Get().LogsCount++;
-            block.GasUsed += consumedGas;
             block.Events |= L1BlockEvents.Events;
             #endregion
 

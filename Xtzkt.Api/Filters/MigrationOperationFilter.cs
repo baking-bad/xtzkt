@@ -16,7 +16,7 @@ public class MigrationOperationFilter : BaseOperationFilter
 
     /// <summary>
     /// Filters by migration kind (`bootstrap`, `activate_baker`, `air_drop`, `proposal_invoice`,
-    /// `code_change`, `origination`, `remove_bigmap_key`, `burn_balance` or `amend_address`).
+    /// `code_change`, `origination`, `remove_bigmap_key`, `burn_balance`, `amend_address` or `bind_alias`).
     ///
     /// Click on the parameter to expand more details.
     ///

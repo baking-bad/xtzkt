@@ -43,14 +43,14 @@ public partial class ProtoHelpers
         Cache.Addresses.Add(alias);
         Db.Addresses.Add(alias);
 
-        // TODO: check if aliases can have aliases
-        await BindAliases(alias);
-
         return alias;
     }
 
     protected async Task<XEvmAlias> UpgradeToXEvmAlias(XEvmUser user, XMichelsonAddress owner)
     {
+        if (user.AliasesCount != 0)
+            await UnbindAliases(user);
+
         var aliasForwarder = await Cache.Addresses.GetExistingAsync(EvmRuntime.AliasForwarder);
         var alias = new XEvmAlias
         {
@@ -95,11 +95,10 @@ public partial class ProtoHelpers
         return alias;
     }
 
-    public override async Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
+    public override Task RemoveXEvmAlias(XEvmAlias alias, XMichelsonAddress owner)
     {
-        // TODO: check if aliases can have aliases
         if (alias.AliasesCount != 0)
-            await UnbindAliases(alias);
+            throw new InvalidOperationException($"Alias {alias.Hash} has its own aliases");
 
         Db.TryAttach(owner);
         owner.AliasesCount--;
@@ -109,6 +108,8 @@ public partial class ProtoHelpers
         Cache.Chain.ReleaseAddressId();
         Cache.Addresses.Remove(alias);
         Db.Addresses.Remove(alias);
+
+        return Task.CompletedTask;
     }
 
     protected override async Task BindAliases(XEvmAddress address)
@@ -118,7 +119,7 @@ public partial class ProtoHelpers
             if (alias is not XMichelsonGhost ghost)
                 throw new InvalidOperationException($"Cannot upgrade {alias.Type} to XMichelsonAlias");
 
-            UpgradeToXMichelsonAlias(ghost, address);
+            await UpgradeToXMichelsonAlias(ghost, address);
         }
         // UPDATE: add other runtimes here, when implemented
     }
@@ -168,8 +169,9 @@ public partial class ProtoHelpers
             Eip7702DelegateId = null,
         };
         Cache.Addresses.Add(user);
+        var isAdded = Db.Entry(alias).State == EntityState.Added;
         Db.Entry(alias).State = EntityState.Detached;
-        Db.Entry(user).State = EntityState.Modified;
+        Db.Entry(user).State = isAdded ? EntityState.Added : EntityState.Modified;
 
         Db.TryAttach(owner);
         owner.AliasesCount--;
@@ -322,7 +324,7 @@ public partial class ProtoHelpers
             if (address is not XMichelsonGhost ghost)
                 throw new InvalidOperationException($"Cannot upgrade {address.Type} to XMichelsonAlias");
 
-            return UpgradeToXMichelsonAlias(ghost, owner);
+            return await UpgradeToXMichelsonAlias(ghost, owner);
         }
 
         var alias = new XMichelsonAlias
@@ -345,14 +347,14 @@ public partial class ProtoHelpers
         Cache.Addresses.Add(alias);
         Db.Addresses.Add(alias);
 
-        // TODO: check if aliases can have aliases
-        await BindAliases(alias);
-
         return alias;
     }
 
-    protected XMichelsonAlias UpgradeToXMichelsonAlias(XMichelsonGhost ghost, XEvmAddress owner)
+    protected async Task<XMichelsonAlias> UpgradeToXMichelsonAlias(XMichelsonGhost ghost, XEvmAddress owner)
     {
+        if (ghost.AliasesCount != 0)
+            await UnbindAliases(ghost);
+
         var alias = new XMichelsonAlias
         {
             Id = ghost.Id,
@@ -420,18 +422,18 @@ public partial class ProtoHelpers
             AliasesCount = alias.AliasesCount,
         };
         Cache.Addresses.Add(ghost);
+        var isAdded = Db.Entry(alias).State == EntityState.Added;
         Db.Entry(alias).State = EntityState.Detached;
-        Db.Entry(ghost).State = EntityState.Modified;
+        Db.Entry(ghost).State = isAdded ? EntityState.Added : EntityState.Modified;
 
         Db.TryAttach(owner);
         owner.AliasesCount--;
     }
 
-    public override async Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
+    public override Task RemoveXMichelsonAlias(XMichelsonAlias alias, XEvmAddress owner)
     {
-        // TODO: check if aliases can have aliases
         if (alias.AliasesCount != 0)
-            await UnbindAliases(alias);
+            throw new InvalidOperationException($"Alias {alias.Hash} has its own aliases");
 
         Db.TryAttach(owner);
         owner.AliasesCount--;
@@ -441,6 +443,8 @@ public partial class ProtoHelpers
         Cache.Chain.ReleaseAddressId();
         Cache.Addresses.Remove(alias);
         Db.Addresses.Remove(alias);
+
+        return Task.CompletedTask;
     }
 
     protected async Task BindAliases(XMichelsonAddress address)
@@ -448,7 +452,7 @@ public partial class ProtoHelpers
         if (await Cache.Addresses.GetOrDefaultAsync(EvmRuntime.GetAlias(address.Hash)) is XEvmAddress alias)
         {
             if (alias is not XEvmUser ghost)
-                throw new InvalidOperationException($"Cannot upgrade {alias.Type} to XMichelsonAlias");
+                throw new InvalidOperationException($"Cannot upgrade {alias.Type} to XEvmAlias");
 
             await UpgradeToXEvmAlias(ghost, address);
         }
@@ -461,7 +465,7 @@ public partial class ProtoHelpers
             DowngradeToXEvmUser(alias, address);
 
         // NOTE: add other runtimes, when implemented
-
+        
         if (address.AliasesCount != 0)
             throw new InvalidOperationException("Failed to unbind aliases");
     }

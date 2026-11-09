@@ -37,7 +37,7 @@ public partial class ProtoHelpers
             throw new Exception("Inconsistent evm inputs");
 
         if (michelsonBlock != null && michelsonBlock.Value.Required("header").RequiredDateTime("timestamp") != blueprint.Timestamp)
-            throw new Exception("Inconsistent michlson inputs");
+            throw new Exception("Inconsistent michelson inputs");
 
         var michelsonBatches = michelsonBlock?
             .RequiredArray("operations", 4)[3]
@@ -66,7 +66,7 @@ public partial class ProtoHelpers
             evmOps.Add(hash, new EvmOpContext
             {
                 Operation = op,
-                RootFrame = GetEvmRootFrame(op, GetEvmInternalOperations(op, isSynthetic)),
+                RootFrame = GetEvmRootFrame(op, isSynthetic),
             });
         }
 
@@ -81,7 +81,7 @@ public partial class ProtoHelpers
                 Contents = [.. GetMichelsonOperations(batch, opg).Select(op => new MichelsonContent
                 {
                     Op = op,
-                    Internals = GetMichelsonInternalContents(GetMichelsonInternalOperations(op)),
+                    Internals = GetMichelsonInternalContents(op),
                 })],
             });
         }
@@ -246,12 +246,12 @@ public partial class ProtoHelpers
         }
     }
 
-    static bool HasCalls(JsonElement trace)
+    protected static bool HasCalls(JsonElement trace)
     {
         return trace.OptionalArray("calls") is JsonElement calls && calls.GetArrayLength() != 0;
     }
 
-    static bool HasLogs(JsonElement trace)
+    protected static bool HasLogs(JsonElement trace)
     {
         if (trace.OptionalArray("logs") is JsonElement logs && logs.GetArrayLength() != 0)
             return true;
@@ -272,11 +272,11 @@ public partial class ProtoHelpers
         public required OperationStatus? StaticRootStatus { get; init; }
     }
 
-    static EvmRootFrame GetEvmRootFrame(EvmOperation op, List<EvmInternalOperation> internals)
+    protected virtual EvmRootFrame GetEvmRootFrame(EvmOperation op, bool isSynthetic)
     {
         var root = new EvmRootFrame { Op = op };
         var path = new List<EvmFrame> { root };
-        foreach (var iop in internals)
+        foreach (var iop in GetEvmInternalOperations(op, isSynthetic))
         {
             if (iop.Depth < 1 || iop.Depth > path.Count)
                 throw new Exception("Invalid call trace");
@@ -289,11 +289,12 @@ public partial class ProtoHelpers
         return root;
     }
 
-    const string CracBeginTag = "cross_runtime_call";
-    const string CracEndTag = "cross_runtime_call_end";
+    protected const string CracBeginTag = "cross_runtime_call";
+    protected const string CracEndTag = "cross_runtime_call_end";
 
-    List<MichelsonInternalContent> GetMichelsonInternalContents(List<MichelsonInternalOperation> iops)
+    protected virtual List<MichelsonInternalContent> GetMichelsonInternalContents(MichelsonOperation op)
     {
+        var iops = GetMichelsonInternalOperations(op);
         var pos = 0;
         var items = GetMichelsonInternalContents(iops, ref pos);
         if (pos != iops.Count)
@@ -359,7 +360,7 @@ public partial class ProtoHelpers
         };
     }
 
-    string? GetCracMarker(MichelsonInternalOperation iop)
+    protected string? GetCracMarker(MichelsonInternalOperation iop)
     {
         if (iop.From == MichelsonRuntime.CracOrigin && iop.Content.RequiredString("kind") == "event")
         {
@@ -370,7 +371,7 @@ public partial class ProtoHelpers
         return null;
     }
 
-    static string GetCracId(MichelsonInternalOperation marker)
+    protected static string GetCracId(MichelsonInternalOperation marker)
     {
         return marker.Content.Required("payload").RequiredString("string");
     }
@@ -435,12 +436,12 @@ public partial class ProtoHelpers
         return michelsonOps;
     }
 
-    static string GetMichelsonSyntheticHash(string evmTransactionHash)
+    protected static string GetMichelsonSyntheticHash(string evmTransactionHash)
     {
         return Hashes.FormatMichelsonOperationHash(Blake2b.ComputeHash(32, [.. "michelson"u8, .. Hex.GetBytes(evmTransactionHash)]));
     }
 
-    static string GetEvmSyntheticHash(string michelsonOperationHash)
+    protected static string GetEvmSyntheticHash(string michelsonOperationHash)
     {
         return Keccak256.GetHash([.. "evm"u8, .. Hashes.ParseMichelsonOperationHash(michelsonOperationHash)]);
     }

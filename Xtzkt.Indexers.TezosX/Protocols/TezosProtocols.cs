@@ -19,6 +19,7 @@ namespace Xtzkt.Indexers.TezosX
             services.AddScoped<Proto08Handler>();
             services.AddScoped<Proto09Handler>();
             services.AddScoped<Proto10Handler>();
+            services.AddScoped<Proto11Handler>();
         }
 
         public static ProtocolHandler GetProtocolHandler(this IServiceProvider services, string? kernel)
@@ -30,7 +31,7 @@ namespace Xtzkt.Indexers.TezosX
                 throw new NotImplementedException($"Kernel {kernel} is not supported. Set FallbackToLatestKernel=true to index unknown kernels with the latest kernel handler");
 
             // the handler of the latest kernel; keep in sync with the switch below
-            return services.GetRequiredService<Proto10Handler>();
+            return services.GetRequiredService<Proto11Handler>();
         }
 
         static ProtocolHandler? GetKernelHandler(IServiceProvider services, string? kernel)
@@ -81,6 +82,8 @@ namespace Xtzkt.Indexers.TezosX
                 "0x00db5a8b279b9915f7ffef420347b5d9667ac4e73a9c766b7ef71513f748f52c67" => services.GetRequiredService<Proto10Handler>(),
                 // Ganesha 7.2
                 "0x009e07373751a43acbf0cd747b404f45130e0ad561c4b7da937e02eb812bd0f7e8" => services.GetRequiredService<Proto10Handler>(),
+                // 8.0-rc
+                "0x0085861015c8d17b97c45b981adf2f50ae7564de50d1115e017b06ec573bf1494a" => services.GetRequiredService<Proto11Handler>(),
 
                 // TODO: remove it after previewnet reset
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto10Handler>(), // v0.1

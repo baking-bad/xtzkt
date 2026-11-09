@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Xtzkt.Data;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
 using Xtzkt.Indexers.TezosX.Utils;
@@ -349,7 +350,8 @@ public partial class ProtoHelpers
     #region migrations
     public async Task<XEvmContract> BootstrapEvmPrecompile(string address, string abiPath, XAddress? creator, XChain state)
     {
-        if (await Cache.Addresses.GetOrDefaultAsync(address) != null)
+        var existing = await Cache.Addresses.GetOrDefaultAsync(address);
+        if (existing != null && (existing is not XEvmUser || creator is not XEvmAddress))
             throw new Exception($"Precompile {address} already exists as a regular address, bootstrap logic must be adjusted.");
 
         var code = (await EvmRpc.GetCode(address, Context.Block.Level)).RequiredHexBytes();
@@ -357,39 +359,54 @@ public partial class ProtoHelpers
         var codeHash = EvmScript.GetHash(code);
         SolidityMetadata.TryRead(code, out var metadata);
 
-        var id = Cache.Chain.NextAddressId();
-        var contract = new XEvmContract
+        XEvmContract contract;
+        if (existing is XEvmUser user)
         {
-            Id = id,
-            ChainId = state.Id,
-            Hash = address,
-            FirstLevel = Context.Block.Level,
-            FirstTimestamp = Context.Block.Timestamp,
-            LastLevel = Context.Block.Level,
-            LastTimestamp = Context.Block.Timestamp,
-            Kind = XContractKind.SmartContract,
-            Tags = XEvmContractTags.None,
-            CreatorId = creator?.Id ?? id,
-            Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
-            CodeHash = codeHash,
-        };
+            contract = UpgradeToXEvmContract(user, (XEvmAddress)creator!);
+            contract.Counter = -1; // contract nonce starts at 1 (EIP161), but for precompiles it's 0
+            contract.CodeHash = codeHash;
+            contract.LastLevel = Context.Block.Level;
+            contract.LastTimestamp = Context.Block.Timestamp;
 
-        if (creator != null)
-        {
-            Db.TryAttach(creator);
-            creator.ContractsCount++;
-            creator.LastLevel = Context.Block.Level;
+            creator!.LastLevel = Context.Block.Level;
             creator.LastTimestamp = Context.Block.Timestamp;
         }
         else
         {
-            contract.ContractsCount++;
+            var id = Cache.Chain.NextAddressId();
+            contract = new XEvmContract
+            {
+                Id = id,
+                ChainId = state.Id,
+                Hash = address,
+                FirstLevel = Context.Block.Level,
+                FirstTimestamp = Context.Block.Timestamp,
+                LastLevel = Context.Block.Level,
+                LastTimestamp = Context.Block.Timestamp,
+                Kind = XContractKind.SmartContract,
+                Tags = XEvmContractTags.None,
+                CreatorId = creator?.Id ?? id,
+                Counter = -1, // contract nonce starts at 1 (EIP161), but for precompiles it's 0
+                CodeHash = codeHash,
+            };
+
+            if (creator != null)
+            {
+                Db.TryAttach(creator);
+                creator.ContractsCount++;
+                creator.LastLevel = Context.Block.Level;
+                creator.LastTimestamp = Context.Block.Timestamp;
+            }
+            else
+            {
+                contract.ContractsCount++;
+            }
+
+            Context.Block.Events |= XBlockEvents.NewAddresses;
+
+            Cache.Addresses.Add(contract);
+            Db.Addresses.Add(contract);
         }
-
-        Context.Block.Events |= XBlockEvents.NewAddresses;
-
-        Cache.Addresses.Add(contract);
-        Db.Addresses.Add(contract);
 
         var script = new EvmScript
         {
@@ -439,21 +456,10 @@ public partial class ProtoHelpers
 
     public async Task RemoveEvmPrecompile(string address, XChain state)
     {
-        var contract = await Db.Addresses
-            .OfType<XEvmContract>()
-            .FirstAsync(x => x.ChainId == state.Id && x.Hash == address);
+        var contract = (await Cache.Addresses.GetExistingAsync(address) as XEvmContract)!;
 
-        var creator = await Db.Addresses
-            .OfType<XAddress>()
-            .FirstAsync(x => x.Id == contract.CreatorId);
-
-        creator.ContractsCount--;
-        creator.LastLevel = Context.Block.Level;
-        creator.LastTimestamp = Context.Block.Timestamp;
-
-        Cache.Chain.ReleaseAddressId();
-        Cache.Addresses.Remove(contract);
-        Db.Addresses.Remove(contract);
+        var creator = await Cache.Addresses.GetAsync(contract.CreatorId);
+        Db.TryAttach(creator);
 
         Cache.Abi.Remove(contract);
         Cache.Chain.ReleaseScriptId();
@@ -463,6 +469,33 @@ public partial class ProtoHelpers
 
         state.MigrationOpsCount--;
         Cache.Chain.ReleaseOperationId();
+
+        if (contract.FirstLevel < Context.Block.Level)
+        {
+            var (lo, hi) = IdLayout.Id64Range(Context.Block.ChainId, Context.Block.Id);
+            await Db.MigrationOps
+                .Where(x => x.Id >= lo && x.Id <= hi && x.AddressId == contract.Id && x.Kind == MigrationKind.Bootstrap)
+                .ExecuteDeleteAsync();
+
+            DowngradeToXEvmUser(contract, (XEvmAddress)creator);
+            var user = (XEvmUser)Cache.Addresses.GetCached(contract.Id);
+            user.MigrationsCount--;
+            user.LastLevel = Context.Block.Level;
+            user.LastTimestamp = Context.Block.Timestamp;
+
+            creator.LastLevel = Context.Block.Level;
+            creator.LastTimestamp = Context.Block.Timestamp;
+            return;
+        }
+
+        creator.ContractsCount--;
+        creator.LastLevel = Context.Block.Level;
+        creator.LastTimestamp = Context.Block.Timestamp;
+
+        Cache.Chain.ReleaseAddressId();
+        Cache.Addresses.Remove(contract);
+        Db.Addresses.Remove(contract);
+
         await Db.MigrationOps
             .Where(x => x.AddressId == contract.Id)
             .ExecuteDeleteAsync();

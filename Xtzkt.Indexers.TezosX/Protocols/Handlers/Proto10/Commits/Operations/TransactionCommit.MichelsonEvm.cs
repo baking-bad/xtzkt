@@ -200,27 +200,13 @@ partial class TransactionCommit
         var block = Context.Block;
         var initiator = Cache.Addresses.GetCached(parent.SenderId);
 
-        var senderAddress = content.RequiredString("source");
-        var sender = await Helpers.GetOrCreateXMichelsonAddress(senderAddress);
+        var fromAddress = trace.RequiredString("from");
+        var (sender, alias) = await GetMichelsonEvmParties(content.RequiredString("source"), fromAddress);
+        if (alias.Hash != fromAddress)
+            throw new ValidationException("Unexpected crac alias");
 
         var gatewayAddress = content.RequiredString("destination");
         var gateway = (XMichelsonContract)await Cache.Addresses.GetExistingAsync(gatewayAddress);
-
-        XEvmAddress alias;
-        if (sender is XMichelsonAlias a)
-        {
-            // alias of alias is expected to resolve into original owner
-            alias = await Cache.Addresses.GetAsync(a.OwnerId) as XEvmAddress
-                ?? throw new Exception("Failed to resolve alias owner");
-        }
-        else
-        {
-            var aliasAddress = EvmRuntime.GetAlias(senderAddress);
-            alias = await Helpers.GetOrCreateXEvmAlias(aliasAddress, sender);
-        }
-
-        if (alias.Hash != trace.RequiredString("from"))
-            throw new ValidationException("Unexpected crac alias");
 
         var targetAddress = trace.RequiredString("to");
         var target = await Helpers.GetOrCreateXEvmAddress(targetAddress);
@@ -352,6 +338,19 @@ partial class TransactionCommit
         Context.TransactionOps.Add(op);
 
         return op;
+    }
+
+    protected virtual async Task<(XMichelsonAddress Sender, XEvmAddress Alias)> GetMichelsonEvmParties(string senderAddress, string fromAddress)
+    {
+        var sender = await Helpers.GetOrCreateXMichelsonAddress(senderAddress);
+
+        // alias of alias is expected to resolve into original owner
+        if (sender is XMichelsonAlias senderAlias)
+            return (sender, await Cache.Addresses.GetAsync(senderAlias.OwnerId) as XEvmAddress
+                ?? throw new Exception("Failed to resolve alias owner"));
+
+        var aliasAddress = EvmRuntime.GetAlias(senderAddress);
+        return (sender, await Helpers.GetOrCreateXEvmAlias(aliasAddress, sender));
     }
 
     public virtual async Task Revert(XMichelsonEvmTransactionOperation op)

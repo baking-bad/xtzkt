@@ -48,11 +48,36 @@ class LogCommit(ProtocolHandler protocol) : Proto02.LogCommit(protocol)
             ?? throw new Exception("Event parent transaction not found");
 
         var result = content.Required("result");
-        if (parentTx.Status != OperationStatus.Applied || result.RequiredString("status") != "applied")
-            return;
-
         var consumedMilligas = result.OptionalInt64("consumed_milligas") ?? 0;
         var consumedGas = (int)((consumedMilligas + 999) / 1000);
+
+        #region count gas
+        if (parentTx != cracParent)
+        {
+            if (cracParent != null)
+            {
+                var cracGas = EvmRuntime.ConvertGas(consumedMilligas);
+                cracParent.GasUsed -= cracGas;
+                Context.Block.EvmGasUsed -= cracGas;
+            }
+            if (parentTx is IXManagerOperation)
+            {
+                parentTx.GasUsed += consumedGas;
+                Context.Block.MichelsonGasUsed += consumedGas;
+            }
+            else
+            {
+                var parentGas = EvmRuntime.ConvertGas(consumedMilligas);
+                parentTx.GasUsed += parentGas;
+                Context.Block.EvmGasUsed += parentGas;
+            }
+        }
+        #endregion
+
+        if (parentTx.Status != OperationStatus.Applied ||
+            result.RequiredString("status") != "applied" ||
+            IsIgnoredMichelsonLog(contract))
+            return;
 
         var log = new MichelsonLog
         {
@@ -84,26 +109,6 @@ class LogCommit(ProtocolHandler protocol) : Proto02.LogCommit(protocol)
         #endregion
 
         #region apply
-        if (parentTx != cracParent)
-        {
-            if (cracParent != null)
-            {
-                var cracGas = EvmRuntime.ConvertGas(consumedMilligas);
-                cracParent.GasUsed -= cracGas;
-                Context.Block.EvmGasUsed -= cracGas;
-            }
-            if (parentTx is IXManagerOperation)
-            {
-                parentTx.GasUsed += consumedGas;
-                Context.Block.MichelsonGasUsed += consumedGas;
-            }
-            else
-            {
-                var parentGas = EvmRuntime.ConvertGas(consumedMilligas);
-                parentTx.GasUsed += parentGas;
-                Context.Block.EvmGasUsed += parentGas;
-            }
-        }
         parentTx.LogsCount = (parentTx.LogsCount ?? 0) + 1;
         contract.LogsCount++;
         contract.LastLevel = block.Level;
@@ -113,5 +118,10 @@ class LogCommit(ProtocolHandler protocol) : Proto02.LogCommit(protocol)
         #endregion
 
         Batch.Logs.Add(log);
+    }
+
+    protected virtual bool IsIgnoredMichelsonLog(XMichelsonContract contract)
+    {
+        return false;
     }
 }

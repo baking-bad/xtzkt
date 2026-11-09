@@ -23,6 +23,7 @@ public interface IEvmRuntime
     string DeadAddress { get; }
     string TezosXCaller { get; }
     string DepositOrigin { get; }
+    string RescueGuard { get; }
     #endregion
 
     #region known topics
@@ -41,6 +42,7 @@ public interface IEvmRuntime
 
     #region helpers
     string GetAlias(string address);
+    string[] GetAliases(string address);
     int ConvertGas(long michelsonMilligas);
     bool IsCracCall(string? to, JsonElement trace);
     #endregion

@@ -37,6 +37,8 @@ class EvmRuntime : IEvmRuntime
     public virtual string TezosXCaller => throw new NotImplementedException();
 
     public string DepositOrigin => "0x000000000000000000000000000000000000feed";
+
+    public virtual string RescueGuard => throw new NotImplementedException();
     #endregion
 
     #region known topics
@@ -61,6 +63,8 @@ class EvmRuntime : IEvmRuntime
 
     #region helpers
     public virtual string GetAlias(string address) => throw new NotImplementedException();
+
+    public virtual string[] GetAliases(string address) => throw new NotImplementedException();
 
     public virtual int ConvertGas(long michelsonMilligas) => throw new NotImplementedException();
 
