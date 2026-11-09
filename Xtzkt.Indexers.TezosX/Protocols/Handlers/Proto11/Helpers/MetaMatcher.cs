@@ -111,6 +111,7 @@ public partial class ProtoHelpers
     bool HasExecutedCracCalls(MichelsonContent content)
     {
         return IsCracCall(content.Op) && GetStatus(content.Op) is OperationStatus.Applied or OperationStatus.Backtracked ||
+            content.Internals.Any(x => x is MichelsonCracFrameContent) ||
             content.Internals.Any(x => x is MichelsonInternalOpContent { Op: var op } && IsCracCall(op) &&
                 GetStatus(op) is OperationStatus.Applied or OperationStatus.Backtracked);
     }
@@ -196,6 +197,9 @@ public partial class ProtoHelpers
 
                 var enters = j < _cracFrames.Count && _entered[i] is ulong[] entered && Get(entered, j) && Get(next, j + 1);
                 var skips = CanEnterNothing(_gatewayCalls[i]) && Get(next, j);
+
+                if (!enters && !skips)
+                    throw new InvalidOperationException("Cross-runtime call alignment lost its reach");
 
                 ambiguous |= enters && skips;
 

@@ -102,8 +102,8 @@ public partial class ProtoHelpers
     {
         foreach (var content in contents)
         {
-            // crac frames are read along with the gateway calls that entered them, while the ones of a backtracked
-            // operation are skipped, as the kernel drops its evm side and there is nothing to match them with
+            // crac frames are read along with the gateway calls that entered them, except the ones of a backtracked
+            // operation under 7.x kernels, which drop its evm side, so there is nothing to match them with
             if (content is not MichelsonInternalOpContent { Op: var op } opContent)
                 continue;
 
