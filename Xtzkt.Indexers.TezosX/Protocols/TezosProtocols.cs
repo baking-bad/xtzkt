@@ -83,7 +83,7 @@ namespace Xtzkt.Indexers.TezosX
                 // Ganesha 7.2
                 "0x009e07373751a43acbf0cd747b404f45130e0ad561c4b7da937e02eb812bd0f7e8" => services.GetRequiredService<Proto10Handler>(),
                 // 8.0-rc
-                "0x0085861015c8d17b97c45b981adf2f50ae7564de50d1115e017b06ec573bf1494a" => services.GetRequiredService<Proto11Handler>(),
+                "0x00caf818b747d3c33410b0fb0fbd12aa3bf66d96dcdcef84f9377e236fe329bb7f" => services.GetRequiredService<Proto11Handler>(),
 
                 // TODO: remove it after previewnet reset
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto10Handler>(), // v0.1
