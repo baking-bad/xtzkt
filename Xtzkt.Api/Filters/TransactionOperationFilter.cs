@@ -106,6 +106,16 @@ public class TransactionOperationFilter : ManagerOperationFilter
     public bool? Guessed { get; set; }
 
     /// <summary>
+    /// Filters by EVM opcode that made the call (`call`, `call_code`, `delegate_call`, `static_call`,
+    /// `self_destruct` or `suicide`).
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Examples: `?opCode=delegate_call`, `?opCode.ne=static_call`.
+    /// </summary>
+    public EvmOpCodeParameter? OpCode { get; set; }
+
+    /// <summary>
     /// Filters by alias address (Tezos X cross-runtime only).
     ///
     /// Click on the parameter to expand more details.
@@ -149,6 +159,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
         Entrypoint == null &&
         Parameters == null &&
         Guessed == null &&
+        OpCode == null &&
         Alias == null &&
         Gateway == null &&
         ClaimDepositId == null &&
@@ -165,6 +176,7 @@ public class TransactionOperationFilter : ManagerOperationFilter
         ($"{name}.entrypoint", Entrypoint),
         ($"{name}.parameters", Parameters),
         ($"{name}.guessed", Guessed),
+        ($"{name}.opCode", OpCode),
         ($"{name}.alias", Alias),
         ($"{name}.gateway", Gateway),
         ($"{name}.claimDepositId", ClaimDepositId),
