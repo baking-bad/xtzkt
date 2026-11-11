@@ -1189,6 +1189,25 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
+    public SqlBuilder Where(string column, EvmOpCodeParameter? value)
+    {
+        if (value == null) return this;
+
+        if (value.Eq != null)
+            _filters.Add($"{column} = {Param(value.Eq)}");
+
+        if (value.Ne != null)
+            _filters.Add($"({column} IS NULL OR {column} != {Param(value.Ne)})");
+
+        if (value.In != null)
+            _filters.Add($"{column} = ANY ({Param(value.In)})");
+
+        if (value.Ni != null)
+            _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
+
+        return this;
+    }
+
     public SqlBuilder OrderBy(SortParameter? sort, SortSpec spec)
     {
         if (sort?.Cols.Count > 0)

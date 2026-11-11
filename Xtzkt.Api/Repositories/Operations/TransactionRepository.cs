@@ -33,6 +33,10 @@ public class TransactionRepository(
     async Task<List<IdRange>?> ProcessFilters(TransactionOperationFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
+
+        if (filter.OpCode?.Eq != null || filter.OpCode?.In != null)
+            chains.RemoveAll(x => x.Layer != Data.Models.Layer.TezosX);
+
         if (chains.Count == 0)
             return null;
 
@@ -193,6 +197,7 @@ public class TransactionRepository(
             .Where(@"""Entrypoint""",     filter.Entrypoint)
             .Where(@"""Parameters""",     filter.Parameters)
             .Where(@"""Guessed""",        filter.Guessed)
+            .Where(@"""OpCode""",         filter.OpCode)
             .Where(@"""AliasId""",        filter.Alias?.Id)
             .Where(@"""GatewayId""",      filter.Gateway?.Id)
             .Where(@"""ClaimDepositId""", filter.ClaimDepositId)
@@ -235,6 +240,7 @@ public class TransactionRepository(
             .Where(@"""Entrypoint""",     filter.Entrypoint)
             .Where(@"""Parameters""",     filter.Parameters)
             .Where(@"""Guessed""",        filter.Guessed)
+            .Where(@"""OpCode""",         filter.OpCode)
             .Where(@"""AliasId""",        filter.Alias?.Id)
             .Where(@"""GatewayId""",      filter.Gateway?.Id)
             .Where(@"""ClaimDepositId""", filter.ClaimDepositId)
