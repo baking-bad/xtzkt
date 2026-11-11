@@ -66,10 +66,10 @@ public class AccountRepository(
             #endregion
         }
 
-        var addresses = _addresses
+        var addresses = (await Task.WhenAll(_addresses
             .OrderBy(x => x is Data.Models.XMichelsonAlias or Data.Models.XEvmAlias ? 1 : 0)
             .ThenBy(x => x.Id)
-            .Select(_addressRepo.Get)
+            .Select(_addressRepo.Get)))
             .ToList();
 
         return new Account

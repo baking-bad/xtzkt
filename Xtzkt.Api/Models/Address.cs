@@ -85,7 +85,7 @@ public abstract class Address
 
 public abstract class L1AddressBase : Address
 {
-    /// <summary>Spendable balance (mutez).</summary>
+    /// <summary>Full balance, including staked and unstaked funds and smart rollup bonds (mutez).</summary>
     public long Balance { get; set; }
 
     /// <summary>Amount frozen as smart rollup commitment bonds (mutez).</summary>
@@ -103,7 +103,7 @@ public abstract class L1AddressBase : Address
     /// <summary>Timestamp of the block where the current delegation was set.</summary>
     public DateTime? DelegationTimestamp { get; set; }
 
-    /// <summary>Whether the address has any funds staked with its baker.</summary>
+    /// <summary>Whether the address is an active baker or delegates to one.</summary>
     public bool Staked { get; set; }
 
     /// <summary>Address index in the on-chain address registry, if it was registered there.</summary>
@@ -168,6 +168,9 @@ public class L1User : L1AddressBase
 
     /// <summary>Public key of the address, if it was revealed.</summary>
     public string? PublicKey { get; set; }
+
+    /// <summary>Amount the address has staked with its baker (mutez), included in the balance.</summary>
+    public long StakedBalance { get; set; }
 
     /// <summary>Shares of the baker's staked pool the address owns, used to compute its staked balance.</summary>
     public BigInteger? StakedPseudotokens { get; set; }

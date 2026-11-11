@@ -461,7 +461,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto25
             {
                 var target = content.RequiredString("destination");
                 
-                if (target.StartsWith("tz") && content.Optional("parameters")?.RequiredString("entrypoint") is string entrypoint)
+                if (target.StartsWith("tz") && content.Optional("parameters")?.RequiredUnistring("entrypoint") is string entrypoint)
                 {
                     switch (entrypoint)
                     {
