@@ -27,6 +27,20 @@ public class AddressRepository(
         { "lastTimestamp",  (@"""LastTimestamp""",                      "timestamptz") },
     };
 
+    static readonly SortSpec FullBalanceSortSpec = new("id")
+    {
+        { "id",             (@"""Id""",                                                                 "integer") },
+        { "balance",        (@"COALESCE(""Balance"", ""Balance18"") + COALESCE(""StakedBalance"", 0)",  "numeric") },
+        { "firstTimestamp", (@"""FirstTimestamp""",                                                     "timestamptz") },
+        { "lastTimestamp",  (@"""LastTimestamp""",                                                      "timestamptz") },
+    };
+
+    static readonly string Source = $"""
+        (SELECT a.*, div(b."ExternalStakedBalance"::numeric * a."StakedPseudotokens", b."IssuedPseudotokens")::bigint AS "StakedBalance"
+        FROM "Addresses" AS a
+        LEFT JOIN "Addresses" AS b ON b."Id" = a."BakerId" AND b."Type" = {(int)Data.Models.AddressType.L1Baker}) AS "Addresses"
+        """;
+
     bool ProcessFilters(AddressFilter filter, Pagination? pagination = null)
     {
         #region replace chain filter
@@ -99,7 +113,7 @@ public class AddressRepository(
                     case "originationsCount":           columns.Add(@"""OriginationsCount"""); break;
                     case "migrationsCount":             columns.Add(@"""MigrationsCount"""); break;
                     // L1/XMichelson use "Balance"; XEvm uses "Balance18"
-                    case "balance":                     columns.Add(@"""Balance"""); columns.Add(@"""Balance18"""); break;
+                    case "balance":                     columns.Add(@"""Balance"""); columns.Add(@"""Balance18"""); columns.Add(@"""StakedBalance"""); break;
                     // XAddress
                     case "aliasesCount":                columns.Add(@"""AliasesCount"""); break;
                     case "depositOpsCount":             columns.Add(@"""DepositOpsCount"""); break;
@@ -133,6 +147,7 @@ public class AddressRepository(
                     case "publicKey":                   columns.Add(@"""PublicKey"""); break;
                     case "registerConstantsCount":      columns.Add(@"""RegisterConstantsCount"""); break;
                     // L1User
+                    case "stakedBalance":               columns.Add(@"""Type"""); columns.Add(@"""OwnStakedBalance"""); columns.Add(@"""StakedBalance"""); break;
                     case "stakedPseudotokens":          columns.Add(@"""StakedPseudotokens"""); break;
                     case "unstakedBalance":             columns.Add(@"""UnstakedBalance"""); break;
                     case "unstakedBaker":               columns.Add(@"""UnstakedBakerId"""); break;
@@ -214,9 +229,9 @@ public class AddressRepository(
             }
         }
 
-        var (query, parameters) = new SqlBuilder()
+        SqlBuilder BuildQuery(SqlBuilder builder, SortSpec spec) => builder
             .Select(columns)
-            .From(@"""Addresses""")
+            .From(Source)
             .Where(@"""Id""", filter.Id)
             .Where(@"""Hash""", filter.Hash)
             .Where(@"""Type""", filter.Type)
@@ -225,8 +240,34 @@ public class AddressRepository(
             .Where(@"""FirstTimestamp""", filter.FirstTimestamp)
             .Where(@"""LastLevel""", filter.LastLevel)
             .Where(@"""LastTimestamp""", filter.LastTimestamp)
-            .OrderBy(pagination.Sort, SortSpec)
-            .Cursor(pagination.Cursor, SortSpec)
+            .OrderBy(pagination.Sort, spec)
+            .Cursor(pagination.Cursor, spec);
+
+        SqlBuilder sql;
+        if (pagination.SortingBy("balance"))
+        {
+            if (columns.Count != 0)
+                columns.UnionWith([@"""Id""", @"""Balance""", @"""Balance18""", @"""StakedBalance""", @"""FirstTimestamp""", @"""LastTimestamp"""]);
+
+            sql = new SqlBuilder();
+            sql.From(
+            [
+                BuildQuery(new SqlBuilder(sql), SortSpec)
+                    .Where(@"""StakedPseudotokens""", new BigIntegerNullParameter { Eq = BigIntegerNullParameter.Null })
+                    .Limit(pagination.Offset + pagination.Limit),
+                BuildQuery(new SqlBuilder(sql), FullBalanceSortSpec)
+                    .Where(@"""StakedPseudotokens""", new BigIntegerNullParameter { Ne = BigIntegerNullParameter.Null })
+                    .Where(@"""BakerId""", new Int32NullParameter { Ne = Int32NullParameter.Null })
+                    .Limit(pagination.Offset + pagination.Limit)
+            ], "u")
+            .OrderBy(pagination.Sort, FullBalanceSortSpec);
+        }
+        else
+        {
+            sql = BuildQuery(new SqlBuilder(), SortSpec);
+        }
+
+        var (query, parameters) = sql
             .Offset(pagination.Offset)
             .Limit(pagination.Limit)
             .Build();
@@ -260,8 +301,22 @@ public class AddressRepository(
         return await db.QueryFirstAsync<long>(query, parameters);
     }
 
-    public Address Get(Data.Models.Address address)
+    public async Task<Address> Get(Data.Models.Address address)
     {
+        var stakedBalance = 0L;
+        if (address is Data.Models.L1User { StakedPseudotokens: BigInteger pseudotokens } user)
+        {
+            if (user.BakerId is not int bakerId ||
+                await _addressCache.GetAsync(bakerId) is not Data.Models.L1Baker { IssuedPseudotokens: BigInteger issued } baker ||
+                issued <= BigInteger.Zero)
+            {
+                var rows = await Get(new AddressFilter { Id = new() { Eq = user.Id } }, new Pagination { Limit = 1 });
+                return rows.FirstOrDefault() ?? throw new InvalidOperationException($"Address {user.Hash} not found");
+            }
+
+            stakedBalance = (long)(baker.ExternalStakedBalance * pseudotokens / issued);
+        }
+
         return address switch
         {
             Data.Models.L1Baker row => new L1Baker
@@ -314,6 +369,7 @@ public class AddressRepository(
                 ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                 Revealed = row.Revealed,
                 PublicKey = row.PublicKey,
+                StakedBalance = row.OwnStakedBalance,
                 StakedPseudotokens = row.StakedPseudotokens,
                 UnstakedBalance = row.UnstakedBalance,
                 UnstakedBaker = _addressCache.GetInfo(row.UnstakedBakerId),
@@ -385,7 +441,7 @@ public class AddressRepository(
                 TransactionsCount = row.TransactionsCount,
                 OriginationsCount = row.OriginationsCount,
                 MigrationsCount = row.MigrationsCount,
-                Balance = row.Balance,
+                Balance = row.Balance + stakedBalance,
                 SmartRollupBonds = row.SmartRollupBonds,
                 Counter = row.Counter,
                 Baker = _addressCache.GetInfo(row.BakerId),
@@ -412,6 +468,7 @@ public class AddressRepository(
                 ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                 Revealed = row.Revealed,
                 PublicKey = row.PublicKey,
+                StakedBalance = stakedBalance,
                 StakedPseudotokens = row.StakedPseudotokens,
                 UnstakedBalance = row.UnstakedBalance,
                 UnstakedBaker = _addressCache.GetInfo(row.UnstakedBakerId),
@@ -867,7 +924,7 @@ public class AddressRepository(
                     TransactionsCount = row.TransactionsCount,
                     OriginationsCount = row.OriginationsCount,
                     MigrationsCount = row.MigrationsCount,
-                    Balance = row.Balance,
+                    Balance = row.Balance + (row.StakedBalance ?? 0L),
                     SmartRollupBonds = row.SmartRollupBonds,
                     Counter = row.Counter,
                     Baker = _addressCache.GetInfo((int?)row.BakerId),
@@ -894,6 +951,7 @@ public class AddressRepository(
                     ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                     Revealed = row.Revealed,
                     PublicKey = row.PublicKey,
+                    StakedBalance = row.StakedBalance ?? 0L,
                     StakedPseudotokens = row.StakedPseudotokens == null ? null : (BigInteger)row.StakedPseudotokens,
                     UnstakedBalance = row.UnstakedBalance,
                     UnstakedBaker = _addressCache.GetInfo((int?)row.UnstakedBakerId),
@@ -955,6 +1013,7 @@ public class AddressRepository(
                     ActiveRefutationGamesCount = row.ActiveRefutationGamesCount,
                     Revealed = row.Revealed,
                     PublicKey = row.PublicKey,
+                    StakedBalance = row.OwnStakedBalance,
                     StakedPseudotokens = row.StakedPseudotokens == null ? null : (BigInteger)row.StakedPseudotokens,
                     UnstakedBalance = row.UnstakedBalance,
                     UnstakedBaker = _addressCache.GetInfo((int?)row.UnstakedBakerId),
@@ -1507,7 +1566,7 @@ public class AddressRepository(
                     foreach (var row in rows) result[j++][i] = row.MigrationsCount;
                     break;
                 case "balance":
-                    foreach (var row in rows) result[j++][i] = ((object?)row.Balance18) ?? (object?)row.Balance;
+                    foreach (var row in rows) result[j++][i] = ((object?)row.Balance18) ?? (object?)(row.Balance + (row.StakedBalance ?? 0L));
                     break;
                 case "aliasesCount":
                     foreach (var row in rows) result[j++][i] = row.AliasesCount;
@@ -1637,6 +1696,14 @@ public class AddressRepository(
                     break;
                 case "registerConstantsCount":
                     foreach (var row in rows) result[j++][i] = row.RegisterConstantsCount;
+                    break;
+                case "stakedBalance":
+                    foreach (var row in rows) result[j++][i] = (Data.Models.AddressType)row.Type switch
+                    {
+                        Data.Models.AddressType.L1Baker => row.OwnStakedBalance,
+                        Data.Models.AddressType.L1User => row.StakedBalance ?? 0L,
+                        _ => null
+                    };
                     break;
                 case "stakedPseudotokens":
                     foreach (var row in rows) result[j++][i] = (object?)row.StakedPseudotokens;
