@@ -23,6 +23,8 @@ public class MigrationRepository(
         { "timestamp", (@"""Timestamp""", "timestamptz") },
     };
 
+    const string BalanceChangeColumn = @"COALESCE(""BalanceChange"", ""BalanceChange18"")";
+
     async Task<List<IdRange>?> ProcessFilters(MigrationOperationFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
@@ -68,13 +70,14 @@ public class MigrationRepository(
         var (query, parameters) = new SqlBuilder()
             .Select(columns)
             .From(@"""MigrationOps""")
-            .Where(@"""Id""",        ranges)
-            .Where(@"""Id""",        filter.Id)
-            .Where(@"""Runtime""",   filter.Runtime)
-            .Where(@"""Level""",     filter.Level)
-            .Where(@"""Timestamp""", filter.Timestamp)
-            .Where(@"""Kind""",      filter.Kind)
-            .Where(@"""AddressId""", filter.Account?.Id)
+            .Where(@"""Id""",           ranges)
+            .Where(@"""Id""",           filter.Id)
+            .Where(@"""Runtime""",      filter.Runtime)
+            .Where(@"""Level""",        filter.Level)
+            .Where(@"""Timestamp""",    filter.Timestamp)
+            .Where(@"""Kind""",         filter.Kind)
+            .Where(@"""AddressId""",    filter.Account?.Id)
+            .Where(BalanceChangeColumn, filter.BalanceChange)
             .OrderBy(pagination.Sort, SortSpec)
             .Cursor(pagination.Cursor, SortSpec)
             .Offset(pagination.Offset)
@@ -96,13 +99,14 @@ public class MigrationRepository(
         var (query, parameters) = new SqlBuilder()
             .Select("COUNT(*)")
             .From(@"""MigrationOps""")
-            .Where(@"""Id""",        ranges)
-            .Where(@"""Id""",        filter.Id)
-            .Where(@"""Runtime""",   filter.Runtime)
-            .Where(@"""Level""",     filter.Level)
-            .Where(@"""Timestamp""", filter.Timestamp)
-            .Where(@"""Kind""",      filter.Kind)
-            .Where(@"""AddressId""", filter.Account?.Id)
+            .Where(@"""Id""",           ranges)
+            .Where(@"""Id""",           filter.Id)
+            .Where(@"""Runtime""",      filter.Runtime)
+            .Where(@"""Level""",        filter.Level)
+            .Where(@"""Timestamp""",    filter.Timestamp)
+            .Where(@"""Kind""",         filter.Kind)
+            .Where(@"""AddressId""",    filter.Account?.Id)
+            .Where(BalanceChangeColumn, filter.BalanceChange)
             .Build();
 
         await using var db = await _dataSource.OpenConnectionAsync();
