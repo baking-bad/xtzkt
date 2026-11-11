@@ -33,14 +33,26 @@ public class MigrationOperationFilter : BaseOperationFilter
     /// </summary>
     public AddressInfoParameter? Account { get; set; }
 
+    /// <summary>
+    /// Filters by raw balance change. The value is compared as is, without converting between decimals,
+    /// so it's mutez for `michelson` migrations, and 18 decimals for `evm` ones.
+    ///
+    /// Click on the parameter to expand more details.
+    ///
+    /// Example: `?balanceChange.ne=0`.
+    /// </summary>
+    public BigIntegerParameter? BalanceChange { get; set; }
+
     public override bool IsEmpty() =>
         base.IsEmpty() &&
         Runtime == null &&
         Kind == null &&
-        Account == null;
+        Account == null &&
+        BalanceChange == null;
 
     public override string Normalize(string name) => base.Normalize(name) + ResponseCacheService.BuildKey("",
         ($"{name}.runtime", Runtime),
         ($"{name}.kind", Kind),
-        ($"{name}.account", Account));
+        ($"{name}.account", Account),
+        ($"{name}.balanceChange", BalanceChange));
 }
