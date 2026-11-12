@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text.Json;
 using Xtzkt.Data.Models;
 using Xtzkt.Indexers.Common.Extensions;
@@ -75,6 +76,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto21
         {
             var uncheckedVotingPower = baker.TotalDelegated + baker.TotalStaked;
             return uncheckedVotingPower == remote.RequiredInt64("current_voting_power");
+        }
+
+        protected override bool CheckStakingDenominator(JsonElement remote, L1Baker baker)
+        {
+            return remote.RequiredBigInteger("staking_denominator") == (baker.IssuedPseudotokens ?? BigInteger.Zero);
         }
     }
 }

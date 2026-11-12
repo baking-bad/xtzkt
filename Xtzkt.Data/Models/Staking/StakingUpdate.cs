@@ -34,6 +34,7 @@ namespace Xtzkt.Data.Models
         Finalize,
         SlashStaked,
         SlashUnstaked,
+        BurnPseudotokens,
     }
 
     public static class StakingUpdateModel

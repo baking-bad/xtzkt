@@ -35,6 +35,8 @@ public class AddressRepository(
         { "lastTimestamp",  (@"""LastTimestamp""",                                                      "timestamptz") },
     };
 
+    static readonly OrParameter NonStakers = new(([@"""StakedPseudotokens""", @"""BakerId"""], [Int32NullParameter.Null]));
+
     static readonly string Source = $"""
         (SELECT a.*, div(b."ExternalStakedBalance"::numeric * a."StakedPseudotokens", b."IssuedPseudotokens")::bigint AS "StakedBalance"
         FROM "Addresses" AS a
@@ -253,7 +255,7 @@ public class AddressRepository(
             sql.From(
             [
                 BuildQuery(new SqlBuilder(sql), SortSpec)
-                    .Where(@"""StakedPseudotokens""", new BigIntegerNullParameter { Eq = BigIntegerNullParameter.Null })
+                    .Where(NonStakers)
                     .Limit(pagination.Offset + pagination.Limit),
                 BuildQuery(new SqlBuilder(sql), FullBalanceSortSpec)
                     .Where(@"""StakedPseudotokens""", new BigIntegerNullParameter { Ne = BigIntegerNullParameter.Null })

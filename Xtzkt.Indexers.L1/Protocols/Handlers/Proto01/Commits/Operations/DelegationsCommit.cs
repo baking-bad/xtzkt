@@ -101,8 +101,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto01
                     if (prevBaker != null)
                     {
                         #region reset current delegation
-                        if (result.TryGetProperty("balance_updates", out var updates))
-                            await Unstake(delegation, [.. updates.EnumerateArray()]);
+                        await Unstake(delegation, result.TryGetProperty("balance_updates", out var updates)
+                            ? [.. updates.EnumerateArray()]
+                            : []);
 
                         delegation.PrevDelegationLevel = sender.DelegationLevel;
                         delegation.PrevDelegationTimestamp = sender.DelegationTimestamp;

@@ -17,9 +17,12 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
                 FROM (
                     SELECT
                         sc."Id" AS id,
-                        FLOOR(baker."ExternalStakedBalance"
-                            * COALESCE(staker."StakedPseudotokens", 0::numeric)
-                            / COALESCE(baker."IssuedPseudotokens", 1::numeric))::bigint AS stake
+                        CASE WHEN staker."BakerId" = sc."BakerId"
+                            THEN div(baker."ExternalStakedBalance"
+                                * COALESCE(staker."StakedPseudotokens", 0::numeric),
+                                COALESCE(baker."IssuedPseudotokens", 1::numeric))::bigint
+                            ELSE 0
+                        END AS stake
                     FROM "StakerCycles" AS sc
                     INNER JOIN "Addresses" AS baker ON baker."Id" = sc."BakerId"
                     INNER JOIN "Addresses" AS staker ON staker."Id" = sc."StakerId"
@@ -56,6 +59,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto19
                 FROM "StakerCycles" AS sc
                 INNER JOIN "Addresses" AS staker ON staker."Id" = sc."StakerId"
                 WHERE sc."ChainId" = {0} AND sc."Cycle" = {2} AND staker."StakedPseudotokens" IS NOT NULL
+                AND staker."BakerId" = sc."BakerId"
                 """, Context.Block.ChainId, Context.Block.Cycle, Context.Block.Cycle - 1);
             #endregion
         }

@@ -274,6 +274,23 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                         Cache.Statistics.Current.TotalLost += update.RoundingError ?? 0;
                         #endregion
                         break;
+                    case StakingUpdateType.BurnPseudotokens:
+                        #region burn pseudotokens
+                        if (staker == baker || staker.BakerId != baker.Id || update.Amount != 0 ||
+                            update.Pseudotokens is not BigInteger burnt || burnt <= BigInteger.Zero ||
+                            staker.StakedPseudotokens != burnt || !(baker.IssuedPseudotokens >= burnt))
+                            throw new Exception("Unexpected staking balance updates behavior");
+
+                        staker.StakedPseudotokens = null;
+                        baker.IssuedPseudotokens -= burnt;
+                        if (baker.IssuedPseudotokens == BigInteger.Zero)
+                            baker.IssuedPseudotokens = null;
+
+                        baker.StakersCount--;
+                        if (baker.Staked)
+                            Cache.Statistics.Current.TotalStakers--;
+                        #endregion
+                        break;
                     default:
                         throw new Exception("Unexpected staking balance updates behavior");
                 }
@@ -463,6 +480,13 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
                             baker.ExternalDelegatedBalance -= roundingError;
                             baker.RoundingError -= roundingError;
                         }
+                        #endregion
+                        break;
+                    case StakingUpdateType.BurnPseudotokens:
+                        #region burn pseudotokens
+                        staker.StakedPseudotokens = update.Pseudotokens;
+                        baker.IssuedPseudotokens = (baker.IssuedPseudotokens ?? BigInteger.Zero) + update.Pseudotokens!.Value;
+                        baker.StakersCount++;
                         #endregion
                         break;
                     default:
