@@ -162,8 +162,11 @@ public static class AbiDecoder
 
     static object[] DecodeArray(ReadOnlySpan<byte> data, int offset, int count, AbiParameter item)
     {
-        var res = new object[count];
         var bytes = data[offset..];
+        if (count > bytes.Length / WordSize)
+            throw new FormatException("Array length exceeds the data size");
+
+        var res = new object[count];
 
         if (IsDynamic(item))
         {
