@@ -29,6 +29,9 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
             if (!CheckVotingPower(remote, baker))
                 throw new Exception($"Diagnostics failed: wrong voting power {baker.Hash}");
 
+            if (!CheckStakingDenominator(remote, baker))
+                throw new Exception($"Diagnostics failed: wrong staking denominator {baker.Hash}");
+
             if (remote.RequiredBool("deactivated") != !baker.Staked)
                 throw new Exception($"Diagnostics failed: wrong deactivation state {baker.Hash}");
 
@@ -120,6 +123,11 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto12
         }
 
         protected virtual bool CheckVotingPower(JsonElement remote, L1Baker baker)
+        {
+            return true;
+        }
+
+        protected virtual bool CheckStakingDenominator(JsonElement remote, L1Baker baker)
         {
             return true;
         }
