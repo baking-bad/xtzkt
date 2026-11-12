@@ -12,7 +12,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
-// Ganesha, kernels 7.0 - 7.2
+// Ganesha, kernels 7.0 - 7.3
 public class Proto10Handler(
     EvmNode evmRpc,
     TezosNode michelsonRpc,

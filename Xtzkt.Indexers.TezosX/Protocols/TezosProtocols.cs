@@ -82,6 +82,8 @@ namespace Xtzkt.Indexers.TezosX
                 "0x00db5a8b279b9915f7ffef420347b5d9667ac4e73a9c766b7ef71513f748f52c67" => services.GetRequiredService<Proto10Handler>(),
                 // Ganesha 7.2
                 "0x009e07373751a43acbf0cd747b404f45130e0ad561c4b7da937e02eb812bd0f7e8" => services.GetRequiredService<Proto10Handler>(),
+                // Ganesha 7.3
+                "0x00e65e70dcbb99681c8a75eb1425b24ae8114a2f79f665ed8ecba905ab5285f595" => services.GetRequiredService<Proto10Handler>(),
                 // 8.0-rc
                 "0x00caf818b747d3c33410b0fb0fbd12aa3bf66d96dcdcef84f9377e236fe329bb7f" => services.GetRequiredService<Proto11Handler>(),
 
