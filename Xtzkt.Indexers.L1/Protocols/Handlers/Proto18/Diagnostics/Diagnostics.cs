@@ -34,8 +34,7 @@ namespace Xtzkt.Indexers.L1.Protocols.Proto18
 
                 if (stakingParameters.TryGetProperty("active", out var active))
                 {
-                    if (active.RequiredInt64("limit_of_staking_over_baking_millionth") != baker.LimitOfStakingOverBaking &&
-                        active.RequiredInt64("limit_of_staking_over_baking_millionth") != 2147483647)
+                    if (active.RequiredInt64("limit_of_staking_over_baking_millionth") != baker.LimitOfStakingOverBaking)
                         throw new Exception($"Diagnostics failed: wrong limit_of_staking_over_baking_millionth for {baker.Hash}");
 
                     if (active.RequiredInt64("edge_of_baking_over_staking_billionth") != baker.EdgeOfBakingOverStaking)
