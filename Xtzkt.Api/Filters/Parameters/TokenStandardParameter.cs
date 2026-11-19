@@ -24,6 +24,22 @@ public class TokenStandardParameter : INormalizable
     /// </summary>
     public int? Ne { get; set; }
 
+    /// <summary>
+    /// **In list** mode.
+    /// Returns items where 'param' is equal to any of comma-separated 'values'.
+    ///
+    /// Example: `?standard.in=fa2,erc20`.
+    /// </summary>
+    public List<int>? In { get; set; }
+
+    /// <summary>
+    /// **Not in list** mode.
+    /// Returns items where 'param' is not equal to any of comma-separated 'values'.
+    ///
+    /// Example: `?standard.ni=erc721,erc1155`.
+    /// </summary>
+    public List<int>? Ni { get; set; }
+
     public string Normalize(string name)
     {
         var sb = new StringBuilder();
@@ -33,6 +49,12 @@ public class TokenStandardParameter : INormalizable
 
         if (Ne != null)
             sb.Append($"{name}.ne={Ne}&");
+
+        if (In?.Count > 0)
+            sb.Append($"{name}.in={string.Join(",", In.OrderBy(x => x))}&");
+
+        if (Ni?.Count > 0)
+            sb.Append($"{name}.ni={string.Join(",", Ni.OrderBy(x => x))}&");
 
         return sb.ToString();
     }

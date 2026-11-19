@@ -990,6 +990,26 @@ public class SqlBuilder(SqlBuilder? _root = null)
             _filters.Add($"({column} & {p}) != {p}");
         }
 
+        if (value.In?.Count > 0)
+        {
+            var sqls = new List<string>(value.In.Count);
+            foreach (var tags in value.In.Distinct())
+            {
+                var p = Param(tags);
+                sqls.Add($"({column} & {p}) = {p}");
+            }
+            _filters.Add($"({string.Join(" OR ", sqls)})");
+        }
+
+        if (value.Ni != null)
+        {
+            foreach (var tags in value.Ni.Distinct())
+            {
+                var p = Param(tags);
+                _filters.Add($"({column} & {p}) != {p}");
+            }
+        }
+
         return this;
     }
 

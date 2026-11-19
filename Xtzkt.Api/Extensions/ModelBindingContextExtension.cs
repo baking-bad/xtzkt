@@ -888,6 +888,11 @@ internal static class ModelBindingContextExtension
                             return json;
                         })];
                 }
+                if (result.Length == 0)
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "JSON array must contain at least one item.");
+                    return false;
+                }
                 return bindingContext.CheckBatchSize(name, result.Length);
             }
             catch (JsonException) { }

@@ -21,10 +21,18 @@ public class TokenStandardBinder : IModelBinder
         if (!bindingContext.TryGetEnum(TokenStandards.Mapping, $"{param}.ne", ref hasValue, out var ne))
             return Task.CompletedTask;
 
+        if (!bindingContext.TryGetEnumList(TokenStandards.Mapping, $"{param}.in", ref hasValue, out var @in))
+            return Task.CompletedTask;
+
+        if (!bindingContext.TryGetEnumList(TokenStandards.Mapping, $"{param}.ni", ref hasValue, out var ni))
+            return Task.CompletedTask;
+
         bindingContext.Result = ModelBindingResult.Success(!hasValue ? null : new TokenStandardParameter
         {
             Eq = value ?? eq,
             Ne = ne,
+            In = @in,
+            Ni = ni,
         });
 
         return Task.CompletedTask;
