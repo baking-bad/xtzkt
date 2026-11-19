@@ -59,9 +59,9 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Examples: `?anyof.from.to=123`, `?anyof.from.to.hash.in=tz1...,0x...`.
+    /// Examples: `?anyof.from.to=123`, `?anyof.from.to.hash.in=tz1...,0x...`, `?anyof.from.to.hash=KT1...%deposit`.
     /// </summary>
-    public AnyOfParameter? Anyof { get; set; }
+    public AnyOfWithEntrypointParameter? Anyof { get; set; }
 
     /// <summary>
     /// Filters by sender address.
@@ -77,9 +77,9 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?fromEntrypoint=transfer`.
+    /// Examples: `?fromEntrypoint=transfer`, `?fromEntrypoint=null`.
     /// </summary>
-    public Utf8BytesParameter? FromEntrypoint { get; set; }
+    public Utf8BytesNullParameter? FromEntrypoint { get; set; }
 
     /// <summary>
     /// Filters by target address.
@@ -95,9 +95,9 @@ public class TokenTransferFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?toEntrypoint=transfer`.
+    /// Examples: `?toEntrypoint=transfer`, `?toEntrypoint=null`.
     /// </summary>
-    public Utf8BytesParameter? ToEntrypoint { get; set; }
+    public Utf8BytesNullParameter? ToEntrypoint { get; set; }
 
     /// <summary>
     /// Filters by amount.

@@ -7,6 +7,7 @@ using Xtzkt.Api.Filters.Parameters;
 using Xtzkt.Api.Utils;
 using Xtzkt.Data;
 using Xtzkt.Utils;
+using Utf8 = Xtzkt.Utils.Encoding.Utf8;
 
 namespace Xtzkt.Api;
 
@@ -137,6 +138,38 @@ public class SqlBuilder(SqlBuilder? _root = null)
         if (group.Count != 0)
             _orGroups.Add(group);
 
+        return this;
+    }
+
+    public SqlBuilder Where(AnyOfWithEntrypointParameter? anyof, Func<string, (string column, string epColumn)> map)
+    {
+        if (anyof?.Values is not { } values || values.All(x => x.Entrypoint == null))
+            return this;
+
+        var hasNull = values.Any(x => x.Id == Int32NullParameter.Null);
+        var ids = values.Where(x => x.Id != Int32NullParameter.Null && x.Entrypoint == null).Select(x => x.Id).ToList();
+        var idsParam = ids.Count != 0 ? Param(ids) : null;
+        var withEntrypoints = values
+            .Where(x => x.Entrypoint != null)
+            .Select(x => (idParam: Param(x.Id), epParam: x.Entrypoint!.Length != 0 ? Param(Utf8.GetBytes(x.Entrypoint)) : null))
+            .ToList();
+
+        var conditions = new List<string>();
+        foreach (var (column, epColumn) in anyof.Fields.Select(map).Distinct())
+        {
+            if (hasNull)
+                conditions.Add($"{column} IS NULL");
+
+            if (idsParam != null)
+                conditions.Add($"{column} = ANY ({idsParam})");
+
+            foreach (var (idParam, epParam) in withEntrypoints)
+                conditions.Add(epParam == null
+                    ? $"({column} = {idParam} AND {epColumn} IS NULL)"
+                    : $"({column} = {idParam} AND {epColumn} = {epParam})");
+        }
+
+        _filters.Add($"({string.Join(" OR ", conditions)})");
         return this;
     }
 
@@ -1088,21 +1121,41 @@ public class SqlBuilder(SqlBuilder? _root = null)
         return this;
     }
 
-    public SqlBuilder Where(string column, Utf8BytesParameter? value)
+    public SqlBuilder Where(string column, Utf8BytesNullParameter? value)
     {
         if (value == null) return this;
 
         if (value.Eq != null)
-            _filters.Add($"{column} = {Param(value.Eq)}");
+        {
+            if (value.Eq.Length == 0)
+                _filters.Add($"{column} IS NULL");
+            else
+                _filters.Add($"{column} = {Param(value.Eq)}");
+        }
 
         if (value.Ne != null)
-            _filters.Add($"{column} != {Param(value.Ne)}");
+        {
+            if (value.Ne.Length == 0)
+                _filters.Add($"{column} IS NOT NULL");
+            else
+                _filters.Add($"({column} IS NULL OR {column} != {Param(value.Ne)})");
+        }
 
         if (value.In != null)
-            _filters.Add($"{column} = ANY ({Param(value.In)})");
+        {
+            if (value.In.Any(x => x.Length == 0))
+                _filters.Add($"({column} IS NULL OR {column} = ANY ({Param(value.In.Where(x => x.Length != 0).ToList())}))");
+            else
+                _filters.Add($"{column} = ANY ({Param(value.In)})");
+        }
 
         if (value.Ni != null)
-            _filters.Add($"NOT ({column} = ANY ({Param(value.Ni)}))");
+        {
+            if (value.Ni.Any(x => x.Length == 0))
+                _filters.Add($"({column} IS NOT NULL AND NOT ({column} = ANY ({Param(value.Ni.Where(x => x.Length != 0).ToList())})))");
+            else
+                _filters.Add($"({column} IS NULL OR NOT ({column} = ANY ({Param(value.Ni)})))");
+        }
 
         return this;
     }

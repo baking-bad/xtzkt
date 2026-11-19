@@ -24,6 +24,13 @@ public class TokenTransferRepository(
         { "timestamp", (@"tt.""Timestamp""", "timestamptz") },
     };
 
+    static (string, string) AnyofColumns(string field) => field switch
+    {
+        "from" => (@"tt.""FromId""", @"tt.""FromEntrypoint"""),
+        "to" => (@"tt.""ToId""", @"tt.""ToEntrypoint"""),
+        _ => throw new BadRequestException(nameof(TokenTransferFilter.Anyof), "This parameter can be used with `from` and `to` fields only."),
+    };
+
     async Task<List<IdRange>?> ProcessFilters(TokenTransferFilter filter, Pagination? pagination = null)
     {
         var chains = _chainCache.Resolve(filter.Chain);
@@ -32,18 +39,14 @@ public class TokenTransferRepository(
 
         if (filter.Anyof != null)
         {
-            var columns = filter.Anyof.Fields.Select(field => field switch
-            {
-                "from" => @"tt.""FromId""",
-                "to" => @"tt.""ToId""",
-                _ => throw new BadRequestException(nameof(filter.Anyof), "This parameter can be used with `from` and `to` fields only."),
-            }).Distinct().ToList();
+            var columns = filter.Anyof.Fields.Select(field => AnyofColumns(field).Item1).Distinct().ToList();
 
-            if (await _addressCache.ResolveAddresses(filter.Anyof, chains) is not List<Data.Models.Address> addresses)
+            var anyof = filter.Anyof.WithoutEntrypoints();
+            if (await _addressCache.ResolveAddresses(anyof, chains) is not List<Data.Models.Address> addresses)
                 return null;
 
             var or = new OrParameterBuilder(pagination?.Limit);
-            if (filter.Anyof.HasNull)
+            if (anyof.HasNull)
                 or.Add(columns, Int32NullParameter.Null, 0);
             foreach (var address in addresses)
                 or.Add(columns, address.Id, address.TokenTransfersCount);
@@ -193,6 +196,7 @@ public class TokenTransferRepository(
             .From(@"""TokenTransfers""", "tt")
             .InnerJoin(@"""Tokens""", "t", @"""Id""", @"tt.""TokenId""")
             .Where(filter.Or)
+            .Where(filter.Anyof, AnyofColumns)
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)
@@ -237,6 +241,7 @@ public class TokenTransferRepository(
 
         var (query, parameters) = sql
             .Where(filter.Or)
+            .Where(filter.Anyof, AnyofColumns)
             .Where(@"tt.""Id""",             ranges)
             .Where(@"tt.""Id""",             filter.Id)
             .Where(@"tt.""Level""",          filter.Level)

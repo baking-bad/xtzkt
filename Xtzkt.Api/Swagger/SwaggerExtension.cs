@@ -86,7 +86,7 @@ static class SwaggerExtension
                 if (ctx.JsonTypeInfo.Type == typeof(SelectionParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(MichelineParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(HexBytesParameter) ||
-                    ctx.JsonTypeInfo.Type == typeof(Utf8BytesParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof(Utf8BytesNullParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(OperationHashParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(OperationHashEqParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(BlockHashParameter) ||
@@ -103,7 +103,9 @@ static class SwaggerExtension
                     ctx.JsonTypeInfo.Type == typeof(CursorParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(ActivityTypesParameter) ||
                     ctx.JsonTypeInfo.Type == typeof(ActivityRolesParameter) ||
-                    ctx.JsonTypeInfo.Type == typeof(SearchScopesParameter))
+                    ctx.JsonTypeInfo.Type == typeof(SearchScopesParameter) ||
+                    ctx.JsonTypeInfo.Type == typeof((int, string)) ||
+                    ctx.JsonTypeInfo.Type == typeof((int, string)?))
                 {
                     schema.Properties?.Clear();
                     schema.Type = JsonSchemaType.String;

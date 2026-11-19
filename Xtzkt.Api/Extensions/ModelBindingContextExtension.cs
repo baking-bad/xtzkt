@@ -9,6 +9,7 @@ using Xtzkt.Api.Utils;
 using Xtzkt.Utils;
 using Base58 = Xtzkt.Utils.Encoding.Base58;
 using Hex = Xtzkt.Utils.Encoding.Hex;
+using Utf8 = Xtzkt.Utils.Encoding.Utf8;
 
 namespace Xtzkt.Api.Extensions;
 
@@ -370,6 +371,43 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
+    public static bool TryGetAddressHashWithEntrypointNull(this ModelBindingContext bindingContext, string name, ref bool hasValue, out (string Hash, string? Entrypoint)? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameter(name, out var rawValue))
+        {
+            if (!TryParseAddressHashWithEntrypointNull(rawValue, out var value))
+            {
+                bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                return false;
+            }
+            hasValue = true;
+            result = value;
+        }
+        return true;
+    }
+
+    public static bool TryGetAddressHashWithEntrypointNullList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<(string Hash, string? Entrypoint)>? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        {
+            var list = new List<(string Hash, string? Entrypoint)>(rawValues.Length);
+            foreach (var rawValue in rawValues)
+            {
+                if (!TryParseAddressHashWithEntrypointNull(rawValue, out var value))
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                    return false;
+                }
+                list.Add(value);
+            }
+            hasValue = true;
+            result = list;
+        }
+        return true;
+    }
+
     public static bool TryGetAddressHash(this ModelBindingContext bindingContext, string name, ref bool hasValue, out string? result)
     {
         result = null;
@@ -452,6 +490,43 @@ internal static class ModelBindingContextExtension
                     }
                     list.Add(value);
                 }
+            }
+            hasValue = true;
+            result = list;
+        }
+        return true;
+    }
+
+    public static bool TryGetAddressIdWithEntrypointNull(this ModelBindingContext bindingContext, string name, ref bool hasValue, out (int Id, string? Entrypoint)? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameter(name, out var rawValue))
+        {
+            if (!TryParseAddressIdWithEntrypointNull(rawValue, out var value))
+            {
+                bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
+                return false;
+            }
+            hasValue = true;
+            result = value;
+        }
+        return true;
+    }
+
+    public static bool TryGetAddressIdWithEntrypointNullList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<(int Id, string? Entrypoint)>? result)
+    {
+        result = null;
+        if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
+        {
+            var list = new List<(int Id, string? Entrypoint)>(rawValues.Length);
+            foreach (var rawValue in rawValues)
+            {
+                if (!TryParseAddressIdWithEntrypointNull(rawValue, out var value))
+                {
+                    bindingContext.ModelState.TryAddModelError(name, "List contains invalid value.");
+                    return false;
+                }
+                list.Add(value);
             }
             hasValue = true;
             result = list;
@@ -944,12 +1019,12 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
-    public static bool TryGetUtf8Bytes(this ModelBindingContext bindingContext, string name, ref bool hasValue, out byte[]? result)
+    public static bool TryGetUtf8BytesNull(this ModelBindingContext bindingContext, string name, ref bool hasValue, out byte[]? result)
     {
         result = null;
         if (bindingContext.TryGetQueryParameter(name, out var rawValue))
         {
-            if (!Utf8.TryParse(rawValue, out var bytes))
+            if (!TryParseUtf8BytesNull(rawValue, out var bytes))
             {
                 bindingContext.ModelState.TryAddModelError(name, "Invalid value.");
                 return false;
@@ -960,7 +1035,7 @@ internal static class ModelBindingContextExtension
         return true;
     }
 
-    public static bool TryGetUtf8BytesList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<byte[]>? result)
+    public static bool TryGetUtf8BytesNullList(this ModelBindingContext bindingContext, string name, ref bool hasValue, out List<byte[]>? result)
     {
         result = null;
         if (bindingContext.TryGetQueryParameterList(name, out var rawValues))
@@ -968,7 +1043,7 @@ internal static class ModelBindingContextExtension
             var list = new List<byte[]>(rawValues.Length);
             foreach (var rawValue in rawValues)
             {
-                if (!Utf8.TryParse(rawValue, out var bytes))
+                if (!TryParseUtf8BytesNull(rawValue, out var bytes))
                 {
                     bindingContext.ModelState.TryAddModelError(name, "List contains invalid value.");
                     return false;
@@ -1054,6 +1129,59 @@ internal static class ModelBindingContextExtension
         }
 
         return true;
+    }
+
+    static bool TryParseAddressHashWithEntrypointNull(string rawValue, out (string Hash, string? Entrypoint) result)
+    {
+        result = (AddressHashNullParameter.Null, null);
+        if (rawValue == "null")
+            return true;
+
+        var pos = rawValue.IndexOf('%');
+        if (pos < 0)
+        {
+            if (!AddressHash.TryNormalize(rawValue, out var hash))
+                return false;
+
+            result = (hash, null);
+            return true;
+        }
+
+        if (!Regexes.MichelsonAddress().IsMatch(rawValue.AsSpan(0, pos)))
+            return false;
+
+        result = (rawValue[..pos], rawValue[(pos + 1)..]);
+        return true;
+    }
+
+    static bool TryParseAddressIdWithEntrypointNull(string rawValue, out (int Id, string? Entrypoint) result)
+    {
+        result = (Int32NullParameter.Null, null);
+        if (rawValue == "null")
+            return true;
+
+        var pos = rawValue.IndexOf('%');
+        if (!int.TryParse(pos < 0 ? rawValue : rawValue[..pos], out var id) || pos >= 0 && id == Int32NullParameter.Null)
+            return false;
+
+        result = (id, pos < 0 ? null : rawValue[(pos + 1)..]);
+        return true;
+    }
+
+    static bool TryParseUtf8BytesNull(string rawValue, [NotNullWhen(true)] out byte[]? result)
+    {
+        if (rawValue == "null")
+        {
+            result = Utf8BytesNullParameter.Null;
+            return true;
+        }
+
+        var value = rawValue.Length > 1 && rawValue[0] == '"' && rawValue[^1] == '"'
+            ? rawValue[1..^1]
+            : rawValue;
+
+        result = value.Length != 0 ? Utf8.GetBytes(value) : null;
+        return result != null;
     }
 
     static bool TryParseTez(string rawValue, out BigInteger result)

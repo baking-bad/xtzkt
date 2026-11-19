@@ -56,9 +56,9 @@ public class TokenBalanceFilter : INormalizable
     ///
     /// Click on the parameter to expand more details.
     ///
-    /// Example: `?entrypoint=transfer`.
+    /// Examples: `?entrypoint=transfer`, `?entrypoint=null`.
     /// </summary>
-    public Utf8BytesParameter? Entrypoint { get; set; }
+    public Utf8BytesNullParameter? Entrypoint { get; set; }
 
     /// <summary>
     /// Filters by level of the block where the item first appeared.
