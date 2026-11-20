@@ -8,7 +8,7 @@ using Xtzkt.Indexers.TezosX.Services;
 
 namespace Xtzkt.Indexers.TezosX.Protocols;
 
-// Tezos X, kernel 8.0
+// Horus, kernel 8.0
 public class Proto11Handler(
     EvmNode evmRpc,
     TezosNode michelsonRpc,

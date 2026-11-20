@@ -84,15 +84,16 @@ namespace Xtzkt.Indexers.TezosX
                 "0x009e07373751a43acbf0cd747b404f45130e0ad561c4b7da937e02eb812bd0f7e8" => services.GetRequiredService<Proto10Handler>(),
                 // Ganesha 7.3
                 "0x00e65e70dcbb99681c8a75eb1425b24ae8114a2f79f665ed8ecba905ab5285f595" => services.GetRequiredService<Proto10Handler>(),
-                // 8.0-rc
-                "0x00caf818b747d3c33410b0fb0fbd12aa3bf66d96dcdcef84f9377e236fe329bb7f" => services.GetRequiredService<Proto11Handler>(),
+                // Horus 8.0
+                "0x0098890c787a228c5c170059915e99af5d991e9d37505148f3ddf1e66186ec84eb" => services.GetRequiredService<Proto11Handler>(),
 
                 // TODO: remove it after previewnet reset
                 "0x00a237d1781d29dbcc7b9621684831f7c553946aca808acaf404d6818dc39b18e3" => services.GetRequiredService<Proto10Handler>(), // v0.1
                 "0x007a6ac98660fa68cab09abfb3a59be93ccf4a5d47aeb44a00ffb0a3babdba448a" => services.GetRequiredService<Proto10Handler>(), // v0.7
                 "0x007491e390ec047ffa4edb877c25b41cc46d72884aaa8fa367b952f0c57b85140f" => services.GetRequiredService<Proto10Handler>(), // v0.9
                 "0x005f5acc7705865ed1e40561a7c5ceba8b59364a3df39b378c8e4d96350b7135ac" => services.GetRequiredService<Proto10Handler>(), // v0.10
-                "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25" => services.GetRequiredService<Proto10Handler>(), // v0.10
+                "0x00b14aa3ca1379bcb6b607cb5917572ecda788d63240727c01dec75ffa4bc75c25" => services.GetRequiredService<Proto10Handler>(), // v0.10                
+                "0x00caf818b747d3c33410b0fb0fbd12aa3bf66d96dcdcef84f9377e236fe329bb7f" => services.GetRequiredService<Proto11Handler>(), // v8.0-rc
                 #endregion
 
                 _ => null
